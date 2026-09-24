@@ -1,0 +1,78 @@
+# Teachly
+
+Teachly is a teacher-first educational operating system. This repository currently contains the Phase 2 backend vertical slice and the approved product/architecture documentation.
+
+## Structure
+
+- `apps/api`: NestJS modular monolith backend.
+- `apps/web`: reserved for the later web application phase.
+- `packages/contracts`: reserved for generated API contracts.
+- `database`: migrations and development fixture references.
+- `docs`: product, architecture, and development decisions.
+
+## Prerequisites
+
+- Node.js 24 or compatible LTS release.
+- Corepack-enabled pnpm 12.
+- PostgreSQL 15+ for integration tests and local persistence.
+
+Enable the repository package manager with `corepack enable`, then install dependencies:
+
+```text
+corepack pnpm install
+```
+
+Copy `.env.example` to `.env` and adjust `DATABASE_URL` if needed.
+
+## Local PostgreSQL
+
+Create a local database and user matching `.env.example`, or use an equivalent disposable PostgreSQL instance. Teachly does not require Redis or a queue for this phase.
+
+## Database
+
+Generate migrations after schema changes:
+
+```text
+corepack pnpm db:generate
+corepack pnpm db:migrate
+corepack pnpm db:seed
+```
+
+The seed creates deterministic development users, education taxonomy, and one internal single-choice task through the fixture pipeline.
+
+## Backend
+
+```text
+corepack pnpm dev:api
+```
+
+- API: `http://localhost:3000`
+- OpenAPI UI: `http://localhost:3000/docs`
+- Health: `http://localhost:3000/health`
+
+Development authentication uses the `x-dev-user` header and is enabled only when `NODE_ENV` is not `production` and `DEV_AUTH_ENABLED=true`. Use `teacher` or `student` for the seeded identities.
+
+## Verification
+
+```text
+corepack pnpm typecheck
+corepack pnpm build
+corepack pnpm test:unit
+corepack pnpm test
+```
+
+Unit tests do not need PostgreSQL:
+
+```text
+corepack pnpm test:unit
+```
+
+Integration and e2e tests require a **disposable** PostgreSQL database. Set `TEST_DATABASE_URL` to a connection URL whose database name ends in `_test` and explicitly set `ALLOW_TEST_DB_RESET=true`. These suites **drop and recreate the public schema** for isolation. Never point them at a shared or production database. Missing configuration fails the suites rather than skipping them.
+
+```text
+corepack pnpm test:integration
+corepack pnpm test:e2e
+corepack pnpm test
+```
+
+The database suites run the migrations and deterministic fixture seed from a clean schema. `corepack pnpm db:migrate` and `corepack pnpm db:seed` use `DATABASE_URL` for local development; seeding additionally requires explicit `NODE_ENV=development` (or `test`) and `DEV_AUTH_ENABLED=true`. The development authentication adapter is not production authentication. Startup requires explicit `NODE_ENV`, `DEV_AUTH_ENABLED`, and `DATABASE_URL` values.

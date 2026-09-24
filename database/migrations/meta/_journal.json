@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790189400054,
+      "tag": "0000_phase_2_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790269394275,
+      "tag": "0001_submission_lineage",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790269441389,
+      "tag": "0002_one_attempt_per_assignment",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790269906361,
+      "tag": "0003_result_submission_fk",
+      "breakpoints": true
+    }
+  ]
+}

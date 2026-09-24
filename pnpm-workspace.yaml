@@ -1,0 +1,7 @@
+packages:
+  - apps/*
+  - packages/*
+
+allowBuilds:
+  '@scarf/scarf': true
+  esbuild: true

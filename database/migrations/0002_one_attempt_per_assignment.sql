@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "attempts_one_per_assignment" ON "attempts" USING btree ("assignment_id");

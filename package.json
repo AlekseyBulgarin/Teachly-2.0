@@ -1,0 +1,21 @@
+{
+  "name": "teachly",
+  "private": true,
+  "packageManager": "pnpm@12.6.0",
+  "scripts": {
+    "build": "corepack pnpm --filter @teachly/api build",
+    "dev:api": "corepack pnpm --filter @teachly/api dev",
+    "lint": "corepack pnpm --filter @teachly/api lint",
+    "test": "corepack pnpm --filter @teachly/api test",
+    "test:unit": "corepack pnpm --filter @teachly/api test:unit",
+    "test:integration": "corepack pnpm --filter @teachly/api test:integration",
+    "test:e2e": "corepack pnpm --filter @teachly/api test:e2e",
+    "typecheck": "corepack pnpm --filter @teachly/api typecheck",
+    "db:generate": "corepack pnpm --filter @teachly/api db:generate",
+    "db:migrate": "corepack pnpm --filter @teachly/api db:migrate",
+    "db:seed": "corepack pnpm --filter @teachly/api db:seed"
+  },
+  "devDependencies": {
+    "@neon/config": "^1.7.3"
+  }
+}
