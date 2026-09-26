@@ -2,6 +2,7 @@ import {
   boolean,
   check,
   foreignKey,
+  index,
   integer,
   jsonb,
   pgEnum,
@@ -24,6 +25,22 @@ export const membershipStatusEnum = pgEnum('membership_status', ['active', 'revo
 export const integrationStatusEnum = pgEnum('integration_status', ['active', 'disabled']);
 export const apiKeyStatusEnum = pgEnum('api_key_status', ['active', 'revoked']);
 export const externalUserStatusEnum = pgEnum('external_user_status', ['active', 'inactive']);
+export const learningEventTypeEnum = pgEnum('learning_event_type', ['attempt_submitted', 'result_recorded']);
+export const knowledgeSourceStatusEnum = pgEnum('knowledge_source_status', ['active', 'disabled']);
+export const knowledgeDocumentStatusEnum = pgEnum('knowledge_document_status', ['active', 'disabled']);
+export const knowledgeVersionStatusEnum = pgEnum('knowledge_version_status', [
+  'draft',
+  'approved',
+  'rejected',
+  'disabled',
+  'superseded',
+]);
+export const knowledgeLicenseStatusEnum = pgEnum('knowledge_license_status', ['unknown', 'allowed', 'restricted']);
+export const knowledgeExternalAiPermissionEnum = pgEnum('knowledge_external_ai_permission', [
+  'not_reviewed',
+  'allowed',
+  'prohibited',
+]);
 
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -355,6 +372,77 @@ export const results = pgTable('results', {
   }).onDelete('restrict'),
 }));
 
+export const learningEvents = pgTable('learning_events', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  workspaceId: uuid('workspace_id').notNull(),
+  eventType: learningEventTypeEnum('event_type').notNull(),
+  learnerId: uuid('learner_id').notNull().references(() => users.id, { onDelete: 'restrict' }),
+  source: text('source').notNull(),
+  sourceType: text('source_type').notNull(),
+  sourceId: uuid('source_id').notNull(),
+  taskVersionId: uuid('task_version_id').notNull(),
+  courseId: uuid('course_id').notNull(),
+  skillId: uuid('skill_id').notNull(),
+  outcome: resultOutcomeEnum('outcome'),
+  evaluationRule: text('evaluation_rule'),
+  correlationId: text('correlation_id'),
+  occurredAt: timestamp('occurred_at', { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  workspaceFk: foreignKey({
+    name: 'learning_events_workspace_fk',
+    columns: [table.workspaceId],
+    foreignColumns: [workspaces.id],
+  }).onDelete('restrict'),
+  taskVersionWorkspaceFk: foreignKey({
+    name: 'learning_events_task_version_workspace_fk',
+    columns: [table.taskVersionId, table.workspaceId],
+    foreignColumns: [taskVersions.id, taskVersions.workspaceId],
+  }).onDelete('restrict'),
+  courseWorkspaceFk: foreignKey({
+    name: 'learning_events_course_workspace_fk',
+    columns: [table.courseId, table.workspaceId],
+    foreignColumns: [courses.id, courses.workspaceId],
+  }).onDelete('restrict'),
+  learningEventWorkspaceUnique: uniqueIndex('learning_events_id_workspace_unique').on(table.id, table.workspaceId),
+  learningEventSourceUnique: uniqueIndex('learning_events_source_unique')
+    .on(table.workspaceId, table.eventType, table.sourceType, table.sourceId),
+}));
+
+export const skillEvidence = pgTable('skill_evidence', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  workspaceId: uuid('workspace_id').notNull(),
+  learnerId: uuid('learner_id').notNull().references(() => users.id, { onDelete: 'restrict' }),
+  courseId: uuid('course_id').notNull(),
+  skillId: uuid('skill_id').notNull(),
+  learningEventId: uuid('learning_event_id').notNull(),
+  rule: text('rule').notNull(),
+  outcome: resultOutcomeEnum('outcome').notNull(),
+  occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  workspaceFk: foreignKey({
+    name: 'skill_evidence_workspace_fk',
+    columns: [table.workspaceId],
+    foreignColumns: [workspaces.id],
+  }).onDelete('restrict'),
+  courseWorkspaceFk: foreignKey({
+    name: 'skill_evidence_course_workspace_fk',
+    columns: [table.courseId, table.workspaceId],
+    foreignColumns: [courses.id, courses.workspaceId],
+  }).onDelete('restrict'),
+  learningEventWorkspaceFk: foreignKey({
+    name: 'skill_evidence_event_workspace_fk',
+    columns: [table.learningEventId, table.workspaceId],
+    foreignColumns: [learningEvents.id, learningEvents.workspaceId],
+  }).onDelete('restrict'),
+  skillEvidenceWorkspaceUnique: uniqueIndex('skill_evidence_id_workspace_unique').on(table.id, table.workspaceId),
+  skillEvidenceEventRuleUnique: uniqueIndex('skill_evidence_event_rule_unique')
+    .on(table.workspaceId, table.learningEventId, table.rule),
+  skillEvidenceLearnerSkillIndex: index('skill_evidence_learner_skill_idx')
+    .on(table.workspaceId, table.learnerId, table.skillId, table.occurredAt),
+}));
+
 export const auditEvents = pgTable('audit_events', {
   id: uuid('id').defaultRandom().primaryKey(),
   actorUserId: uuid('actor_user_id').references(() => users.id, { onDelete: 'set null' }),
@@ -366,7 +454,147 @@ export const auditEvents = pgTable('audit_events', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
+export const knowledgeSources = pgTable('knowledge_sources', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  workspaceId: uuid('workspace_id').notNull().references(() => workspaces.id, { onDelete: 'restrict' }),
+  name: text('name').notNull(),
+  sourceType: text('source_type').notNull(),
+  externalReference: text('external_reference'),
+  licenseStatus: knowledgeLicenseStatusEnum('license_status').default('unknown').notNull(),
+  status: knowledgeSourceStatusEnum('status').default('active').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  sourceWorkspaceUnique: uniqueIndex('knowledge_sources_id_workspace_unique').on(table.id, table.workspaceId),
+  sourceReferenceIndex: index('knowledge_sources_workspace_reference_idx').on(table.workspaceId, table.externalReference),
+}));
+
+export const knowledgeDocuments = pgTable('knowledge_documents', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  workspaceId: uuid('workspace_id').notNull(),
+  sourceId: uuid('source_id').notNull(),
+  documentKey: text('document_key').notNull(),
+  title: text('title').notNull(),
+  status: knowledgeDocumentStatusEnum('status').default('active').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  documentSourceWorkspaceFk: foreignKey({
+    name: 'knowledge_documents_source_workspace_fk',
+    columns: [table.sourceId, table.workspaceId],
+    foreignColumns: [knowledgeSources.id, knowledgeSources.workspaceId],
+  }).onDelete('restrict'),
+  documentWorkspaceUnique: uniqueIndex('knowledge_documents_id_workspace_unique').on(table.id, table.workspaceId),
+  documentKeyUnique: uniqueIndex('knowledge_documents_source_key_unique').on(table.workspaceId, table.sourceId, table.documentKey),
+}));
+
+export const knowledgeRawImports = pgTable('knowledge_raw_imports', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  workspaceId: uuid('workspace_id').notNull(),
+  documentId: uuid('document_id').notNull(),
+  idempotencyKey: text('idempotency_key').notNull(),
+  rawContent: text('raw_content').notNull(),
+  contentChecksum: text('content_checksum').notNull(),
+  sourceReference: text('source_reference'),
+  importedAt: timestamp('imported_at', { withTimezone: true }).defaultNow().notNull(),
+  importedByUserId: uuid('imported_by_user_id').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  rawDocumentWorkspaceFk: foreignKey({
+    name: 'knowledge_raw_imports_document_workspace_fk',
+    columns: [table.documentId, table.workspaceId],
+    foreignColumns: [knowledgeDocuments.id, knowledgeDocuments.workspaceId],
+  }).onDelete('restrict'),
+  rawImportWorkspaceUnique: uniqueIndex('knowledge_raw_imports_id_workspace_unique').on(table.id, table.workspaceId),
+  rawDocumentLineageUnique: uniqueIndex('knowledge_raw_imports_id_document_workspace_unique')
+    .on(table.id, table.documentId, table.workspaceId),
+  rawImportIdempotencyUnique: uniqueIndex('knowledge_raw_imports_idempotency_unique')
+    .on(table.workspaceId, table.documentId, table.idempotencyKey),
+}));
+
+export const knowledgeDocumentVersions = pgTable('knowledge_document_versions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  workspaceId: uuid('workspace_id').notNull(),
+  documentId: uuid('document_id').notNull(),
+  rawImportId: uuid('raw_import_id').notNull(),
+  version: integer('version').notNull(),
+  normalizedContent: text('normalized_content').notNull(),
+  contentChecksum: text('content_checksum').notNull(),
+  licenseStatus: knowledgeLicenseStatusEnum('license_status').notNull(),
+  externalAiPermission: knowledgeExternalAiPermissionEnum('external_ai_permission').default('not_reviewed').notNull(),
+  status: knowledgeVersionStatusEnum('status').default('draft').notNull(),
+  approvedByUserId: uuid('approved_by_user_id').references(() => users.id, { onDelete: 'set null' }),
+  approvedByPrincipal: text('approved_by_principal'),
+  approvedAt: timestamp('approved_at', { withTimezone: true }),
+  approvalNote: text('approval_note'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  versionDocumentWorkspaceFk: foreignKey({
+    name: 'knowledge_versions_document_workspace_fk',
+    columns: [table.documentId, table.workspaceId],
+    foreignColumns: [knowledgeDocuments.id, knowledgeDocuments.workspaceId],
+  }).onDelete('restrict'),
+  versionRawImportWorkspaceFk: foreignKey({
+    name: 'knowledge_versions_raw_import_workspace_fk',
+    columns: [table.rawImportId, table.workspaceId],
+    foreignColumns: [knowledgeRawImports.id, knowledgeRawImports.workspaceId],
+  }).onDelete('restrict'),
+  versionRawDocumentWorkspaceFk: foreignKey({
+    name: 'knowledge_versions_raw_document_workspace_fk',
+    columns: [table.rawImportId, table.documentId, table.workspaceId],
+    foreignColumns: [knowledgeRawImports.id, knowledgeRawImports.documentId, knowledgeRawImports.workspaceId],
+  }).onDelete('restrict'),
+  versionWorkspaceUnique: uniqueIndex('knowledge_versions_id_workspace_unique').on(table.id, table.workspaceId),
+  versionDocumentLineageUnique: uniqueIndex('knowledge_versions_id_document_workspace_unique')
+    .on(table.id, table.documentId, table.workspaceId),
+  documentVersionUnique: uniqueIndex('knowledge_versions_document_version_unique').on(table.workspaceId, table.documentId, table.version),
+  approvedDocumentUnique: uniqueIndex('knowledge_versions_one_approved_per_document_unique')
+    .on(table.workspaceId, table.documentId)
+    .where(sql`${table.status} = 'approved'`),
+  approvedMetadataCheck: check('knowledge_versions_approved_metadata_check', sql`
+    ${table.status} <> 'approved'
+    OR (${table.approvedAt} IS NOT NULL AND ${table.approvedByPrincipal} IS NOT NULL)
+  `),
+}));
+
+export const knowledgeChunks = pgTable('knowledge_chunks', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  workspaceId: uuid('workspace_id').notNull(),
+  documentId: uuid('document_id').notNull(),
+  documentVersionId: uuid('document_version_id').notNull(),
+  ordinal: integer('ordinal').notNull(),
+  section: text('section'),
+  content: text('content').notNull(),
+  contentChecksum: text('content_checksum').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  chunkDocumentWorkspaceFk: foreignKey({
+    name: 'knowledge_chunks_document_workspace_fk',
+    columns: [table.documentId, table.workspaceId],
+    foreignColumns: [knowledgeDocuments.id, knowledgeDocuments.workspaceId],
+  }).onDelete('restrict'),
+  chunkVersionWorkspaceFk: foreignKey({
+    name: 'knowledge_chunks_version_workspace_fk',
+    columns: [table.documentVersionId, table.workspaceId],
+    foreignColumns: [knowledgeDocumentVersions.id, knowledgeDocumentVersions.workspaceId],
+  }).onDelete('restrict'),
+  chunkVersionDocumentWorkspaceFk: foreignKey({
+    name: 'knowledge_chunks_version_document_workspace_fk',
+    columns: [table.documentVersionId, table.documentId, table.workspaceId],
+    foreignColumns: [knowledgeDocumentVersions.id, knowledgeDocumentVersions.documentId, knowledgeDocumentVersions.workspaceId],
+  }).onDelete('restrict'),
+  chunkWorkspaceUnique: uniqueIndex('knowledge_chunks_id_workspace_unique').on(table.id, table.workspaceId),
+  chunkOrdinalUnique: uniqueIndex('knowledge_chunks_version_ordinal_unique').on(table.workspaceId, table.documentVersionId, table.ordinal),
+}));
+
 export type User = typeof users.$inferSelect;
 export type TaskVersion = typeof taskVersions.$inferSelect;
 export type Attempt = typeof attempts.$inferSelect;
 export type Result = typeof results.$inferSelect;
+export type LearningEvent = typeof learningEvents.$inferSelect;
+export type SkillEvidenceRecord = typeof skillEvidence.$inferSelect;
+export type KnowledgeSource = typeof knowledgeSources.$inferSelect;
+export type KnowledgeDocument = typeof knowledgeDocuments.$inferSelect;
+export type KnowledgeRawImport = typeof knowledgeRawImports.$inferSelect;
+export type KnowledgeDocumentVersion = typeof knowledgeDocumentVersions.$inferSelect;
+export type KnowledgeChunk = typeof knowledgeChunks.$inferSelect;

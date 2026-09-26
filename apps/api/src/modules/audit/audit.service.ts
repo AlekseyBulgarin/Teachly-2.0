@@ -19,7 +19,7 @@ export class AuditService {
 
   async recordIn(
     tx: DatabaseTransaction,
-    actorUserId: string,
+    actorUserId: string | null,
     action: string,
     resourceType: string,
     resourceId: string,

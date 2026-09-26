@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
 import { AuditModule } from '../audit/audit.module';
 import { EducationModule } from '../education/education.module';
+import { LearningModule } from '../learning/learning.module';
 import { TeachingModule } from '../teaching/teaching.module';
 import { AttemptsController, TeacherResultsController } from './attempts.controller';
 import { AttemptsService } from './attempts.service';
 
 @Module({
-  imports: [EducationModule, AuditModule, TeachingModule],
+  imports: [EducationModule, AuditModule, TeachingModule, LearningModule],
   controllers: [AttemptsController, TeacherResultsController],
   providers: [AttemptsService],
 })

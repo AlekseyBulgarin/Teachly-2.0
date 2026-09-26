@@ -6,7 +6,7 @@
 - **Purpose:** Near-term dependency-aware sequence after the pilot, tenant, identity, AI authority, and privacy decisions.
 - **Scope:** Planning only. This document does not authorize speculative infrastructure or broad module scaffolding.
 
-The first integration is a narrow REST API with a workspace-scoped API key. The customer keeps authentication and frontend ownership. Broad public API versioning, SSO, webhooks, SDKs, and the standalone client remain later work.
+The first integration is a narrow REST API with a workspace-scoped API key. The customer keeps authentication and frontend ownership. Broad public API versioning, SSO, webhooks, SDKs, and the reference/demo client remain later work. The visual direction for that future client is defined in `docs/product/teachly-design-system.md`.
 
 ## Sequence
 
@@ -85,6 +85,8 @@ Exit criteria:
 - student output is grounded and avoids blind answer dumping;
 - teacher artifacts expose evidence, confidence, and proposal status;
 - no artifact changes scoring, attempts, permissions, billing, canonical content, or authoritative learning state.
+
+The reference/demo web application remains deferred until this Core AI vertical slice and its application/API boundaries are stable. It must consume the same contracts as a future B2B integration and must not become a second source of truth.
 
 ### 8. P0, then P1: Partner API and Pilot E2E
 

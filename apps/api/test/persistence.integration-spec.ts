@@ -6,6 +6,7 @@ import { assignments, attempts, auditEvents, externalIdentities, results, submis
 import { AttemptsService } from '../src/modules/attempts/attempts.service';
 import { AuditService } from '../src/modules/audit/audit.service';
 import { EducationService } from '../src/modules/education/education.service';
+import { LearningService } from '../src/modules/learning/learning.service';
 import { IdentityService } from '../src/modules/identity/identity.service';
 import { TeachingService } from '../src/modules/teaching/teaching.service';
 import { TenancyService } from '../src/modules/tenancy/tenancy.service';
@@ -28,7 +29,7 @@ describe('Phase 2 PostgreSQL invariants', () => {
     audit = new AuditService(database);
     const identity = new IdentityService(database, { resolve: async () => null } as AuthenticationAdapter);
     teaching = new TeachingService(database, education, audit, identity, new TenancyService(database), new UsersService(database));
-    attemptsService = new AttemptsService(database, education, audit, teaching);
+    attemptsService = new AttemptsService(database, education, audit, teaching, new LearningService(database, teaching));
   });
 
   afterEach(async () => { await database?.onModuleDestroy(); });

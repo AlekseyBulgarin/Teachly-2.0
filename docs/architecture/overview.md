@@ -30,7 +30,7 @@ The browser is a client, not an authority. Domain modules enforce authorization,
 
 ## Frontend
 
-Next.js, React, and TypeScript provide the web application. Tailwind CSS and shadcn/ui are the preferred presentation tools. React Hook Form and Zod support form validation; TanStack Query manages server state. The frontend should consume typed API contracts and must not duplicate authoritative scoring or permission logic.
+Next.js, React, and TypeScript provide the future reference/demo web application. Tailwind CSS and shadcn/ui may provide implementation primitives, but the canonical Teachly visual identity is defined in `docs/product/teachly-design-system.md`; a generic shadcn dashboard is not the target. React Hook Form and Zod support form validation; TanStack Query manages server state. The frontend should consume typed API contracts and must not duplicate authoritative scoring or permission logic.
 
 ## Backend
 

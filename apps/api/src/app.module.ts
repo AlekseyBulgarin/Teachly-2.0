@@ -8,7 +8,9 @@ import { TeachingModule } from './modules/teaching/teaching.module';
 import { AttemptsModule } from './modules/attempts/attempts.module';
 import { ExternalUsersModule } from './modules/external-users/external-users.module';
 import { IntegrationsModule } from './modules/integrations/integrations.module';
+import { LearningModule } from './modules/learning/learning.module';
 import { TenancyModule } from './modules/tenancy/tenancy.module';
+import { KnowledgeModule } from './modules/knowledge/knowledge.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { TenancyModule } from './modules/tenancy/tenancy.module';
     TenancyModule,
     IntegrationsModule,
     ExternalUsersModule,
+    LearningModule,
+    KnowledgeModule,
   ],
   controllers: [HealthController],
 })

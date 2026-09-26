@@ -2,14 +2,16 @@
 
 ## Status
 
-- **Confirmed:** Teachly is a teacher-first educational operating system for exam preparation.
+- **Confirmed:** Teachly is a universal B2B Educational Intelligence platform with a teacher-first reference experience.
 - **Confirmed:** The initial market is CIS-oriented and Russian-language workflows are expected.
 - **Assumption:** The first product experience will be web-first.
 - **Proposed default:** Keep country, education system, examination, and subject as data, not code modules.
 
 ## Product
 
-Teachly helps teachers run preparation workflows in one system: organize learners, select or import content, create training and assessments, assign work, evaluate attempts, understand progress, and plan the next activity. It is more than a task bank: the task bank is an input to a teacher-led preparation loop.
+Teachly adds an intelligent educational layer to existing online schools, LMS platforms, tutoring platforms, exam-preparation products, universities, corporate learning systems, and other educational products. It connects authorized learner context, deterministic learning state, approved knowledge, and future Educational AI without requiring a customer to replace its authentication, frontend, CRM, payments, or core platform.
+
+The future Teachly reference application also supports teacher workflows: organize learners, select or import content, create training and assessments, assign work, evaluate attempts, understand progress, and plan the next activity. The task bank is an input to a teacher-led preparation loop, not the complete product definition.
 
 The core loop is:
 
@@ -31,7 +33,7 @@ B2C independent teachers and B2B organizations use the same platform. Billing an
 
 ## Market and Content Direction
 
-Initial preparation may cover OGE and EGE subjects including Informatics and ICT, Russian Language, Mathematics, Social Studies, History, Physics, Chemistry, Biology, Literature, and Geography. These are rollout priorities, not hard-coded domain types.
+Initial preparation may cover OGE and EGE subjects including Informatics and ICT, Russian Language, Mathematics, Social Studies, History, Physics, Chemistry, Biology, Literature, and Geography. These are rollout priorities and reference-client scenarios, not hard-coded domain types or the product boundary.
 
 External task banks are a major content source. Teachly must preserve provenance and licensing information while converting raw imports into validated canonical content. Imported solutions are not authoritative until validated and moderated.
 
@@ -39,9 +41,9 @@ External task banks are a major content source. Teachly must preserve provenance
 
 Teachly should become:
 
-- a standalone web application;
-- a teacher operating workspace;
-- a platform API that can be embedded in existing education products;
+- a headless platform API that can be embedded in existing education products;
+- a standalone reference/demo web application consuming the same API and application boundaries;
+- a teacher operating workspace for owned or integrated learning contexts;
 - a foundation for adaptive learning, AI assistance, and future mobile experiences.
 
 ## Non-goals for This Baseline

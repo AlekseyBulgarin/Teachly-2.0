@@ -4,6 +4,7 @@ import { DatabaseService } from '../../infrastructure/database/database';
 import { attempts, results, submissions } from '../../infrastructure/database/schema';
 import { DomainError } from '../../common/errors';
 import { EducationService } from '../education/education.service';
+import { LearningService } from '../learning/learning.service';
 import { evaluateSingleChoice, assertSingleChoiceContent } from '../tasks/single-choice.evaluator';
 import { AuditService } from '../audit/audit.service';
 import { TeachingService } from '../teaching/teaching.service';
@@ -17,6 +18,7 @@ export class AttemptsService {
     private readonly education: EducationService,
     private readonly audit: AuditService,
     private readonly teaching: TeachingService,
+    private readonly learning: LearningService,
   ) {}
 
   async start(studentId: string, taskVersionId: string, assignmentId: string, context?: TenantContext): Promise<StartedAttempt> {
@@ -98,6 +100,18 @@ export class AttemptsService {
         details: evaluation.details,
       }).returning();
       if (!result) throw new Error('Result creation failed');
+      await this.learning.recordResultFacts({
+        workspaceId: attempt.workspaceId,
+        learnerId: studentId,
+        taskVersionId: attempt.taskVersionId,
+        courseId: task.task.courseId,
+        skillId: task.task.skillId,
+        submissionId: submission.id,
+        resultId: result.id,
+        outcome: evaluation.outcome,
+        evaluationRule: task.taskVersion.evaluationRule,
+        occurredAt: result.evaluatedAt,
+      });
       await this.audit.record(studentId, 'attempt_submitted', 'attempt', attemptId, { resultId: result.id, submissionId: submission.id, taskVersionId: task.taskVersion.id }, context?.workspaceId);
       return {
         attempt: this.toAttemptView({ ...attempt, status: 'submitted', submittedAt: new Date() }),

@@ -20,6 +20,7 @@ import { EducationService } from '../src/modules/education/education.service';
 import { IdentityService } from '../src/modules/identity/identity.service';
 import type { AuthenticationAdapter } from '../src/modules/identity/auth.port';
 import { IntegrationsService } from '../src/modules/integrations/integrations.service';
+import { LearningService } from '../src/modules/learning/learning.service';
 import { TeachingService } from '../src/modules/teaching/teaching.service';
 import { TenancyService } from '../src/modules/tenancy/tenancy.service';
 import { UsersService } from '../src/modules/users/users.service';
@@ -51,7 +52,7 @@ describe('Core resources are workspace scoped (PostgreSQL)', () => {
       tenancy,
       new UsersService(database),
     );
-    attemptsService = new AttemptsService(database, education, audit, teaching);
+    attemptsService = new AttemptsService(database, education, audit, teaching, new LearningService(database, teaching));
   });
 
   afterEach(async () => { await database?.onModuleDestroy(); });

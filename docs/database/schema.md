@@ -12,6 +12,7 @@ PostgreSQL is authoritative for identity references, organization memberships, r
 - **Access:** organizations, memberships, scoped permissions, guardian relationships, classes, enrollments.
 - **Taxonomy:** subjects, courses, modules, topics, skills, prerequisites.
 - **Ingestion:** sources, import batches, raw payload references, normalized artifacts, provenance, licenses, validation, moderation.
+- **Approved knowledge:** workspace-owned sources, documents, immutable versions, raw imports, chunks, approval state, and retrieval provenance.
 - **Content:** tasks, task versions, answer schemas, evaluation rules, materials, publication state.
 - **Teaching:** training activities, homework, assignments, recipients, feedback.
 - **Assessment:** specifications, assessments, variants, selected version references, attempts, task attempts, scoring/results.
