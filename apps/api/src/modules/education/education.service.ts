@@ -2,13 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
 import { DatabaseService } from '../../infrastructure/database/database';
 import { courses, skills, subjects, taskVersions, tasks, topics } from '../../infrastructure/database/schema';
+import type { TenantContext } from '../integrations/integrations.types';
 import type { PublishedTaskContext, PublishedTaskVersion, PublicTaskVersion } from './education.types';
 
 @Injectable()
 export class EducationService {
   constructor(private readonly database: DatabaseService) {}
 
-  async findPublishedTaskVersion(taskVersionId: string): Promise<PublishedTaskContext | null> {
+  async findPublishedTaskVersion(taskVersionId: string, context?: TenantContext): Promise<PublishedTaskContext | null> {
     const rows = await this.database.db
       .select({ taskVersion: taskVersions, task: tasks, subject: subjects, course: courses, topic: topics, skill: skills })
       .from(taskVersions)
@@ -17,19 +18,23 @@ export class EducationService {
       .innerJoin(courses, eq(courses.id, tasks.courseId))
       .innerJoin(topics, eq(topics.id, tasks.topicId))
       .innerJoin(skills, eq(skills.id, tasks.skillId))
-      .where(and(eq(taskVersions.id, taskVersionId), eq(taskVersions.status, 'published')))
+      .where(and(
+        eq(taskVersions.id, taskVersionId),
+        eq(taskVersions.status, 'published'),
+        context ? eq(taskVersions.workspaceId, context.workspaceId) : undefined,
+      ))
       .limit(1);
     const row = rows[0];
     return row ? this.toPublishedTaskContext(row) : null;
   }
 
-  async getPublishedTaskVersion(taskVersionId: string): Promise<PublishedTaskContext> {
-    const task = await this.findPublishedTaskVersion(taskVersionId);
+  async getPublishedTaskVersion(taskVersionId: string, context?: TenantContext): Promise<PublishedTaskContext> {
+    const task = await this.findPublishedTaskVersion(taskVersionId, context);
     if (!task) throw new NotFoundException('Published task version not found');
     return task;
   }
 
-  async listPublishedTaskVersions(): Promise<PublishedTaskContext[]> {
+  async listPublishedTaskVersions(context?: TenantContext): Promise<PublishedTaskContext[]> {
     const rows = await this.database.db
       .select({ taskVersion: taskVersions, task: tasks, subject: subjects, course: courses, topic: topics, skill: skills })
       .from(taskVersions)
@@ -38,7 +43,10 @@ export class EducationService {
       .innerJoin(courses, eq(courses.id, tasks.courseId))
       .innerJoin(topics, eq(topics.id, tasks.topicId))
       .innerJoin(skills, eq(skills.id, tasks.skillId))
-      .where(eq(taskVersions.status, 'published'));
+      .where(and(
+        eq(taskVersions.status, 'published'),
+        context ? eq(taskVersions.workspaceId, context.workspaceId) : undefined,
+      ));
     return rows.map((row) => this.toPublishedTaskContext(row));
   }
 
@@ -58,6 +66,7 @@ export class EducationService {
     skill: typeof skills.$inferSelect;
   }): PublishedTaskContext {
     return {
+      workspaceId: row.taskVersion.workspaceId,
       taskVersion: {
         id: row.taskVersion.id,
         taskId: row.taskVersion.taskId,

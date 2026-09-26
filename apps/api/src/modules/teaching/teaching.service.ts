@@ -9,7 +9,9 @@ import { EducationService } from '../education/education.service';
 import { AuditService } from '../audit/audit.service';
 import { developmentAuthEnabled } from '../../common/config';
 import { IdentityService } from '../identity/identity.service';
+import { TenancyService } from '../tenancy/tenancy.service';
 import { UsersService } from '../users/users.service';
+import type { TenantContext } from '../integrations/integrations.types';
 import type { AssignmentView, StudentAssignmentItem, StudentRelationshipItem, StudentView } from './teaching.types';
 
 @Injectable()
@@ -19,6 +21,7 @@ export class TeachingService {
     private readonly education: EducationService,
     private readonly audit: AuditService,
     private readonly identity: IdentityService,
+    private readonly tenancy: TenancyService,
     private readonly users: UsersService,
   ) {}
 
@@ -58,7 +61,8 @@ export class TeachingService {
     return rows.filter((row): row is StudentRelationshipItem => row !== null);
   }
 
-  async assertManagesStudent(teacherId: string, studentId: string): Promise<void> {
+  async assertManagesStudent(teacherId: string, studentId: string, context?: TenantContext): Promise<void> {
+    if (context) await this.tenancy.assertUserCanAccessWorkspace(teacherId, context);
     const [relationship] = await this.database.db
       .select()
       .from(teacherStudentRelationships)
@@ -67,33 +71,53 @@ export class TeachingService {
     if (!relationship) throw new ForbiddenException('Teacher does not manage this student');
   }
 
-  async createAssignment(teacherId: string, studentId: string, taskVersionId: string): Promise<AssignmentView> {
-    await this.assertManagesStudent(teacherId, studentId);
-    await this.education.getPublishedTaskVersion(taskVersionId);
+  async createAssignment(teacherId: string, studentId: string, taskVersionId: string, context?: TenantContext): Promise<AssignmentView> {
+    await this.assertManagesStudent(teacherId, studentId, context);
+    const publishedTask = await this.education.getPublishedTaskVersion(taskVersionId, context);
     return this.database.db.transaction(async (tx) => {
       const [relationship] = await tx.select().from(teacherStudentRelationships)
         .where(and(eq(teacherStudentRelationships.teacherId, teacherId), eq(teacherStudentRelationships.studentId, studentId), eq(teacherStudentRelationships.status, 'active'))).limit(1);
       if (!relationship) throw new ForbiddenException('Teacher does not manage this student');
-      const [assignment] = await tx.insert(assignments).values({ teacherId, studentId, taskVersionId }).returning();
+      const [assignment] = await tx.insert(assignments).values({
+        teacherId,
+        studentId,
+        taskVersionId,
+        workspaceId: context?.workspaceId ?? publishedTask.workspaceId,
+      }).returning();
       if (!assignment) throw new Error('Assignment creation failed');
-      await this.audit.recordIn(tx, teacherId, 'assignment_created', 'assignment', assignment.id, { studentId, taskVersionId });
+      await this.audit.recordIn(
+        tx,
+        teacherId,
+        'assignment_created',
+        'assignment',
+        assignment.id,
+        { studentId, taskVersionId },
+        context?.workspaceId,
+      );
       return this.toAssignmentView(assignment);
     });
   }
 
-  async findAssignmentForStudent(studentId: string, assignmentId: string): Promise<AssignmentView | null> {
+  async findAssignmentForStudent(studentId: string, assignmentId: string, context?: TenantContext): Promise<AssignmentView | null> {
     const [assignment] = await this.database.db
       .select()
       .from(assignments)
-      .where(and(eq(assignments.id, assignmentId), eq(assignments.studentId, studentId)))
+      .where(and(
+        eq(assignments.id, assignmentId),
+        eq(assignments.studentId, studentId),
+        context ? eq(assignments.workspaceId, context.workspaceId) : undefined,
+      ))
       .limit(1);
     return assignment ? this.toAssignmentView(assignment) : null;
   }
 
-  async listAssignmentsForStudent(studentId: string): Promise<StudentAssignmentItem[]> {
-    const rows = await this.database.db.select().from(assignments).where(eq(assignments.studentId, studentId));
+  async listAssignmentsForStudent(studentId: string, context?: TenantContext): Promise<StudentAssignmentItem[]> {
+    const rows = await this.database.db.select().from(assignments).where(and(
+      eq(assignments.studentId, studentId),
+      context ? eq(assignments.workspaceId, context.workspaceId) : undefined,
+    ));
     const resolved = await Promise.all(rows.map(async (assignment) => {
-      const task = await this.education.findPublishedTaskVersion(assignment.taskVersionId);
+      const task = await this.education.findPublishedTaskVersion(assignment.taskVersionId, context);
       if (!task) return null;
       return {
         assignment: this.toAssignmentView(assignment),

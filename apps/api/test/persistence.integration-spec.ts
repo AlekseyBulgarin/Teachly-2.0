@@ -8,6 +8,7 @@ import { AuditService } from '../src/modules/audit/audit.service';
 import { EducationService } from '../src/modules/education/education.service';
 import { IdentityService } from '../src/modules/identity/identity.service';
 import { TeachingService } from '../src/modules/teaching/teaching.service';
+import { TenancyService } from '../src/modules/tenancy/tenancy.service';
 import type { AuthenticationAdapter } from '../src/modules/identity/auth.port';
 import { UsersService } from '../src/modules/users/users.service';
 import { resetTestDatabase, testDatabase } from './postgres-test';
@@ -26,7 +27,7 @@ describe('Phase 2 PostgreSQL invariants', () => {
     const education = new EducationService(database);
     audit = new AuditService(database);
     const identity = new IdentityService(database, { resolve: async () => null } as AuthenticationAdapter);
-    teaching = new TeachingService(database, education, audit, identity, new UsersService(database));
+    teaching = new TeachingService(database, education, audit, identity, new TenancyService(database), new UsersService(database));
     attemptsService = new AttemptsService(database, education, audit, teaching);
   });
 
@@ -70,6 +71,7 @@ describe('Phase 2 PostgreSQL invariants', () => {
     await expect(database.db.update(taskVersions).set({ content: { ...original.content, statement: 'Changed' } }).where(eq(taskVersions.id, original.id))).rejects.toThrow();
     await expect(database.db.delete(taskVersions).where(eq(taskVersions.id, original.id))).rejects.toThrow();
     const [second] = await database.db.insert(taskVersions).values({
+      workspaceId: fixtureIds.workspace,
       taskId: original.taskId, version: 2, taskType: original.taskType, status: 'published',
       content: { ...original.content, statement: 'New version' }, answerSchema: original.answerSchema,
       evaluationRule: original.evaluationRule, provenance: original.provenance, publishedAt: original.publishedAt,
@@ -97,6 +99,7 @@ describe('Phase 2 PostgreSQL invariants', () => {
     const assignment = await teaching.createAssignment(fixtureIds.teacher, student.id, fixtureIds.version);
     const [original] = await database.db.select().from(taskVersions).where(eq(taskVersions.id, fixtureIds.version));
     const [secondVersion] = await database.db.insert(taskVersions).values({
+      workspaceId: fixtureIds.workspace,
       taskId: original!.taskId,
       version: 2,
       taskType: original!.taskType,
@@ -109,6 +112,7 @@ describe('Phase 2 PostgreSQL invariants', () => {
     }).returning();
 
     await expect(database.db.insert(attempts).values({
+      workspaceId: fixtureIds.workspace,
       studentId: student.id,
       taskVersionId: secondVersion!.id,
       assignmentId: assignment.id,
@@ -159,7 +163,7 @@ describe('Phase 2 PostgreSQL invariants', () => {
     await attemptsService.submit(first.student.id, first.attempt.id, 'first', { optionId: 'a' });
     const [submission] = await database.db.select().from(submissions).where(eq(submissions.attemptId, first.attempt.id));
     await expect(database.db.insert(results).values({
-      attemptId: secondAttempt.attempt.id, submissionId: submission!.id,
+      attemptId: secondAttempt.attempt.id, submissionId: submission!.id, workspaceId: fixtureIds.workspace,
       evaluationRule: 'single-choice.v1', outcome: 'correct', isCorrect: true, score: 1,
     })).rejects.toThrow();
   });

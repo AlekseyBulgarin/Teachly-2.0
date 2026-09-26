@@ -27,6 +27,7 @@ export type PublicTaskVersion = Omit<PublishedTaskVersion, 'content'> & {
 };
 
 export type PublishedTaskContext = {
+  workspaceId: string;
   taskVersion: PublishedTaskVersion;
   task: {
     id: string;

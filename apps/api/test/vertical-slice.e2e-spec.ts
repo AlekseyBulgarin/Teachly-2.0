@@ -96,6 +96,7 @@ describe('teacher to student vertical slice (PostgreSQL)', () => {
       .send({ taskVersionId: fixtureIds.version, assignmentId: assignment.body.id }).expect(403);
 
     const [secondVersion] = await database.db.insert(taskVersions).values({
+      workspaceId: fixtureIds.workspace,
       taskId: fixtureIds.task, version: 2, taskType: 'single-choice', status: 'published',
       content: { statement: 'Second version', options: [{ id: 'a', label: 'Yes' }, { id: 'b', label: 'No' }], correctOptionId: 'a' },
       answerSchema: { type: 'single-choice', required: true }, evaluationRule: 'single-choice.v1',

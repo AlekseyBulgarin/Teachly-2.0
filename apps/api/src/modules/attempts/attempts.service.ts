@@ -7,6 +7,7 @@ import { EducationService } from '../education/education.service';
 import { evaluateSingleChoice, assertSingleChoiceContent } from '../tasks/single-choice.evaluator';
 import { AuditService } from '../audit/audit.service';
 import { TeachingService } from '../teaching/teaching.service';
+import type { TenantContext } from '../integrations/integrations.types';
 import type { AttemptResult, AttemptView, ResultView, StartedAttempt, SubmittedAttempt } from './attempts.types';
 
 @Injectable()
@@ -18,36 +19,49 @@ export class AttemptsService {
     private readonly teaching: TeachingService,
   ) {}
 
-  async start(studentId: string, taskVersionId: string, assignmentId: string): Promise<StartedAttempt> {
+  async start(studentId: string, taskVersionId: string, assignmentId: string, context?: TenantContext): Promise<StartedAttempt> {
     if (!assignmentId) throw new ForbiddenException('An assignment is required');
-    const assignment = await this.teaching.findAssignmentForStudent(studentId, assignmentId);
-    const task = await this.education.findPublishedTaskVersion(taskVersionId);
+    const assignment = await this.teaching.findAssignmentForStudent(studentId, assignmentId, context);
+    const task = await this.education.findPublishedTaskVersion(taskVersionId, context);
     if (!assignment || assignment.taskVersionId !== taskVersionId || !task) {
       throw new ForbiddenException('Assignment does not grant access to this task');
     }
     return this.database.transaction(async () => {
-      const currentAssignment = await this.teaching.findAssignmentForStudent(studentId, assignmentId);
-      const currentTask = await this.education.findPublishedTaskVersion(taskVersionId);
+      const currentAssignment = await this.teaching.findAssignmentForStudent(studentId, assignmentId, context);
+      const currentTask = await this.education.findPublishedTaskVersion(taskVersionId, context);
       if (!currentAssignment || currentAssignment.taskVersionId !== taskVersionId || !currentTask) {
         throw new ForbiddenException('Assignment does not grant access to this task');
       }
-      const [created] = await this.database.db.insert(attempts).values({ studentId, taskVersionId, assignmentId })
+      const [created] = await this.database.db.insert(attempts).values({
+        studentId,
+        taskVersionId,
+        assignmentId,
+        workspaceId: context?.workspaceId ?? currentTask.workspaceId,
+      })
         .onConflictDoNothing({ target: attempts.assignmentId }).returning();
-      const attempt = created ?? (await this.database.db.select().from(attempts).where(and(eq(attempts.assignmentId, assignmentId), eq(attempts.studentId, studentId))).limit(1))[0];
+      const attempt = created ?? (await this.database.db.select().from(attempts).where(and(
+        eq(attempts.assignmentId, assignmentId),
+        eq(attempts.studentId, studentId),
+        context ? eq(attempts.workspaceId, context.workspaceId) : undefined,
+      )).limit(1))[0];
       if (!attempt) throw new Error('Attempt creation failed');
-      if (created) await this.audit.record(studentId, 'attempt_started', 'attempt', attempt.id, { taskVersionId });
+      if (created) await this.audit.record(studentId, 'attempt_started', 'attempt', attempt.id, { taskVersionId }, context?.workspaceId);
       return { attempt: this.toAttemptView(attempt), task: this.education.toPublicTaskVersion(currentTask.taskVersion) };
     });
   }
 
-  async submit(studentId: string, attemptId: string, idempotencyKey: string, answer: unknown): Promise<SubmittedAttempt> {
+  async submit(studentId: string, attemptId: string, idempotencyKey: string, answer: unknown, context?: TenantContext): Promise<SubmittedAttempt> {
     return this.database.transaction(async () => {
       const [attempt] = await this.database.db.select()
         .from(attempts)
-        .where(and(eq(attempts.id, attemptId), eq(attempts.studentId, studentId)))
+        .where(and(
+          eq(attempts.id, attemptId),
+          eq(attempts.studentId, studentId),
+          context ? eq(attempts.workspaceId, context.workspaceId) : undefined,
+        ))
         .for('update', { of: attempts }).limit(1);
       if (!attempt) throw new NotFoundException('Attempt not found');
-      const task = await this.education.findPublishedTaskVersion(attempt.taskVersionId);
+      const task = await this.education.findPublishedTaskVersion(attempt.taskVersionId, context);
       if (!task) throw new DomainError('INVALID_TASK_VERSION', 'Task version is not published', 422);
       const [existingSubmission] = await this.database.db.select().from(submissions).where(eq(submissions.attemptId, attemptId)).limit(1);
       if (existingSubmission) {
@@ -65,12 +79,26 @@ export class AttemptsService {
       assertSingleChoiceContent(task.taskVersion.content);
       const evaluation = evaluateSingleChoice(task.taskVersion.content, answer);
       if (evaluation.outcome === 'invalid') throw new DomainError('INVALID_ANSWER', 'Answer must select one available option', 422);
-      const [submission] = await this.database.db.insert(submissions).values({ attemptId, idempotencyKey, answer: answer as { optionId: string } }).returning();
+      const [submission] = await this.database.db.insert(submissions).values({
+        attemptId,
+        workspaceId: attempt.workspaceId,
+        idempotencyKey,
+        answer: answer as { optionId: string },
+      }).returning();
       if (!submission) throw new Error('Submission creation failed');
       await this.database.db.update(attempts).set({ status: 'submitted', submittedAt: new Date() }).where(eq(attempts.id, attemptId));
-      const [result] = await this.database.db.insert(results).values({ attemptId, submissionId: submission.id, evaluationRule: task.taskVersion.evaluationRule, outcome: evaluation.outcome, isCorrect: evaluation.isCorrect, score: evaluation.score, details: evaluation.details }).returning();
+      const [result] = await this.database.db.insert(results).values({
+        attemptId,
+        submissionId: submission.id,
+        workspaceId: attempt.workspaceId,
+        evaluationRule: task.taskVersion.evaluationRule,
+        outcome: evaluation.outcome,
+        isCorrect: evaluation.isCorrect,
+        score: evaluation.score,
+        details: evaluation.details,
+      }).returning();
       if (!result) throw new Error('Result creation failed');
-      await this.audit.record(studentId, 'attempt_submitted', 'attempt', attemptId, { resultId: result.id, submissionId: submission.id, taskVersionId: task.taskVersion.id });
+      await this.audit.record(studentId, 'attempt_submitted', 'attempt', attemptId, { resultId: result.id, submissionId: submission.id, taskVersionId: task.taskVersion.id }, context?.workspaceId);
       return {
         attempt: this.toAttemptView({ ...attempt, status: 'submitted', submittedAt: new Date() }),
         result: this.toResultView(result),
@@ -79,17 +107,27 @@ export class AttemptsService {
     });
   }
 
-  async getResult(studentId: string, attemptId: string): Promise<AttemptResult> {
-    const rows = await this.database.db.select({ result: results, attempt: attempts }).from(results).innerJoin(attempts, eq(attempts.id, results.attemptId)).where(and(eq(results.attemptId, attemptId), eq(attempts.studentId, studentId))).limit(1);
+  async getResult(studentId: string, attemptId: string, context?: TenantContext): Promise<AttemptResult> {
+    const rows = await this.database.db.select({ result: results, attempt: attempts })
+      .from(results)
+      .innerJoin(attempts, eq(attempts.id, results.attemptId))
+      .where(and(
+        eq(results.attemptId, attemptId),
+        eq(attempts.studentId, studentId),
+        context ? eq(attempts.workspaceId, context.workspaceId) : undefined,
+      )).limit(1);
     if (!rows[0]) throw new NotFoundException('Result not found');
     return { attempt: this.toAttemptView(rows[0].attempt), result: this.toResultView(rows[0].result) };
   }
 
-  async listResultsForTeacher(teacherId: string, studentId: string): Promise<AttemptResult[]> {
-    await this.teaching.assertManagesStudent(teacherId, studentId);
+  async listResultsForTeacher(teacherId: string, studentId: string, context?: TenantContext): Promise<AttemptResult[]> {
+    await this.teaching.assertManagesStudent(teacherId, studentId, context);
     const rows = await this.database.db.select({ result: results, attempt: attempts })
       .from(results).innerJoin(attempts, eq(attempts.id, results.attemptId))
-      .where(eq(attempts.studentId, studentId))
+      .where(and(
+        eq(attempts.studentId, studentId),
+        context ? eq(attempts.workspaceId, context.workspaceId) : undefined,
+      ))
       .orderBy(desc(results.evaluatedAt));
     return rows.map((row) => ({ attempt: this.toAttemptView(row.attempt), result: this.toResultView(row.result) }));
   }

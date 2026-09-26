@@ -4,14 +4,15 @@ import { developmentAuthEnabled, requiredEnvironment } from '../../common/config
 import { buildInternalFixture } from '../../modules/education/fixtures/internal-fixture';
 import { DatabaseService } from './database';
 import {
-  courses, externalIdentities, skills, subjects, taskVersions, tasks,
-  topics, teacherStudentRelationships, users,
+  courses, externalIdentities, memberships, organizations, skills, subjects,
+  taskVersions, tasks, topics, teacherStudentRelationships, users, workspaces,
 } from './schema';
 
 const id = (n: number) => `00000000-0000-4000-8000-${n.toString().padStart(12, '0')}`;
 export const fixtureIds = {
   teacher: id(1), student: id(2), subject: id(3), course: id(4),
   topic: id(5), skill: id(6), task: id(7), version: id(8),
+  organization: id(9), workspace: id(10),
 };
 
 export async function seedDevelopmentFixtures(database: DatabaseService): Promise<void> {
@@ -36,15 +37,28 @@ export async function seedDevelopmentFixtures(database: DatabaseService): Promis
       }
     }
     await tx.insert(teacherStudentRelationships).values({ teacherId: fixtureIds.teacher, studentId: fixtureIds.student }).onConflictDoNothing();
+    await tx.insert(organizations).values({
+      id: fixtureIds.organization,
+      name: 'Teachly Development Organization',
+    }).onConflictDoNothing();
+    await tx.insert(workspaces).values({
+      id: fixtureIds.workspace,
+      organizationId: fixtureIds.organization,
+      name: 'Teachly Development Workspace',
+    }).onConflictDoNothing();
+    await tx.insert(memberships).values([
+      { userId: fixtureIds.teacher, organizationId: fixtureIds.organization, role: 'organization_admin' },
+      { userId: fixtureIds.student, organizationId: fixtureIds.organization, workspaceId: fixtureIds.workspace, role: 'educator' },
+    ]).onConflictDoNothing();
     await tx.insert(subjects).values({ id: fixtureIds.subject, ...fixture.subject }).onConflictDoNothing();
-    await tx.insert(courses).values({ id: fixtureIds.course, subjectId: fixtureIds.subject, ...fixture.course }).onConflictDoNothing();
+    await tx.insert(courses).values({ id: fixtureIds.course, workspaceId: fixtureIds.workspace, subjectId: fixtureIds.subject, ...fixture.course }).onConflictDoNothing();
     await tx.insert(topics).values({ id: fixtureIds.topic, courseId: fixtureIds.course, ...fixture.topic }).onConflictDoNothing();
     await tx.insert(skills).values({ id: fixtureIds.skill, topicId: fixtureIds.topic, ...fixture.skill }).onConflictDoNothing();
     await tx.insert(tasks).values({
-      id: fixtureIds.task, subjectId: fixtureIds.subject, courseId: fixtureIds.course,
-      topicId: fixtureIds.topic, skillId: fixtureIds.skill, ...fixture.task,
+      id: fixtureIds.task, workspaceId: fixtureIds.workspace, subjectId: fixtureIds.subject,
+      courseId: fixtureIds.course, topicId: fixtureIds.topic, skillId: fixtureIds.skill, ...fixture.task,
     }).onConflictDoNothing();
-    await tx.insert(taskVersions).values({ id: fixtureIds.version, taskId: fixtureIds.task, ...fixture.taskVersion }).onConflictDoNothing();
+    await tx.insert(taskVersions).values({ id: fixtureIds.version, taskId: fixtureIds.task, workspaceId: fixtureIds.workspace, ...fixture.taskVersion }).onConflictDoNothing();
   });
 }
 

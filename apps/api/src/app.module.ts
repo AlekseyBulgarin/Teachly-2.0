@@ -6,9 +6,22 @@ import { UsersModule } from './modules/users/users.module';
 import { EducationModule } from './modules/education/education.module';
 import { TeachingModule } from './modules/teaching/teaching.module';
 import { AttemptsModule } from './modules/attempts/attempts.module';
+import { ExternalUsersModule } from './modules/external-users/external-users.module';
+import { IntegrationsModule } from './modules/integrations/integrations.module';
+import { TenancyModule } from './modules/tenancy/tenancy.module';
 
 @Module({
-  imports: [DatabaseModule, IdentityModule, UsersModule, EducationModule, TeachingModule, AttemptsModule],
+  imports: [
+    DatabaseModule,
+    IdentityModule,
+    UsersModule,
+    EducationModule,
+    TeachingModule,
+    AttemptsModule,
+    TenancyModule,
+    IntegrationsModule,
+    ExternalUsersModule,
+  ],
   controllers: [HealthController],
 })
 export class AppModule {}

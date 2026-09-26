@@ -1,8 +1,9 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { ApiBadRequestResponse, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ApiErrorDto } from '../../common/api.dto';
-import { CurrentPrincipal } from '../../common/request-context';
+import { CurrentPrincipal, OptionalTenantContext } from '../../common/request-context';
 import type { AuthenticatedPrincipal } from '../identity/auth.types';
+import type { TenantContext } from '../integrations/integrations.types';
 import { TeachingService } from './teaching.service';
 import {
   AssignmentDto,
@@ -33,13 +34,20 @@ export class TeachingController {
 
   @Post('assignments')
   @ApiCreatedResponse({ type: AssignmentDto })
-  async createAssignment(@CurrentPrincipal() principal: AuthenticatedPrincipal, @Body() body: CreateAssignmentDto): Promise<AssignmentDto> {
-    return AssignmentDto.from(await this.teaching.createAssignment(principal.userId, body.studentId, body.taskVersionId));
+  async createAssignment(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @OptionalTenantContext() context: TenantContext | undefined,
+    @Body() body: CreateAssignmentDto,
+  ): Promise<AssignmentDto> {
+    return AssignmentDto.from(await this.teaching.createAssignment(principal.userId, body.studentId, body.taskVersionId, context));
   }
 
   @Get('assignments')
   @ApiOkResponse({ type: [StudentAssignmentResponseDto] })
-  async listAssignments(@CurrentPrincipal() principal: AuthenticatedPrincipal): Promise<StudentAssignmentResponseDto[]> {
-    return (await this.teaching.listAssignmentsForStudent(principal.userId)).map(StudentAssignmentResponseDto.from);
+  async listAssignments(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @OptionalTenantContext() context?: TenantContext,
+  ): Promise<StudentAssignmentResponseDto[]> {
+    return (await this.teaching.listAssignmentsForStudent(principal.userId, context)).map(StudentAssignmentResponseDto.from);
   }
 }

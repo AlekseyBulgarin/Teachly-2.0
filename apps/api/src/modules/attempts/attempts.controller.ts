@@ -1,8 +1,9 @@
 import { Body, Controller, ForbiddenException, Get, Param, ParseUUIDPipe, Post } from '@nestjs/common';
 import { ApiBadRequestResponse, ApiCreatedResponse, ApiOkResponse, ApiParam, ApiTags } from '@nestjs/swagger';
 import { ApiErrorDto } from '../../common/api.dto';
-import { CurrentPrincipal } from '../../common/request-context';
+import { CurrentPrincipal, OptionalTenantContext } from '../../common/request-context';
 import type { AuthenticatedPrincipal } from '../identity/auth.types';
+import type { TenantContext } from '../integrations/integrations.types';
 import { AttemptsService } from './attempts.service';
 import {
   AttemptResultResponseDto,
@@ -20,24 +21,37 @@ export class AttemptsController {
 
   @Post()
   @ApiCreatedResponse({ type: StartAttemptResponseDto })
-  async start(@CurrentPrincipal() principal: AuthenticatedPrincipal, @Body() body: StartAttemptDto): Promise<StartAttemptResponseDto> {
+  async start(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @OptionalTenantContext() context: TenantContext | undefined,
+    @Body() body: StartAttemptDto,
+  ): Promise<StartAttemptResponseDto> {
     if (principal.userType !== 'student') throw new ForbiddenException('Only students can start attempts');
-    return StartAttemptResponseDto.from(await this.attempts.start(principal.userId, body.taskVersionId, body.assignmentId));
+    return StartAttemptResponseDto.from(await this.attempts.start(principal.userId, body.taskVersionId, body.assignmentId, context));
   }
 
   @Post(':attemptId/submissions')
   @ApiCreatedResponse({ type: SubmitAnswerResponseDto })
   @ApiParam({ name: 'attemptId', format: 'uuid' })
-  async submit(@CurrentPrincipal() principal: AuthenticatedPrincipal, @Param('attemptId', ParseUUIDPipe) attemptId: string, @Body() body: SubmitAnswerDto): Promise<SubmitAnswerResponseDto> {
+  async submit(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Param('attemptId', ParseUUIDPipe) attemptId: string,
+    @OptionalTenantContext() context: TenantContext | undefined,
+    @Body() body: SubmitAnswerDto,
+  ): Promise<SubmitAnswerResponseDto> {
     if (principal.userType !== 'student') throw new ForbiddenException('Only students can submit attempts');
-    return SubmitAnswerResponseDto.from(await this.attempts.submit(principal.userId, attemptId, body.idempotencyKey, body.answer));
+    return SubmitAnswerResponseDto.from(await this.attempts.submit(principal.userId, attemptId, body.idempotencyKey, body.answer, context));
   }
 
   @Get(':attemptId/result')
   @ApiOkResponse({ type: AttemptResultResponseDto })
   @ApiParam({ name: 'attemptId', format: 'uuid' })
-  async result(@CurrentPrincipal() principal: AuthenticatedPrincipal, @Param('attemptId', ParseUUIDPipe) attemptId: string): Promise<AttemptResultResponseDto> {
-    return AttemptResultResponseDto.from(await this.attempts.getResult(principal.userId, attemptId));
+  async result(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Param('attemptId', ParseUUIDPipe) attemptId: string,
+    @OptionalTenantContext() context?: TenantContext,
+  ): Promise<AttemptResultResponseDto> {
+    return AttemptResultResponseDto.from(await this.attempts.getResult(principal.userId, attemptId, context));
   }
 }
 
@@ -50,7 +64,11 @@ export class TeacherResultsController {
   @Get(':studentId/results')
   @ApiOkResponse({ type: [AttemptResultResponseDto] })
   @ApiParam({ name: 'studentId', format: 'uuid' })
-  async listResults(@CurrentPrincipal() principal: AuthenticatedPrincipal, @Param('studentId', ParseUUIDPipe) studentId: string): Promise<AttemptResultResponseDto[]> {
-    return (await this.attempts.listResultsForTeacher(principal.userId, studentId)).map(AttemptResultResponseDto.from);
+  async listResults(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Param('studentId', ParseUUIDPipe) studentId: string,
+    @OptionalTenantContext() context?: TenantContext,
+  ): Promise<AttemptResultResponseDto[]> {
+    return (await this.attempts.listResultsForTeacher(principal.userId, studentId, context)).map(AttemptResultResponseDto.from);
   }
 }

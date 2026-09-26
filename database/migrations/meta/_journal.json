@@ -36,6 +36,20 @@
       "when": 1790270000000,
       "tag": "0004_attempt_assignment_task_version_fk",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790399129921,
+      "tag": "0005_b2b_identity_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790402089241,
+      "tag": "0006_b2b_workspace_scope",
+      "breakpoints": true
     }
   ]
 }
