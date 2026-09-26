@@ -130,7 +130,9 @@ export const assignments = pgTable('assignments', {
   studentId: uuid('student_id').notNull().references(() => users.id, { onDelete: 'restrict' }),
   taskVersionId: uuid('task_version_id').notNull().references(() => taskVersions.id, { onDelete: 'restrict' }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => ({
+  assignmentTaskVersionUnique: uniqueIndex('assignments_id_task_version_unique').on(table.id, table.taskVersionId),
+}));
 
 export const attempts = pgTable('attempts', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -142,6 +144,11 @@ export const attempts = pgTable('attempts', {
   submittedAt: timestamp('submitted_at', { withTimezone: true }),
 }, (table) => ({
   oneAttemptPerAssignment: uniqueIndex('attempts_one_per_assignment').on(table.assignmentId),
+  assignmentTaskVersionFk: foreignKey({
+    name: 'attempts_assignment_task_version_fk',
+    columns: [table.assignmentId, table.taskVersionId],
+    foreignColumns: [assignments.id, assignments.taskVersionId],
+  }),
 }));
 
 export const submissions = pgTable(

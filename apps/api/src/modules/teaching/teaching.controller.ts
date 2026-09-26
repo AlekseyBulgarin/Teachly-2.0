@@ -1,50 +1,45 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { IsUUID, IsString, MinLength } from 'class-validator';
+import { Body, Controller, Get, Post } from '@nestjs/common';
+import { ApiBadRequestResponse, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiErrorDto } from '../../common/api.dto';
 import { CurrentPrincipal } from '../../common/request-context';
 import type { AuthenticatedPrincipal } from '../identity/auth.types';
 import { TeachingService } from './teaching.service';
+import {
+  AssignmentDto,
+  CreateAssignmentDto,
+  CreateStudentDto,
+  StudentAssignmentResponseDto,
+  StudentDto,
+  StudentRelationshipResponseDto,
+} from './teaching.dto';
 
-class CreateStudentDto {
-  @IsString()
-  @MinLength(1)
-  displayName!: string;
-}
-
-class CreateAssignmentDto {
-  @IsUUID()
-  studentId!: string;
-
-  @IsUUID()
-  taskVersionId!: string;
-}
-
+@ApiTags('teaching')
+@ApiBadRequestResponse({ type: ApiErrorDto })
 @Controller()
 export class TeachingController {
   constructor(private readonly teaching: TeachingService) {}
 
   @Get('students')
-  async listStudents(@CurrentPrincipal() principal: AuthenticatedPrincipal) {
-    return this.teaching.listStudents(principal.userId);
+  @ApiOkResponse({ type: [StudentRelationshipResponseDto] })
+  async listStudents(@CurrentPrincipal() principal: AuthenticatedPrincipal): Promise<StudentRelationshipResponseDto[]> {
+    return (await this.teaching.listStudents(principal.userId)).map(StudentRelationshipResponseDto.from);
   }
 
   @Post('students')
-  async createStudent(@CurrentPrincipal() principal: AuthenticatedPrincipal, @Body() body: CreateStudentDto) {
-    return this.teaching.createStudent(principal.userId, body.displayName);
+  @ApiCreatedResponse({ type: StudentDto })
+  async createStudent(@CurrentPrincipal() principal: AuthenticatedPrincipal, @Body() body: CreateStudentDto): Promise<StudentDto> {
+    return StudentDto.from(await this.teaching.createStudent(principal.userId, body.displayName));
   }
 
   @Post('assignments')
-  async createAssignment(@CurrentPrincipal() principal: AuthenticatedPrincipal, @Body() body: CreateAssignmentDto) {
-    return this.teaching.createAssignment(principal.userId, body.studentId, body.taskVersionId);
+  @ApiCreatedResponse({ type: AssignmentDto })
+  async createAssignment(@CurrentPrincipal() principal: AuthenticatedPrincipal, @Body() body: CreateAssignmentDto): Promise<AssignmentDto> {
+    return AssignmentDto.from(await this.teaching.createAssignment(principal.userId, body.studentId, body.taskVersionId));
   }
 
   @Get('assignments')
-  async listAssignments(@CurrentPrincipal() principal: AuthenticatedPrincipal) {
-    const rows = await this.teaching.listAssignmentsForStudent(principal.userId);
-    return rows.map((row) => ({ ...row, taskVersion: this.teaching.toPublicTaskVersion(row.taskVersion) }));
-  }
-
-  @Get('students/:studentId/results')
-  async listResults(@CurrentPrincipal() principal: AuthenticatedPrincipal, @Param('studentId') studentId: string) {
-    return this.teaching.listResultsForTeacher(principal.userId, studentId);
+  @ApiOkResponse({ type: [StudentAssignmentResponseDto] })
+  async listAssignments(@CurrentPrincipal() principal: AuthenticatedPrincipal): Promise<StudentAssignmentResponseDto[]> {
+    return (await this.teaching.listAssignmentsForStudent(principal.userId)).map(StudentAssignmentResponseDto.from);
   }
 }

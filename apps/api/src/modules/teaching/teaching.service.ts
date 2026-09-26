@@ -1,18 +1,16 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { and, desc, eq } from 'drizzle-orm';
+import { ForbiddenException, Injectable } from '@nestjs/common';
+import { and, eq } from 'drizzle-orm';
 import { DatabaseService } from '../../infrastructure/database/database';
 import {
   assignments,
-  attempts,
-  externalIdentities,
-  results,
-  taskVersions,
   teacherStudentRelationships,
-  users,
 } from '../../infrastructure/database/schema';
 import { EducationService } from '../education/education.service';
 import { AuditService } from '../audit/audit.service';
 import { developmentAuthEnabled } from '../../common/config';
+import { IdentityService } from '../identity/identity.service';
+import { UsersService } from '../users/users.service';
+import type { AssignmentView, StudentAssignmentItem, StudentRelationshipItem, StudentView } from './teaching.types';
 
 @Injectable()
 export class TeachingService {
@@ -20,39 +18,44 @@ export class TeachingService {
     private readonly database: DatabaseService,
     private readonly education: EducationService,
     private readonly audit: AuditService,
+    private readonly identity: IdentityService,
+    private readonly users: UsersService,
   ) {}
 
-  toPublicTaskVersion(taskVersion: typeof taskVersions.$inferSelect) {
-    return this.education.toPublicTaskVersion(taskVersion);
-  }
-
   private async assertTeacher(userId: string): Promise<void> {
-    const [user] = await this.database.db.select().from(users).where(eq(users.id, userId)).limit(1);
+    const user = await this.users.findById(userId);
     if (!user || user.type !== 'teacher') throw new ForbiddenException('Teacher access required');
   }
 
-  async createStudent(teacherId: string, displayName: string) {
+  async createStudent(teacherId: string, displayName: string): Promise<StudentView> {
     await this.assertTeacher(teacherId);
-    const student = await this.database.db.transaction(async (tx) => {
-      const [student] = await tx.insert(users).values({ type: 'student', displayName }).returning();
-      if (!student) throw new Error('Student creation failed');
-      await tx.insert(teacherStudentRelationships).values({ teacherId, studentId: student.id });
+    const student = await this.database.transaction(async () => {
+      const student = await this.users.createStudent(displayName);
       if (developmentAuthEnabled()) {
-        await tx.insert(externalIdentities).values({ provider: 'development', subject: `dev-student-${student.id}`, userId: student.id });
+        await this.identity.createDevelopmentIdentity(student.id, `dev-student-${student.id}`);
       }
-      await this.audit.recordIn(tx, teacherId, 'student_relationship_created', 'student', student.id, { studentId: student.id });
+      await this.database.db.insert(teacherStudentRelationships).values({ teacherId, studentId: student.id });
+      await this.audit.record(teacherId, 'student_relationship_created', 'student', student.id, { studentId: student.id });
       return student;
     });
-    return student;
+    return { ...student, type: 'student' };
   }
 
-  async listStudents(teacherId: string) {
+  async listStudents(teacherId: string): Promise<StudentRelationshipItem[]> {
     await this.assertTeacher(teacherId);
-    return this.database.db
-      .select({ student: users, relationship: teacherStudentRelationships })
+    const relationships = await this.database.db
+      .select()
       .from(teacherStudentRelationships)
-      .innerJoin(users, eq(users.id, teacherStudentRelationships.studentId))
       .where(and(eq(teacherStudentRelationships.teacherId, teacherId), eq(teacherStudentRelationships.status, 'active')));
+    const rows = await Promise.all(relationships.map(async (relationship) => {
+      const student = await this.users.getById(relationship.studentId);
+      if (student.type !== 'student') return null;
+      return {
+        student,
+        relationship: { id: relationship.id, status: relationship.status, createdAt: relationship.createdAt },
+      };
+    }));
+    return rows.filter((row): row is StudentRelationshipItem => row !== null);
   }
 
   async assertManagesStudent(teacherId: string, studentId: string): Promise<void> {
@@ -64,7 +67,7 @@ export class TeachingService {
     if (!relationship) throw new ForbiddenException('Teacher does not manage this student');
   }
 
-  async createAssignment(teacherId: string, studentId: string, taskVersionId: string) {
+  async createAssignment(teacherId: string, studentId: string, taskVersionId: string): Promise<AssignmentView> {
     await this.assertManagesStudent(teacherId, studentId);
     await this.education.getPublishedTaskVersion(taskVersionId);
     return this.database.db.transaction(async (tx) => {
@@ -74,39 +77,38 @@ export class TeachingService {
       const [assignment] = await tx.insert(assignments).values({ teacherId, studentId, taskVersionId }).returning();
       if (!assignment) throw new Error('Assignment creation failed');
       await this.audit.recordIn(tx, teacherId, 'assignment_created', 'assignment', assignment.id, { studentId, taskVersionId });
-      return assignment;
+      return this.toAssignmentView(assignment);
     });
   }
 
-  async getAssignmentForStudent(studentId: string, assignmentId: string) {
-    const rows = await this.database.db
-      .select({ assignment: assignments, taskVersion: taskVersions })
+  async findAssignmentForStudent(studentId: string, assignmentId: string): Promise<AssignmentView | null> {
+    const [assignment] = await this.database.db
+      .select()
       .from(assignments)
-      .innerJoin(taskVersions, eq(taskVersions.id, assignments.taskVersionId))
       .where(and(eq(assignments.id, assignmentId), eq(assignments.studentId, studentId)))
       .limit(1);
-    const row = rows[0];
-    if (!row) throw new NotFoundException('Assignment not found');
-    if (row.taskVersion.status !== 'published') throw new ForbiddenException('Assignment task is not available');
-    return row;
+    return assignment ? this.toAssignmentView(assignment) : null;
   }
 
-  async listAssignmentsForStudent(studentId: string) {
-    return this.database.db
-      .select({ assignment: assignments, taskVersion: taskVersions })
-      .from(assignments)
-      .innerJoin(taskVersions, eq(taskVersions.id, assignments.taskVersionId))
-      .where(and(eq(assignments.studentId, studentId), eq(taskVersions.status, 'published')));
+  async listAssignmentsForStudent(studentId: string): Promise<StudentAssignmentItem[]> {
+    const rows = await this.database.db.select().from(assignments).where(eq(assignments.studentId, studentId));
+    const resolved = await Promise.all(rows.map(async (assignment) => {
+      const task = await this.education.findPublishedTaskVersion(assignment.taskVersionId);
+      if (!task) return null;
+      return {
+        assignment: this.toAssignmentView(assignment),
+        taskVersion: this.education.toPublicTaskVersion(task.taskVersion),
+      };
+    }));
+    return resolved.filter((item): item is StudentAssignmentItem => item !== null);
   }
 
-  async listResultsForTeacher(teacherId: string, studentId: string) {
-    await this.assertManagesStudent(teacherId, studentId);
-    return this.database.db
-      .select({ result: results, attempt: attempts, taskVersion: taskVersions })
-      .from(results)
-      .innerJoin(attempts, eq(attempts.id, results.attemptId))
-      .innerJoin(taskVersions, eq(taskVersions.id, attempts.taskVersionId))
-      .where(eq(attempts.studentId, studentId))
-      .orderBy(desc(results.evaluatedAt));
+  private toAssignmentView(assignment: typeof assignments.$inferSelect): AssignmentView {
+    return {
+      id: assignment.id,
+      studentId: assignment.studentId,
+      taskVersionId: assignment.taskVersionId,
+      createdAt: assignment.createdAt,
+    };
   }
 }

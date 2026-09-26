@@ -1,5 +1,6 @@
 import request from 'supertest';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
 import { HttpExceptionFilter } from '../src/common/http-exception.filter';
@@ -7,6 +8,7 @@ import { DatabaseService } from '../src/infrastructure/database/database';
 import { externalIdentities, taskVersions, users } from '../src/infrastructure/database/schema';
 import { fixtureIds } from '../src/infrastructure/database/seed';
 import { resetTestDatabase, testDatabase } from './postgres-test';
+import { requestIdMiddleware } from '../src/common/request-id.middleware';
 
 jest.setTimeout(120_000);
 
@@ -19,6 +21,7 @@ describe('teacher to student vertical slice (PostgreSQL)', () => {
     await resetTestDatabase(database);
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = moduleRef.createNestApplication();
+    app.use(requestIdMiddleware);
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
     app.useGlobalFilters(new HttpExceptionFilter());
     await app.init();
@@ -36,6 +39,15 @@ describe('teacher to student vertical slice (PostgreSQL)', () => {
   }
 
   it('authenticates, assigns, evaluates, replays, and lets the managing teacher review', async () => {
+    const openApi = SwaggerModule.createDocument(app, new DocumentBuilder().setTitle('Teachly API').setVersion('0.1.0').build());
+    const schemas = openApi.components?.schemas as Record<string, { properties?: Record<string, unknown> }>;
+    expect(openApi.paths['/attempts/{attemptId}/submissions']?.post?.responses?.['201']).toBeDefined();
+    expect(schemas.SubmitAnswerDto).toBeDefined();
+    expect(schemas.SubmitAnswerResponseDto).toBeDefined();
+    expect(schemas.TaskContentDto?.properties).not.toHaveProperty('correctOptionId');
+    expect(schemas.PublicTaskVersionDto?.properties).not.toHaveProperty('provenance');
+    expect(schemas.PublicTaskVersionDto?.properties).not.toHaveProperty('answerSchema');
+
     await request(app.getHttpServer()).get('/users/me').expect(401);
     const studentId = await provisionStudent('Student A');
     const assignment = await request(app.getHttpServer()).post('/assignments').set('x-dev-user', 'teacher')
@@ -45,10 +57,23 @@ describe('teacher to student vertical slice (PostgreSQL)', () => {
       .send({ taskVersionId: fixtureIds.version, assignmentId: assignment.body.id }).expect(201);
     const attemptId = started.body.attempt.id as string;
     expect(started.body.task.content.correctOptionId).toBeUndefined();
+    expect(started.body.task.provenance).toBeUndefined();
+    expect(started.body.task.answerSchema).toBeUndefined();
+    expect(started.body.attempt.studentId).toBeUndefined();
+
+    const invalidPath = await request(app.getHttpServer()).post('/attempts/not-a-uuid/submissions')
+      .set('x-dev-user', student).set('x-request-id', 'phase-2-contract-test')
+      .send({ idempotencyKey: 'invalid-path', answer: { optionId: 'a' } }).expect(400);
+    expect(invalidPath.headers['x-request-id']).toBe('phase-2-contract-test');
+    expect(invalidPath.body).toMatchObject({ code: 'BAD_REQUEST', message: 'Validation failed', requestId: 'phase-2-contract-test' });
+
+    await request(app.getHttpServer()).post(`/attempts/${attemptId}/submissions`).set('x-dev-user', student)
+      .send({ idempotencyKey: 'invalid-answer-shape', answer: {} }).expect(400);
 
     const submitted = await request(app.getHttpServer()).post(`/attempts/${attemptId}/submissions`).set('x-dev-user', student)
       .send({ idempotencyKey: 'one', answer: { optionId: 'a' } }).expect(201);
     expect(submitted.body.result).toMatchObject({ outcome: 'correct', score: 1, attemptId, evaluationRule: 'single-choice.v1' });
+    expect(submitted.body.result.details).toBeUndefined();
     const replay = await request(app.getHttpServer()).post(`/attempts/${attemptId}/submissions`).set('x-dev-user', student)
       .send({ idempotencyKey: 'one', answer: { optionId: 'a' } }).expect(201);
     expect(replay.body.result.id).toBe(submitted.body.result.id);

@@ -29,6 +29,13 @@
       "when": 1790269906361,
       "tag": "0003_result_submission_fk",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790270000000,
+      "tag": "0004_attempt_assignment_task_version_fk",
+      "breakpoints": true
     }
   ]
 }

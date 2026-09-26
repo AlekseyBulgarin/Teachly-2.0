@@ -12,6 +12,10 @@ export class IdentityService {
     @Inject(AUTHENTICATION_ADAPTER) private readonly adapter: AuthenticationAdapter,
   ) {}
 
+  async createDevelopmentIdentity(userId: string, subject: string): Promise<void> {
+    await this.database.db.insert(externalIdentities).values({ provider: 'development', subject, userId });
+  }
+
   async resolveRequest(request: { headers: Record<string, unknown> }): Promise<AuthenticatedPrincipal> {
     const external = await this.adapter.resolve(request);
     if (!external) throw new UnauthorizedException('Authentication required');
