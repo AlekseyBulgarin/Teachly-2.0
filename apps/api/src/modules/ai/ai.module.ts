@@ -13,10 +13,11 @@ import { FakeAiProvider } from './fake-ai-provider';
 import { OpenAiProvider } from './openai-provider';
 import { PartnerRemediationController } from './partner-remediation.controller';
 import { PartnerRemediationService } from './partner-remediation.service';
+import { AiTraceController } from './ai-trace.controller';
 
 @Module({
   imports: [AttemptsModule, AuditModule, EducationModule, ExternalUsersModule, IntegrationsModule, KnowledgeModule, LearningModule],
-  controllers: [PartnerRemediationController],
+  controllers: [PartnerRemediationController, AiTraceController],
   providers: [FakeAiProvider, OpenAiProvider, AiContextAssembler, AiRuntime, PartnerRemediationService, { provide: AI_PROVIDER, useExisting: OpenAiProvider }],
   exports: [AiRuntime, AiContextAssembler],
 })

@@ -280,6 +280,36 @@ export class KnowledgeService implements KnowledgeRetrievalPort {
     return this.retrieveApproved(input, true);
   }
 
+  async listStatus(context: TenantContext) {
+    await this.requireContext(context);
+    return this.database.db.select({
+      sourceId: knowledgeSources.id,
+      sourceName: knowledgeSources.name,
+      sourceType: knowledgeSources.sourceType,
+      sourceStatus: knowledgeSources.status,
+      sourceLicenseStatus: knowledgeSources.licenseStatus,
+      documentId: knowledgeDocuments.id,
+      documentTitle: knowledgeDocuments.title,
+      documentStatus: knowledgeDocuments.status,
+      versionId: knowledgeDocumentVersions.id,
+      version: knowledgeDocumentVersions.version,
+      versionStatus: knowledgeDocumentVersions.status,
+      licenseStatus: knowledgeDocumentVersions.licenseStatus,
+      externalAiPermission: knowledgeDocumentVersions.externalAiPermission,
+      approvedAt: knowledgeDocumentVersions.approvedAt,
+    }).from(knowledgeSources)
+      .innerJoin(knowledgeDocuments, and(
+        eq(knowledgeDocuments.sourceId, knowledgeSources.id),
+        eq(knowledgeDocuments.workspaceId, context.workspaceId),
+      ))
+      .innerJoin(knowledgeDocumentVersions, and(
+        eq(knowledgeDocumentVersions.documentId, knowledgeDocuments.id),
+        eq(knowledgeDocumentVersions.workspaceId, context.workspaceId),
+      ))
+      .where(eq(knowledgeSources.workspaceId, context.workspaceId))
+      .orderBy(desc(knowledgeDocumentVersions.createdAt));
+  }
+
   private async retrieveApproved(input: KnowledgeRetrievalInput, externalAiOnly: boolean): Promise<RetrievedKnowledgeExcerpt[]> {
     await this.requireContext(input.context);
     const limit = Math.min(Math.max(input.limit ?? 20, 1), 100);

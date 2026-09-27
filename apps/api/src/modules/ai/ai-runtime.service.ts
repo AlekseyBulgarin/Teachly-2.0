@@ -136,6 +136,27 @@ export class AiRuntime {
     }
   }
 
+  async listRecent(workspaceId: string) {
+    const rows = await this.database.db.select().from(aiRequests)
+      .where(eq(aiRequests.workspaceId, workspaceId))
+      .orderBy(aiRequests.createdAt)
+      .limit(20);
+    return rows.reverse().map((row) => ({
+      requestId: row.id,
+      capability: row.capability,
+      status: row.status,
+      provider: row.provider,
+      model: row.model,
+      latencyMs: row.latencyMs,
+      knowledgeReferences: row.knowledgeReferences,
+      outcome: row.structuredOutput
+        ? (row.structuredOutput.abstained ? 'abstained' : 'completed')
+        : null,
+      createdAt: row.createdAt,
+      completedAt: row.completedAt,
+    }));
+  }
+
   private async findExisting(input: AiExecutionInput) {
     const [request] = await this.database.db.select().from(aiRequests).where(and(
       eq(aiRequests.workspaceId, input.context.workspaceId),

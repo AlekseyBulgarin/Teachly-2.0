@@ -61,6 +61,15 @@ export class ExternalUsersService {
     return externalUser;
   }
 
+  async list(context: TenantContext): Promise<ExternalUserView[]> {
+    await this.integrations.requireActiveTenantContext(context);
+    return this.database.db.select().from(externalUsers).where(and(
+      eq(externalUsers.organizationId, context.organizationId),
+      eq(externalUsers.workspaceId, context.workspaceId),
+      eq(externalUsers.integrationId, context.integrationId),
+    ));
+  }
+
   async resolveActiveLearner(context: TenantContext, externalUserId: string): Promise<ExternalUserView & { learnerId: string }> {
     await this.integrations.requireActiveTenantContext(context);
     const externalUser = await this.findInContext(context, externalUserId);

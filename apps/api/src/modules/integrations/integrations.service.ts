@@ -131,6 +131,11 @@ export class IntegrationsService {
     if (integration.id !== context.integrationId) throw new NotFoundException('Active integration not found');
   }
 
+  async getCurrent(context: TenantContext): Promise<IntegrationView> {
+    await this.requireActiveTenantContext(context);
+    return this.requireActiveIntegration(context.organizationId, context.workspaceId, context.integrationId);
+  }
+
   private async requireActiveIntegration(
     organizationId: string,
     workspaceId: string,

@@ -7,3 +7,5 @@ coverage/
 *.log
 .DS_Store
 .neon
+.next/
+*.tsbuildinfo

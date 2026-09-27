@@ -51,4 +51,11 @@ export class ExternalUsersController {
   ): Promise<ExternalUserResponseDto> {
     return ExternalUserResponseDto.from(await this.externalUsers.get(context, id));
   }
+
+  @Get()
+  @RequireIntegrationScopes('external_users:read')
+  @ApiOkResponse({ type: [ExternalUserResponseDto] })
+  async list(@CurrentTenantContext() context: TenantContext): Promise<ExternalUserResponseDto[]> {
+    return (await this.externalUsers.list(context)).map(ExternalUserResponseDto.from);
+  }
 }
