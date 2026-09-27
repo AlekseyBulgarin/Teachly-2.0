@@ -20,5 +20,5 @@ export async function resetTestDatabase(database: DatabaseService): Promise<void
   await database.pool.query('DROP SCHEMA IF EXISTS public CASCADE');
   await database.pool.query('CREATE SCHEMA public');
   await applyMigrations(database);
-  await seedDevelopmentFixtures(database);
+  await seedDevelopmentFixtures(database, { includeDemoRecords: false });
 }

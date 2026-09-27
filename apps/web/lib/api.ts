@@ -35,8 +35,10 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return body as T;
 }
 
+type StudentRelationshipRow = { student: Student; relationship: { id: string; status: string; createdAt: string } };
+
 export const api = {
-  students: () => request<Student[]>('students'),
+  students: () => request<StudentRelationshipRow[]>('students').then((rows) => rows.map((row) => row.student)),
   results: (studentId: string) => request<AttemptResult[]>(`students/${studentId}/results`),
   task: (taskVersionId: string) => request<Task>(`tasks/published/${taskVersionId}`),
   learningState: (studentId: string, skillId: string) => request<LearningState>(`students/${studentId}/learning-state?skillId=${skillId}`),

@@ -25,8 +25,12 @@ export const fixtureIds = {
 
 export const demoApiKey = 'tlk_00000000000000dd.teachly-demo-key';
 
-export async function seedDevelopmentFixtures(database: DatabaseService): Promise<void> {
+export async function seedDevelopmentFixtures(
+  database: DatabaseService,
+  options: { includeDemoRecords?: boolean } = {},
+): Promise<void> {
   if (!developmentAuthEnabled()) throw new Error('Development fixture seeding requires explicitly enabled development authentication');
+  const includeDemoRecords = options.includeDemoRecords ?? true;
   const fixture = buildInternalFixture();
   await database.db.transaction(async (tx) => {
     await tx.insert(users).values([
@@ -69,6 +73,8 @@ export async function seedDevelopmentFixtures(database: DatabaseService): Promis
       courseId: fixtureIds.course, topicId: fixtureIds.topic, skillId: fixtureIds.skill, ...fixture.task,
     }).onConflictDoNothing();
     await tx.insert(taskVersions).values({ id: fixtureIds.version, taskId: fixtureIds.task, workspaceId: fixtureIds.workspace, ...fixture.taskVersion }).onConflictDoNothing();
+    if (!includeDemoRecords) return;
+
     await tx.insert(integrations).values({
       id: fixtureIds.integration,
       organizationId: fixtureIds.organization,

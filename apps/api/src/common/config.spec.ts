@@ -12,7 +12,20 @@ describe('environment validation', () => {
 
   it('rejects development authentication in production before startup', () => {
     expect(() => requiredEnvironment({ ...base, NODE_ENV: 'production' })).toThrow('cannot be enabled in production');
-    expect(() => requiredEnvironment({ ...base, NODE_ENV: 'production', DEV_AUTH_ENABLED: 'false' })).not.toThrow();
+    expect(() => requiredEnvironment({
+      ...base,
+      NODE_ENV: 'production',
+      DEV_AUTH_ENABLED: 'false',
+      OPENAI_API_KEY: 'test-openai-key',
+    })).not.toThrow();
+  });
+
+  it('requires OpenAI configuration in production', () => {
+    expect(() => requiredEnvironment({
+      ...base,
+      NODE_ENV: 'production',
+      DEV_AUTH_ENABLED: 'false',
+    })).toThrow('OPENAI_API_KEY is required in production');
   });
 
   it('fails closed without an explicit environment', () => {

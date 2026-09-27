@@ -19,7 +19,12 @@ export class DatabaseService implements OnModuleDestroy {
     if (!url) {
       throw new Error('DATABASE_URL is required');
     }
-    this.pool = new Pool({ connectionString: url });
+    this.pool = new Pool({
+      connectionString: url,
+      connectionTimeoutMillis: 30_000,
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 10_000,
+    });
     this.rootDb = drizzle(this.pool, { schema });
   }
 

@@ -18,7 +18,13 @@ import { AiTraceController } from './ai-trace.controller';
 @Module({
   imports: [AttemptsModule, AuditModule, EducationModule, ExternalUsersModule, IntegrationsModule, KnowledgeModule, LearningModule],
   controllers: [PartnerRemediationController, AiTraceController],
-  providers: [FakeAiProvider, OpenAiProvider, AiContextAssembler, AiRuntime, PartnerRemediationService, { provide: AI_PROVIDER, useExisting: OpenAiProvider }],
+  providers: [FakeAiProvider, OpenAiProvider, AiContextAssembler, AiRuntime, PartnerRemediationService, {
+    provide: AI_PROVIDER,
+    useFactory: (fake: FakeAiProvider, openai: OpenAiProvider) => (
+      process.env.NODE_ENV === 'production' || process.env.OPENAI_API_KEY ? openai : fake
+    ),
+    inject: [FakeAiProvider, OpenAiProvider],
+  }],
   exports: [AiRuntime, AiContextAssembler],
 })
 export class AiModule {}

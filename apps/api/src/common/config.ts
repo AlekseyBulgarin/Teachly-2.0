@@ -34,6 +34,7 @@ export function requiredEnvironment(env: NodeJS.ProcessEnv = process.env): void 
   const errors = validateSync(config, { skipMissingProperties: false });
   if (errors.length > 0) throw new Error(`Invalid environment: ${errors.map((error) => error.property).join(', ')}`);
   if (env.DEV_AUTH_ENABLED === 'true' && env.NODE_ENV === 'production') throw new Error('Development authentication cannot be enabled in production');
+  if (env.NODE_ENV === 'production' && !env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY is required in production');
   try {
     const url = new URL(config.DATABASE_URL);
     if (!['postgres:', 'postgresql:'].includes(url.protocol) || !url.hostname || !url.pathname.slice(1)) throw new Error();
