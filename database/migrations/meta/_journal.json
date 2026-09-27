@@ -71,6 +71,20 @@
       "when": 1790442484746,
       "tag": "0009_mean_changeling",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790445000000,
+      "tag": "0010_ai_runtime_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790449350319,
+      "tag": "0011_grounded_remediation",
+      "breakpoints": true
     }
   ]
 }

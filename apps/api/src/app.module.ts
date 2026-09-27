@@ -11,6 +11,7 @@ import { IntegrationsModule } from './modules/integrations/integrations.module';
 import { LearningModule } from './modules/learning/learning.module';
 import { TenancyModule } from './modules/tenancy/tenancy.module';
 import { KnowledgeModule } from './modules/knowledge/knowledge.module';
+import { AiModule } from './modules/ai/ai.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { KnowledgeModule } from './modules/knowledge/knowledge.module';
     ExternalUsersModule,
     LearningModule,
     KnowledgeModule,
+    AiModule,
   ],
   controllers: [HealthController],
 })

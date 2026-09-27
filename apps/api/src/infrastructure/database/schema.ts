@@ -41,6 +41,7 @@ export const knowledgeExternalAiPermissionEnum = pgEnum('knowledge_external_ai_p
   'allowed',
   'prohibited',
 ]);
+export const aiRequestStatusEnum = pgEnum('ai_request_status', ['started', 'succeeded', 'failed']);
 
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -587,6 +588,69 @@ export const knowledgeChunks = pgTable('knowledge_chunks', {
   chunkOrdinalUnique: uniqueIndex('knowledge_chunks_version_ordinal_unique').on(table.workspaceId, table.documentVersionId, table.ordinal),
 }));
 
+export const aiRequests = pgTable('ai_requests', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  workspaceId: uuid('workspace_id').notNull().references(() => workspaces.id, { onDelete: 'restrict' }),
+  learnerId: uuid('learner_id').references(() => users.id, { onDelete: 'set null' }),
+  capability: text('capability').notNull(),
+  idempotencyKey: text('idempotency_key').notNull(),
+  requestHash: text('request_hash').notNull(),
+  policyVersion: text('policy_version').notNull(),
+  promptVersion: text('prompt_version').notNull(),
+  status: aiRequestStatusEnum('status').default('started').notNull(),
+  provider: text('provider'),
+  model: text('model'),
+  contextReferences: jsonb('context_references').$type<Array<{ type: string; id: string }>>().notNull(),
+  knowledgeReferences: jsonb('knowledge_references').$type<string[]>().notNull(),
+  structuredOutput: jsonb('structured_output').$type<Record<string, unknown>>(),
+  failureCategory: text('failure_category'),
+  failureMessage: text('failure_message'),
+  latencyMs: integer('latency_ms'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  completedAt: timestamp('completed_at', { withTimezone: true }),
+}, (table) => ({
+  requestWorkspaceUnique: uniqueIndex('ai_requests_id_workspace_unique').on(table.id, table.workspaceId),
+  requestIdempotencyUnique: uniqueIndex('ai_requests_idempotency_unique').on(table.workspaceId, table.capability, table.idempotencyKey),
+  requestWorkspaceStatusIndex: index('ai_requests_workspace_status_idx').on(table.workspaceId, table.status, table.createdAt),
+}));
+
+export const aiUsageRecords = pgTable('ai_usage_records', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  workspaceId: uuid('workspace_id').notNull(),
+  aiRequestId: uuid('ai_request_id').notNull(),
+  provider: text('provider').notNull(),
+  model: text('model').notNull(),
+  inputTokens: integer('input_tokens'),
+  outputTokens: integer('output_tokens'),
+  totalTokens: integer('total_tokens'),
+  estimatedCostMicros: integer('estimated_cost_micros'),
+  metadata: jsonb('metadata').$type<Record<string, unknown>>(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  usageRequestWorkspaceFk: foreignKey({
+    name: 'ai_usage_records_request_workspace_fk',
+    columns: [table.aiRequestId, table.workspaceId],
+    foreignColumns: [aiRequests.id, aiRequests.workspaceId],
+  }).onDelete('cascade'),
+  usageRequestUnique: uniqueIndex('ai_usage_records_request_unique').on(table.workspaceId, table.aiRequestId),
+}));
+
+export const aiEvaluationRecords = pgTable('ai_evaluation_records', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  workspaceId: uuid('workspace_id').notNull(),
+  aiRequestId: uuid('ai_request_id').notNull(),
+  evaluatorVersion: text('evaluator_version').notNull(),
+  status: text('status').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  evaluationRequestWorkspaceFk: foreignKey({
+    name: 'ai_evaluation_records_request_workspace_fk',
+    columns: [table.aiRequestId, table.workspaceId],
+    foreignColumns: [aiRequests.id, aiRequests.workspaceId],
+  }).onDelete('cascade'),
+  evaluationRequestUnique: uniqueIndex('ai_evaluation_records_request_unique').on(table.workspaceId, table.aiRequestId),
+}));
+
 export type User = typeof users.$inferSelect;
 export type TaskVersion = typeof taskVersions.$inferSelect;
 export type Attempt = typeof attempts.$inferSelect;
@@ -598,3 +662,6 @@ export type KnowledgeDocument = typeof knowledgeDocuments.$inferSelect;
 export type KnowledgeRawImport = typeof knowledgeRawImports.$inferSelect;
 export type KnowledgeDocumentVersion = typeof knowledgeDocumentVersions.$inferSelect;
 export type KnowledgeChunk = typeof knowledgeChunks.$inferSelect;
+export type AiRequest = typeof aiRequests.$inferSelect;
+export type AiUsageRecord = typeof aiUsageRecords.$inferSelect;
+export type AiEvaluationRecord = typeof aiEvaluationRecords.$inferSelect;
