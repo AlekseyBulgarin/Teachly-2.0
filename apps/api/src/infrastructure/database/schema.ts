@@ -161,6 +161,7 @@ export const externalUsers = pgTable('external_users', {
   organizationId: uuid('organization_id').notNull(),
   workspaceId: uuid('workspace_id').notNull(),
   integrationId: uuid('integration_id').notNull(),
+  learnerId: uuid('learner_id').references(() => users.id, { onDelete: 'restrict' }),
   externalUserId: text('external_user_id').notNull(),
   status: externalUserStatusEnum('status').default('active').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -173,6 +174,9 @@ export const externalUsers = pgTable('external_users', {
   }).onDelete('restrict'),
   externalIdentityUnique: uniqueIndex('external_users_workspace_integration_external_unique')
     .on(table.workspaceId, table.integrationId, table.externalUserId),
+  learnerMappingUnique: uniqueIndex('external_users_workspace_integration_learner_unique')
+    .on(table.workspaceId, table.integrationId, table.learnerId)
+    .where(sql`${table.learnerId} IS NOT NULL`),
 }));
 
 export const teacherStudentRelationships = pgTable(

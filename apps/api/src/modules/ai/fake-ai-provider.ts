@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import type { AiProvider, AiProviderRequest, AiProviderResponse } from './ai-provider';
 import type { GroundedRemediationOutput } from './ai.types';
 
@@ -10,7 +10,11 @@ export type FakeAiProviderBehavior = {
 
 @Injectable()
 export class FakeAiProvider implements AiProvider {
-  constructor(private readonly behavior: FakeAiProviderBehavior = {}) {}
+  constructor(@Optional() private behavior: FakeAiProviderBehavior = {}) {}
+
+  setBehavior(behavior: FakeAiProviderBehavior): void {
+    this.behavior = behavior;
+  }
 
   async complete(request: AiProviderRequest, signal: AbortSignal): Promise<AiProviderResponse> {
     if (signal.aborted) throw new Error('AI provider request aborted');

@@ -36,6 +36,15 @@ export class ExternalUserResponseDto {
   updatedAt!: Date;
 
   static from(externalUser: ExternalUserView): ExternalUserResponseDto {
-    return { ...externalUser };
+    return {
+      id: externalUser.id,
+      organizationId: externalUser.organizationId,
+      workspaceId: externalUser.workspaceId,
+      integrationId: externalUser.integrationId,
+      externalUserId: externalUser.externalUserId,
+      status: externalUser.status,
+      createdAt: externalUser.createdAt,
+      updatedAt: externalUser.updatedAt,
+    };
   }
 }

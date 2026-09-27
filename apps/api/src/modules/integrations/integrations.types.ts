@@ -1,4 +1,4 @@
-export const integrationScopes = ['external_users:read', 'external_users:write'] as const;
+export const integrationScopes = ['external_users:read', 'external_users:write', 'remediation:write'] as const;
 export type IntegrationScope = typeof integrationScopes[number];
 
 export type TenantContext = {

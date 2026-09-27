@@ -31,3 +31,11 @@ export const OptionalTenantContext = createParamDecorator(
     return request.tenantContext;
   },
 );
+
+export const CurrentRequestId = createParamDecorator(
+  (_data: unknown, context: ExecutionContext): string => {
+    const request = context.switchToHttp().getRequest<TeachlyRequest>();
+    if (!request.requestId) throw new Error('Request ID is missing');
+    return request.requestId;
+  },
+);

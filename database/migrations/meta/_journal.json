@@ -85,6 +85,13 @@
       "when": 1790449350319,
       "tag": "0011_grounded_remediation",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790451000000,
+      "tag": "0012_partner_external_learner",
+      "breakpoints": true
     }
   ]
 }

@@ -19,7 +19,11 @@ const POLICY_VERSION = 'ai-foundation.v1';
 const PROMPT_VERSION = 'grounded-remediation.v1';
 
 export class AiRuntimeError extends Error {
-  constructor(public readonly category: 'invalid_input' | 'in_progress' | 'provider_failure' | 'timeout' | 'invalid_output', message: string) {
+  constructor(
+    public readonly category: 'invalid_input' | 'idempotency_conflict' | 'in_progress' | 'provider_failure' | 'timeout' | 'invalid_output',
+    message: string,
+    public readonly requestId?: string,
+  ) {
     super(message);
   }
 }
@@ -39,11 +43,11 @@ export class AiRuntime {
     const requestHash = this.hash({ capability: input.capability, learnerId: input.learnerId, context });
     const existing = await this.findExisting(input);
     if (existing) {
-      if (existing.requestHash !== requestHash) throw new AiRuntimeError('invalid_input', 'AI idempotency key conflict');
-      if (existing.status === 'started') throw new AiRuntimeError('in_progress', 'AI request is already in progress');
-      if (existing.status === 'failed') throw new AiRuntimeError('provider_failure', existing.failureMessage ?? 'AI request failed');
+      if (existing.requestHash !== requestHash) throw new AiRuntimeError('idempotency_conflict', 'AI idempotency key conflict', existing.id);
+      if (existing.status === 'started') throw new AiRuntimeError('in_progress', 'AI request is already in progress', existing.id);
+      if (existing.status === 'failed') throw new AiRuntimeError('provider_failure', existing.failureMessage ?? 'AI request failed', existing.id);
       if (!existing.structuredOutput || !existing.provider || !existing.model) {
-        throw new AiRuntimeError('invalid_output', 'AI request has no replayable output');
+        throw new AiRuntimeError('invalid_output', 'AI request has no replayable output', existing.id);
       }
       return {
         requestId: existing.id,
@@ -126,7 +130,7 @@ export class AiRuntime {
         }).where(and(eq(aiRequests.id, request.id), eq(aiRequests.workspaceId, input.context.workspaceId)));
         await this.audit.record(null, 'ai_request_failed', 'ai_request', request.id, { category }, input.context.workspaceId);
       });
-      throw new AiRuntimeError(category, message);
+      throw new AiRuntimeError(category, message, request.id);
     } finally {
       clearTimeout(timeout);
     }

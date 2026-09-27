@@ -3,6 +3,7 @@ export type ExternalUserView = {
   organizationId: string;
   workspaceId: string;
   integrationId: string;
+  learnerId: string | null;
   externalUserId: string;
   status: 'active' | 'inactive';
   createdAt: Date;
