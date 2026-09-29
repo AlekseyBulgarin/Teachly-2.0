@@ -92,6 +92,34 @@
       "when": 1790451000000,
       "tag": "0012_partner_external_learner",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790590056223,
+      "tag": "0013_chemical_wasp",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1790590208065,
+      "tag": "0014_luxuriant_silver_surfer",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1790603351727,
+      "tag": "0015_young_enchantress",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1790609865967,
+      "tag": "0016_panoramic_alex_wilder",
+      "breakpoints": true
     }
   ]
 }

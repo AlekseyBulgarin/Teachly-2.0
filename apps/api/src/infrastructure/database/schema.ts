@@ -20,7 +20,7 @@ export const taskVersionStatusEnum = pgEnum('task_version_status', ['draft', 'pu
 export const attemptStatusEnum = pgEnum('attempt_status', ['started', 'submitted']);
 export const resultOutcomeEnum = pgEnum('result_outcome', ['correct', 'incorrect', 'invalid']);
 export const tenantStatusEnum = pgEnum('tenant_status', ['active', 'archived']);
-export const membershipRoleEnum = pgEnum('membership_role', ['organization_admin', 'workspace_admin', 'educator']);
+export const membershipRoleEnum = pgEnum('membership_role', ['organization_admin', 'workspace_admin', 'educator', 'content_editor']);
 export const membershipStatusEnum = pgEnum('membership_status', ['active', 'revoked']);
 export const integrationStatusEnum = pgEnum('integration_status', ['active', 'disabled']);
 export const apiKeyStatusEnum = pgEnum('api_key_status', ['active', 'revoked']);
@@ -227,13 +227,39 @@ export const skills = pgTable('skills', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
+export const taskSources = pgTable('task_sources', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id').notNull(),
+  workspaceId: uuid('workspace_id').notNull(),
+  integrationId: uuid('integration_id'),
+  name: text('name').notNull(),
+  sourceType: text('source_type').notNull(),
+  mode: text('mode').notNull(),
+  status: text('status').default('active').notNull(),
+  metadata: jsonb('metadata').$type<{ description?: string; provider?: string }>().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  workspaceFk: foreignKey({ name: 'task_sources_workspace_fk', columns: [table.workspaceId, table.organizationId],
+    foreignColumns: [workspaces.id, workspaces.organizationId] }).onDelete('restrict'),
+  integrationFk: foreignKey({ name: 'task_sources_integration_fk',
+    columns: [table.organizationId, table.workspaceId, table.integrationId],
+    foreignColumns: [integrations.organizationId, integrations.workspaceId, integrations.id] }).onDelete('restrict'),
+  tenantUnique: uniqueIndex('task_sources_id_workspace_unique').on(table.id, table.workspaceId),
+  sourceTenantUnique: uniqueIndex('task_sources_id_org_workspace_unique').on(table.id, table.organizationId, table.workspaceId),
+  modeCheck: check('task_sources_mode_check', sql`${table.mode} IN ('imported_snapshot', 'external_reference')`),
+  statusCheck: check('task_sources_status_check', sql`${table.status} IN ('active', 'disabled')`),
+}));
+
 export const tasks = pgTable('tasks', {
   id: uuid('id').defaultRandom().primaryKey(),
   workspaceId: uuid('workspace_id').notNull(),
-  subjectId: uuid('subject_id').notNull().references(() => subjects.id, { onDelete: 'restrict' }),
-  courseId: uuid('course_id').notNull().references(() => courses.id, { onDelete: 'restrict' }),
-  topicId: uuid('topic_id').notNull().references(() => topics.id, { onDelete: 'restrict' }),
-  skillId: uuid('skill_id').notNull().references(() => skills.id, { onDelete: 'restrict' }),
+  subjectId: uuid('subject_id').references(() => subjects.id, { onDelete: 'restrict' }),
+  courseId: uuid('course_id').references(() => courses.id, { onDelete: 'restrict' }),
+  topicId: uuid('topic_id').references(() => topics.id, { onDelete: 'restrict' }),
+  skillId: uuid('skill_id').references(() => skills.id, { onDelete: 'restrict' }),
+  taskSourceId: uuid('task_source_id'),
+  externalTaskId: text('external_task_id'),
   sourceKind: text('source_kind').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
@@ -243,6 +269,57 @@ export const tasks = pgTable('tasks', {
     foreignColumns: [courses.id, courses.workspaceId],
   }).onDelete('restrict'),
   taskWorkspaceUnique: uniqueIndex('tasks_id_workspace_unique').on(table.id, table.workspaceId),
+  sourceWorkspaceFk: foreignKey({ name: 'tasks_source_workspace_fk', columns: [table.taskSourceId, table.workspaceId],
+    foreignColumns: [taskSources.id, taskSources.workspaceId] }).onDelete('restrict'),
+  externalIdentityUnique: uniqueIndex('tasks_source_external_unique').on(table.workspaceId, table.taskSourceId, table.externalTaskId)
+    .where(sql`${table.taskSourceId} IS NOT NULL`),
+  sourceIdentityCheck: check('tasks_source_identity_check', sql`(${table.taskSourceId} IS NULL) = (${table.externalTaskId} IS NULL)`),
+}));
+
+export const taskSourceSnapshots = pgTable('task_source_snapshots', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  workspaceId: uuid('workspace_id').notNull(),
+  taskId: uuid('task_id').notNull(),
+  taskSourceId: uuid('task_source_id').notNull(),
+  externalTaskId: text('external_task_id').notNull(),
+  idempotencyKey: text('idempotency_key').notNull(),
+  rawPayload: jsonb('raw_payload').$type<Record<string, unknown>>().notNull(),
+  checksum: text('checksum').notNull(),
+  importedByUserId: uuid('imported_by_user_id').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  taskWorkspaceFk: foreignKey({ name: 'task_snapshots_task_workspace_fk', columns: [table.taskId, table.workspaceId],
+    foreignColumns: [tasks.id, tasks.workspaceId] }).onDelete('restrict'),
+  sourceWorkspaceFk: foreignKey({ name: 'task_snapshots_source_workspace_fk', columns: [table.taskSourceId, table.workspaceId],
+    foreignColumns: [taskSources.id, taskSources.workspaceId] }).onDelete('restrict'),
+  taskChecksumUnique: uniqueIndex('task_snapshots_task_checksum_unique').on(table.taskId, table.checksum),
+  sourceIdempotencyUnique: uniqueIndex('task_snapshots_source_idempotency_unique').on(table.taskSourceId, table.workspaceId, table.idempotencyKey),
+  lineageUnique: uniqueIndex('task_snapshots_id_task_workspace_unique').on(table.id, table.taskId, table.workspaceId),
+}));
+
+export const taskCurriculumMappings = pgTable('task_curriculum_mappings', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id').notNull(),
+  workspaceId: uuid('workspace_id').notNull(),
+  taskSourceId: uuid('task_source_id').notNull(),
+  mappingType: text('mapping_type').notNull(),
+  externalValue: text('external_value').notNull(),
+  subjectId: uuid('subject_id').references(() => subjects.id, { onDelete: 'restrict' }),
+  courseId: uuid('course_id'),
+  topicId: uuid('topic_id').references(() => topics.id, { onDelete: 'restrict' }),
+  skillId: uuid('skill_id').references(() => skills.id, { onDelete: 'restrict' }),
+  createdByUserId: uuid('created_by_user_id').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  sourceTenantFk: foreignKey({ name: 'task_curriculum_mappings_source_tenant_fk',
+    columns: [table.taskSourceId, table.organizationId, table.workspaceId],
+    foreignColumns: [taskSources.id, taskSources.organizationId, taskSources.workspaceId] }).onDelete('restrict'),
+  courseWorkspaceFk: foreignKey({ name: 'task_curriculum_mappings_course_workspace_fk', columns: [table.courseId, table.workspaceId],
+    foreignColumns: [courses.id, courses.workspaceId] }).onDelete('restrict'),
+  externalMappingUnique: uniqueIndex('task_curriculum_mappings_external_unique')
+    .on(table.workspaceId, table.taskSourceId, table.mappingType, table.externalValue),
+  mappingTypeCheck: check('task_curriculum_mappings_type_check', sql`${table.mappingType} IN ('subject', 'course', 'topic', 'skill', 'category', 'section')`),
 }));
 
 export const taskVersions = pgTable(
@@ -254,15 +331,20 @@ export const taskVersions = pgTable(
     version: integer('version').notNull(),
     taskType: text('task_type').notNull(),
     status: taskVersionStatusEnum('status').default('draft').notNull(),
-    content: jsonb('content').$type<{ statement: string; options: Array<{ id: string; label: string }>; correctOptionId: string }>().notNull(),
-    answerSchema: jsonb('answer_schema').$type<{ type: 'single-choice'; required: true }>().notNull(),
+    content: jsonb('content').$type<{
+      statement: string; options: Array<{ id: string; label: string }>; correctOptionId?: string;
+      title?: string; blocks?: Array<Record<string, unknown>>; attachments?: Array<{ reference: string; label?: string }>;
+      metadata?: Record<string, string | number | boolean>;
+    }>().notNull(),
+    answerSchema: jsonb('answer_schema').$type<{ type: string; required?: boolean; answer?: unknown }>().notNull(),
     evaluationRule: text('evaluation_rule').notNull(),
     provenance: jsonb('provenance').$type<{
-      sourceKind: 'internal_fixture';
-      sourceIdentifier: string;
-      licenseStatus: 'development_only';
-      fixtureVersion: string;
+      sourceKind: string; sourceIdentifier: string; licenseStatus?: string; fixtureVersion?: string;
+      taskSourceId?: string; externalTaskId?: string; rawSnapshotId?: string; edited?: boolean;
+      externalCurriculum?: Partial<Record<'subject' | 'course' | 'topic' | 'skill' | 'category' | 'section', string>>;
     }>().notNull(),
+    rawSnapshotId: uuid('raw_snapshot_id'),
+    publishedByUserId: uuid('published_by_user_id').references(() => users.id, { onDelete: 'set null' }),
     publishedAt: timestamp('published_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
@@ -274,6 +356,9 @@ export const taskVersions = pgTable(
       foreignColumns: [tasks.id, tasks.workspaceId],
     }).onDelete('restrict'),
     taskVersionWorkspaceUnique: uniqueIndex('task_versions_id_workspace_unique').on(table.id, table.workspaceId),
+    snapshotLineageFk: foreignKey({ name: 'task_versions_snapshot_lineage_fk',
+      columns: [table.rawSnapshotId, table.taskId, table.workspaceId],
+      foreignColumns: [taskSourceSnapshots.id, taskSourceSnapshots.taskId, taskSourceSnapshots.workspaceId] }).onDelete('restrict'),
     publishedDate: check('task_versions_published_date', sql`${table.status} <> 'published' OR ${table.publishedAt} IS NOT NULL`),
   }),
 );
@@ -333,7 +418,8 @@ export const submissions = pgTable(
     attemptId: uuid('attempt_id').notNull().references(() => attempts.id, { onDelete: 'cascade' }),
     workspaceId: uuid('workspace_id').notNull(),
     idempotencyKey: text('idempotency_key').notNull(),
-    answer: jsonb('answer').$type<{ optionId: string }>().notNull(),
+    answer: jsonb('answer').$type<Record<string, unknown>>().notNull(),
+    reviewStatus: text('review_status').default('evaluated').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => ({
@@ -350,6 +436,7 @@ export const submissions = pgTable(
       table.attemptId,
       table.idempotencyKey,
     ),
+    reviewStatusCheck: check('submissions_review_status_check', sql`${table.reviewStatus} IN ('evaluated', 'pending_manual_review')`),
   }),
 );
 
@@ -362,7 +449,10 @@ export const results = pgTable('results', {
   outcome: resultOutcomeEnum('outcome').notNull(),
   isCorrect: boolean('is_correct').notNull(),
   score: integer('score').notNull(),
-  details: jsonb('details').$type<{ selectedOptionId?: string; correctOptionId?: string; reason?: string }>(),
+  details: jsonb('details').$type<{
+    selectedOptionId?: string; correctOptionId?: string; reason?: string;
+    learningHandoff?: 'recorded' | 'skipped_skill_unmapped';
+  }>(),
   evaluatedAt: timestamp('evaluated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   attemptWorkspaceFk: foreignKey({
@@ -375,6 +465,123 @@ export const results = pgTable('results', {
     columns: [table.attemptId, table.submissionId, table.workspaceId],
     foreignColumns: [submissions.attemptId, submissions.id, submissions.workspaceId],
   }).onDelete('restrict'),
+}));
+
+export const externalResultObservations = pgTable('external_result_observations', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id').notNull(),
+  workspaceId: uuid('workspace_id').notNull(),
+  integrationId: uuid('integration_id').notNull(),
+  learnerId: uuid('learner_id').notNull().references(() => users.id, { onDelete: 'restrict' }),
+  externalLearnerId: text('external_learner_id').notNull(),
+  taskSourceId: uuid('task_source_id').notNull(),
+  externalTaskId: text('external_task_id').notNull(),
+  taskVersionId: uuid('task_version_id').notNull(),
+  idempotencyKey: text('idempotency_key').notNull(),
+  outcome: resultOutcomeEnum('outcome'),
+  score: integer('score'),
+  observedAt: timestamp('observed_at', { withTimezone: true }).notNull(),
+  sourceMetadata: jsonb('source_metadata').$type<Record<string, unknown>>().notNull(),
+  learningHandoff: text('learning_handoff').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  integrationTenantFk: foreignKey({ name: 'external_result_observations_integration_tenant_fk',
+    columns: [table.organizationId, table.workspaceId, table.integrationId],
+    foreignColumns: [integrations.organizationId, integrations.workspaceId, integrations.id] }).onDelete('restrict'),
+  sourceWorkspaceFk: foreignKey({ name: 'external_result_observations_source_workspace_fk', columns: [table.taskSourceId, table.workspaceId],
+    foreignColumns: [taskSources.id, taskSources.workspaceId] }).onDelete('restrict'),
+  taskVersionWorkspaceFk: foreignKey({ name: 'external_result_observations_task_version_workspace_fk', columns: [table.taskVersionId, table.workspaceId],
+    foreignColumns: [taskVersions.id, taskVersions.workspaceId] }).onDelete('restrict'),
+  idempotencyUnique: uniqueIndex('external_result_observations_idempotency_unique')
+    .on(table.workspaceId, table.integrationId, table.idempotencyKey),
+  workspaceUnique: uniqueIndex('external_result_observations_id_workspace_unique').on(table.id, table.workspaceId),
+  handoffCheck: check('external_result_observations_handoff_check', sql`${table.learningHandoff} IN ('recorded', 'skipped_skill_unmapped')`),
+}));
+
+export const variants = pgTable('variants', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id').notNull(),
+  workspaceId: uuid('workspace_id').notNull(),
+  taskSourceId: uuid('task_source_id'),
+  externalVariantId: text('external_variant_id'),
+  sourceKind: text('source_kind').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  workspaceFk: foreignKey({ name: 'variants_workspace_fk', columns: [table.workspaceId, table.organizationId],
+    foreignColumns: [workspaces.id, workspaces.organizationId] }).onDelete('restrict'),
+  sourceWorkspaceFk: foreignKey({ name: 'variants_source_workspace_fk', columns: [table.taskSourceId, table.workspaceId],
+    foreignColumns: [taskSources.id, taskSources.workspaceId] }).onDelete('restrict'),
+  tenantExternalUnique: uniqueIndex('variants_source_external_unique')
+    .on(table.workspaceId, table.taskSourceId, table.externalVariantId)
+    .where(sql`${table.taskSourceId} IS NOT NULL AND ${table.externalVariantId} IS NOT NULL`),
+  variantWorkspaceUnique: uniqueIndex('variants_id_workspace_unique').on(table.id, table.workspaceId),
+}));
+
+export const variantSourceSnapshots = pgTable('variant_source_snapshots', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  variantId: uuid('variant_id').notNull(),
+  workspaceId: uuid('workspace_id').notNull(),
+  taskSourceId: uuid('task_source_id').notNull(),
+  externalVariantId: text('external_variant_id').notNull(),
+  idempotencyKey: text('idempotency_key').notNull(),
+  rawPayload: jsonb('raw_payload').$type<Record<string, unknown>>().notNull(),
+  checksum: text('checksum').notNull(),
+  importedByUserId: uuid('imported_by_user_id').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  variantWorkspaceFk: foreignKey({ name: 'variant_snapshots_variant_workspace_fk', columns: [table.variantId, table.workspaceId],
+    foreignColumns: [variants.id, variants.workspaceId] }).onDelete('restrict'),
+  sourceWorkspaceFk: foreignKey({ name: 'variant_snapshots_source_workspace_fk', columns: [table.taskSourceId, table.workspaceId],
+    foreignColumns: [taskSources.id, taskSources.workspaceId] }).onDelete('restrict'),
+  snapshotWorkspaceUnique: uniqueIndex('variant_snapshots_id_variant_workspace_unique').on(table.id, table.variantId, table.workspaceId),
+  sourceIdempotencyUnique: uniqueIndex('variant_snapshots_source_idempotency_unique').on(table.workspaceId, table.taskSourceId, table.idempotencyKey),
+}));
+
+export const variantVersions = pgTable('variant_versions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  variantId: uuid('variant_id').notNull(),
+  workspaceId: uuid('workspace_id').notNull(),
+  version: integer('version').notNull(),
+  status: text('status').default('draft').notNull(),
+  title: text('title'),
+  description: text('description'),
+  metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull(),
+  rawSnapshotId: uuid('raw_snapshot_id'),
+  provenance: jsonb('provenance').$type<Record<string, unknown>>().notNull(),
+  publishedByUserId: uuid('published_by_user_id').references(() => users.id, { onDelete: 'set null' }),
+  publishedAt: timestamp('published_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  variantWorkspaceFk: foreignKey({ name: 'variant_versions_variant_workspace_fk', columns: [table.variantId, table.workspaceId],
+    foreignColumns: [variants.id, variants.workspaceId] }).onDelete('restrict'),
+  rawSnapshotFk: foreignKey({ name: 'variant_versions_snapshot_lineage_fk', columns: [table.rawSnapshotId, table.variantId, table.workspaceId],
+    foreignColumns: [variantSourceSnapshots.id, variantSourceSnapshots.variantId, variantSourceSnapshots.workspaceId] }).onDelete('restrict'),
+  versionUnique: uniqueIndex('variant_versions_variant_version_unique').on(table.variantId, table.version),
+  versionWorkspaceUnique: uniqueIndex('variant_versions_id_workspace_unique').on(table.id, table.workspaceId),
+  statusCheck: check('variant_versions_status_check', sql`${table.status} IN ('draft', 'published', 'archived')`),
+  publishedDateCheck: check('variant_versions_published_date_check', sql`${table.status} <> 'published' OR ${table.publishedAt} IS NOT NULL`),
+}));
+
+export const variantItems = pgTable('variant_items', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  variantVersionId: uuid('variant_version_id').notNull(),
+  workspaceId: uuid('workspace_id').notNull(),
+  position: integer('position').notNull(),
+  taskVersionId: uuid('task_version_id'),
+  externalTaskId: text('external_task_id'),
+  required: boolean('required').default(true).notNull(),
+  resolutionStatus: text('resolution_status').default('unresolved').notNull(),
+  section: text('section'),
+  metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull(),
+}, (table) => ({
+  versionWorkspaceFk: foreignKey({ name: 'variant_items_version_workspace_fk', columns: [table.variantVersionId, table.workspaceId],
+    foreignColumns: [variantVersions.id, variantVersions.workspaceId] }).onDelete('restrict'),
+  taskVersionWorkspaceFk: foreignKey({ name: 'variant_items_task_version_workspace_fk', columns: [table.taskVersionId, table.workspaceId],
+    foreignColumns: [taskVersions.id, taskVersions.workspaceId] }).onDelete('restrict'),
+  itemWorkspaceUnique: uniqueIndex('variant_items_id_workspace_unique').on(table.id, table.workspaceId),
+  positionUnique: uniqueIndex('variant_items_version_position_unique').on(table.variantVersionId, table.position),
+  resolutionCheck: check('variant_items_resolution_check', sql`(${table.resolutionStatus} = 'resolved' AND ${table.taskVersionId} IS NOT NULL) OR (${table.resolutionStatus} = 'unresolved')`),
 }));
 
 export const learningEvents = pgTable('learning_events', {

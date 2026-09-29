@@ -2,13 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { and, desc, eq } from 'drizzle-orm';
 import { DatabaseService } from '../../infrastructure/database/database';
 import { learningEvents, skillEvidence } from '../../infrastructure/database/schema';
-import type { TenantContext } from '../integrations/integrations.types';
+import type { TenantContext } from '../core/core.types';
 import { TeachingService } from '../teaching/teaching.service';
 import { deriveLearningState, deriveSkillEvidence } from './learning.rules';
 import type {
   LearningEventInput,
   LearningEventView,
   LearningState,
+  ExternalResultFactsInput,
+  LearningHandoffResult,
   ResultFactsInput,
   SkillEvidenceView,
 } from './learning.types';
@@ -68,11 +70,18 @@ export class LearningService {
     return this.toEvidenceView(existing);
   }
 
-  async recordResultFacts(input: ResultFactsInput): Promise<{
-    attemptEvent: LearningEventView;
-    resultEvent: LearningEventView;
-    evidence: SkillEvidenceView | null;
-  }> {
+  async recordResultFacts(input: ResultFactsInput & { courseId: string; skillId: string }): Promise<Extract<LearningHandoffResult, { status: 'recorded' }> & { attemptEvent: LearningEventView; resultEvent: LearningEventView }>;
+  async recordResultFacts(input: ResultFactsInput): Promise<LearningHandoffResult>;
+  async recordResultFacts(input: ResultFactsInput): Promise<LearningHandoffResult> {
+    if (!input.courseId || !input.skillId) {
+      return {
+        status: 'skipped',
+        reason: 'skill_unmapped',
+        attemptEvent: null as unknown as LearningEventView,
+        resultEvent: null as unknown as LearningEventView,
+        evidence: null,
+      };
+    }
     const shared = {
       workspaceId: input.workspaceId,
       learnerId: input.learnerId,
@@ -98,7 +107,25 @@ export class LearningService {
       outcome: input.outcome,
       evaluationRule: input.evaluationRule,
     });
-    return { attemptEvent, resultEvent, evidence: await this.deriveEvidenceFor(resultEvent) };
+    return { status: 'recorded', attemptEvent, resultEvent, evidence: await this.deriveEvidenceFor(resultEvent) };
+  }
+
+  async recordExternalResultFacts(input: ExternalResultFactsInput): Promise<LearningHandoffResult> {
+    const resultEvent = await this.ingest({
+      workspaceId: input.workspaceId,
+      learnerId: input.learnerId,
+      taskVersionId: input.taskVersionId,
+      courseId: input.courseId,
+      skillId: input.skillId,
+      eventType: 'result_recorded',
+      source: 'integration',
+      sourceType: 'external_result_observation',
+      sourceId: input.observationId,
+      outcome: input.outcome,
+      evaluationRule: 'external-observation.v1',
+      occurredAt: input.occurredAt,
+    });
+    return { status: 'recorded', attemptEvent: null as unknown as LearningEventView, resultEvent, evidence: await this.deriveEvidenceFor(resultEvent) };
   }
 
   async getLearningState(learnerId: string, skillId: string, context?: TenantContext): Promise<LearningState> {

@@ -4,7 +4,9 @@
   "packageManager": "pnpm@12.6.0",
   "scripts": {
     "build": "corepack pnpm --filter @teachly/api build",
+    "dev": "corepack pnpm --parallel --filter @teachly/api --filter @teachly/web dev",
     "dev:api": "corepack pnpm --filter @teachly/api dev",
+    "dev:web": "corepack pnpm --filter @teachly/web dev",
     "lint": "corepack pnpm --filter @teachly/api lint",
     "test": "corepack pnpm --filter @teachly/api test",
     "test:unit": "corepack pnpm --filter @teachly/api test:unit",

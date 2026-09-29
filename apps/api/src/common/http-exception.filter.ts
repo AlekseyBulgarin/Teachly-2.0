@@ -33,14 +33,14 @@ export class HttpExceptionFilter implements ExceptionFilter {
       const payload = exception.getResponse();
       if (typeof payload === 'string') message = payload;
       else if (typeof payload === 'object' && payload !== null) {
-        const body = payload as { message?: string | string[]; error?: string };
+        const body = payload as { message?: string | string[]; error?: string; details?: unknown };
         code = body.error?.toUpperCase().replaceAll(' ', '_') ?? code;
         if (status === HttpStatus.BAD_REQUEST && code === 'BAD_REQUEST') {
           message = 'Validation failed';
           details = typeof body.message === 'string' ? [body.message] : body.message;
         } else {
           message = Array.isArray(body.message) ? 'Validation failed' : body.message ?? message;
-          details = Array.isArray(body.message) ? body.message : undefined;
+          details = Array.isArray(body.message) ? body.message : body.details;
         }
       }
     }

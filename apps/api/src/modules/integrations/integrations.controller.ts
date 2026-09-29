@@ -3,7 +3,7 @@ import { ApiOkResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { MachineAuthenticated } from '../../common/machine-auth.decorator';
 import { CurrentTenantContext } from '../../common/request-context';
 import { ApiKeyGuard } from './api-key.guard';
-import type { TenantContext } from './integrations.types';
+import type { TenantContext } from '../core/core.types';
 import { IntegrationsService } from './integrations.service';
 import { RequireIntegrationScopes } from './scope.decorator';
 

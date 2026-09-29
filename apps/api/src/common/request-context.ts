@@ -1,7 +1,8 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import type { Request } from 'express';
 import type { AuthenticatedPrincipal } from '../modules/identity/auth.types';
-import type { TenantContext } from '../modules/integrations/integrations.types';
+import { requireTenantContext } from '../modules/core/core.access';
+import type { TenantContext } from '../modules/core/core.types';
 
 export type TeachlyRequest = Request & {
   principal?: AuthenticatedPrincipal;
@@ -17,11 +18,17 @@ export const CurrentPrincipal = createParamDecorator(
   },
 );
 
+export const OptionalPrincipal = createParamDecorator(
+  (_data: unknown, context: ExecutionContext): AuthenticatedPrincipal | undefined => {
+    const request = context.switchToHttp().getRequest<TeachlyRequest>();
+    return request.principal;
+  },
+);
+
 export const CurrentTenantContext = createParamDecorator(
   (_data: unknown, context: ExecutionContext): TenantContext => {
     const request = context.switchToHttp().getRequest<TeachlyRequest>();
-    if (!request.tenantContext) throw new Error('Tenant context is missing');
-    return request.tenantContext;
+    return requireTenantContext(request.tenantContext);
   },
 );
 

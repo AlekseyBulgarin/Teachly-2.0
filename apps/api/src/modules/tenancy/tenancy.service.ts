@@ -3,7 +3,7 @@ import { and, eq, isNull, or } from 'drizzle-orm';
 import { DatabaseService } from '../../infrastructure/database/database';
 import { memberships, organizations, workspaces } from '../../infrastructure/database/schema';
 import type { MembershipRole, MembershipView, OrganizationView, WorkspaceView } from './tenancy.types';
-import type { TenantContext } from '../integrations/integrations.types';
+import type { TenantContext } from '../core/core.types';
 
 @Injectable()
 export class TenancyService {
@@ -66,6 +66,23 @@ export class TenancyService {
         eq(memberships.status, 'active'),
         or(
           eq(memberships.workspaceId, context.workspaceId),
+          and(isNull(memberships.workspaceId), eq(memberships.role, 'organization_admin')),
+        ),
+      )).limit(1);
+    if (!membership) throw new NotFoundException('User is not a member of this workspace');
+  }
+
+  async assertUserCanAccessWorkspaceId(userId: string, workspaceId: string): Promise<void> {
+    const [workspace] = await this.database.db.select({ organizationId: workspaces.organizationId }).from(workspaces)
+      .where(and(eq(workspaces.id, workspaceId), eq(workspaces.status, 'active'))).limit(1);
+    if (!workspace) throw new NotFoundException('Active workspace not found');
+    const [membership] = await this.database.db.select({ id: memberships.id }).from(memberships)
+      .where(and(
+        eq(memberships.userId, userId),
+        eq(memberships.organizationId, workspace.organizationId),
+        eq(memberships.status, 'active'),
+        or(
+          eq(memberships.workspaceId, workspaceId),
           and(isNull(memberships.workspaceId), eq(memberships.role, 'organization_admin')),
         ),
       )).limit(1);

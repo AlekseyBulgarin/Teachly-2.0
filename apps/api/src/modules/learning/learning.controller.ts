@@ -2,7 +2,7 @@ import { Controller, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common';
 import { ApiOkResponse, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { CurrentPrincipal, OptionalTenantContext } from '../../common/request-context';
 import type { AuthenticatedPrincipal } from '../identity/auth.types';
-import type { TenantContext } from '../integrations/integrations.types';
+import type { TenantContext } from '../core/core.types';
 import { LearningService } from './learning.service';
 
 @ApiTags('learning')

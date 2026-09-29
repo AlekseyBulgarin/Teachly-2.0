@@ -1,13 +1,8 @@
-export const integrationScopes = ['external_users:read', 'external_users:write', 'remediation:write'] as const;
+export const integrationScopes = [
+  'external_users:read', 'external_users:write', 'remediation:write',
+  'assessment:read', 'assessment:answer:read', 'assessment:write', 'assessment:manage',
+] as const;
 export type IntegrationScope = typeof integrationScopes[number];
-
-export type TenantContext = {
-  principal: { type: 'api_key'; apiKeyId: string };
-  organizationId: string;
-  workspaceId: string;
-  integrationId: string;
-  scopes: IntegrationScope[];
-};
 
 export type IntegrationView = {
   id: string;

@@ -1,5 +1,5 @@
 export type TenantStatus = 'active' | 'archived';
-export type MembershipRole = 'organization_admin' | 'workspace_admin' | 'educator';
+export type MembershipRole = 'organization_admin' | 'workspace_admin' | 'educator' | 'content_editor';
 export type MembershipStatus = 'active' | 'revoked';
 
 export type OrganizationView = {

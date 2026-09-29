@@ -1,6 +1,16 @@
-import 'dotenv/config';
+import { config as loadDotenv } from 'dotenv';
 import { plainToInstance } from 'class-transformer';
 import { IsIn, IsNotEmpty, IsOptional, IsString, Matches, validateSync } from 'class-validator';
+import { resolve } from 'node:path';
+
+loadDotenv({
+  path: [
+    resolve(process.cwd(), '.env.local'),
+    resolve(process.cwd(), '.env'),
+    resolve(__dirname, '../../../../.env.local'),
+    resolve(__dirname, '../../../../.env'),
+  ],
+});
 
 class EnvironmentSchema {
   @IsIn(['development', 'test', 'production'])

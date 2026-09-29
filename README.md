@@ -5,7 +5,7 @@ Teachly is a teacher-first educational operating system. This repository current
 ## Structure
 
 - `apps/api`: NestJS modular monolith backend.
-- `apps/web`: reserved for the later web application phase.
+- `apps/web`: Next.js Teachly Ecosystem presentation site and live reference client.
 - `packages/contracts`: reserved for generated API contracts.
 - `database`: migrations and development fixture references.
 - `docs`: product, architecture, and development decisions.
@@ -22,11 +22,11 @@ Enable the repository package manager with `corepack enable`, then install depen
 corepack pnpm install
 ```
 
-Copy `.env.example` to `.env` and adjust `DATABASE_URL` if needed.
+Copy `.env.example` to `.env.local` and set `DATABASE_URL` if needed. The API loads the ignored root `.env.local`; the web app uses `apps/web/.env.local`.
 
 ## Local PostgreSQL
 
-Create a local database and user matching `.env.example`, or use an equivalent disposable PostgreSQL instance. Teachly does not require Redis or a queue for this phase.
+Create a local database and user matching `.env.example`, or reuse the configured Neon/dev PostgreSQL database. Teachly does not require Redis or a queue for this phase.
 
 ## Database
 
@@ -40,15 +40,31 @@ corepack pnpm db:seed
 
 The seed creates deterministic development users, education taxonomy, and one internal single-choice task through the fixture pipeline.
 
+## Local Ecosystem
+
+With the local env files configured and the deterministic database seed applied, start both applications with:
+
+```text
+corepack pnpm db:migrate
+corepack pnpm db:seed
+corepack pnpm dev
+```
+
+- Web: `http://localhost:3000`
+- API: `http://localhost:3001`
+- API health: `http://localhost:3001/health`
+
+The equivalent separate commands are `corepack pnpm dev:api` and `corepack pnpm dev:web`.
+
 ## Backend
 
 ```text
 corepack pnpm dev:api
 ```
 
-- API: `http://localhost:3000`
-- OpenAPI UI: `http://localhost:3000/docs`
-- Health: `http://localhost:3000/health`
+- API: `http://localhost:3001`
+- OpenAPI UI: `http://localhost:3001/docs`
+- Health: `http://localhost:3001/health`
 
 Development authentication uses the `x-dev-user` header and is enabled only when `NODE_ENV` is not `production` and `DEV_AUTH_ENABLED=true`. Use `teacher` or `student` for the seeded identities.
 

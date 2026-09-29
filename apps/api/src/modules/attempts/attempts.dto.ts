@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsString, IsUUID, MinLength, ValidateNested } from 'class-validator';
+import { IsNotEmptyObject, IsString, IsUUID, MinLength } from 'class-validator';
 import { PublicTaskVersionDto } from '../education/education.dto';
 import type { AttemptResult, AttemptView, ResultView, StartedAttempt, SubmittedAttempt } from './attempts.types';
 
@@ -14,23 +13,15 @@ export class StartAttemptDto {
   assignmentId!: string;
 }
 
-export class SingleChoiceAnswerDto {
-  @ApiProperty({ minLength: 1 })
-  @IsString()
-  @MinLength(1)
-  optionId!: string;
-}
-
 export class SubmitAnswerDto {
   @ApiProperty({ minLength: 1 })
   @IsString()
   @MinLength(1)
   idempotencyKey!: string;
 
-  @ApiProperty({ type: SingleChoiceAnswerDto })
-  @ValidateNested()
-  @Type(() => SingleChoiceAnswerDto)
-  answer!: SingleChoiceAnswerDto;
+  @ApiProperty({ type: Object })
+  @IsNotEmptyObject()
+  answer!: Record<string, unknown>;
 }
 
 export class AttemptDto {
@@ -79,6 +70,9 @@ export class ResultDto {
   @ApiProperty()
   score!: number;
 
+  @ApiProperty({ enum: ['recorded', 'skipped_skill_unmapped'], required: false })
+  learningHandoff?: 'recorded' | 'skipped_skill_unmapped';
+
   @ApiProperty({ type: String, format: 'date-time' })
   evaluatedAt!: Date;
 
@@ -103,8 +97,11 @@ export class SubmitAnswerResponseDto {
   @ApiProperty({ type: AttemptDto })
   attempt!: AttemptDto;
 
-  @ApiProperty({ type: ResultDto })
-  result!: ResultDto;
+  @ApiProperty({ type: ResultDto, nullable: true })
+  result!: ResultDto | null;
+
+  @ApiProperty({ enum: ['pending'], nullable: true })
+  manualReviewStatus!: 'pending' | null;
 
   @ApiProperty()
   idempotentReplay!: boolean;
@@ -112,7 +109,8 @@ export class SubmitAnswerResponseDto {
   static from(submitted: SubmittedAttempt): SubmitAnswerResponseDto {
     return {
       attempt: AttemptDto.from(submitted.attempt),
-      result: ResultDto.from(submitted.result),
+      result: submitted.result ? ResultDto.from(submitted.result) : null,
+      manualReviewStatus: submitted.manualReviewStatus,
       idempotentReplay: submitted.idempotentReplay,
     };
   }
@@ -122,10 +120,13 @@ export class AttemptResultResponseDto {
   @ApiProperty({ type: AttemptDto })
   attempt!: AttemptDto;
 
-  @ApiProperty({ type: ResultDto })
-  result!: ResultDto;
+  @ApiProperty({ type: ResultDto, nullable: true })
+  result!: ResultDto | null;
+
+  @ApiProperty({ enum: ['pending'], nullable: true })
+  manualReviewStatus!: 'pending' | null;
 
   static from(item: AttemptResult): AttemptResultResponseDto {
-    return { attempt: AttemptDto.from(item.attempt), result: ResultDto.from(item.result) };
+    return { attempt: AttemptDto.from(item.attempt), result: item.result ? ResultDto.from(item.result) : null, manualReviewStatus: item.manualReviewStatus };
   }
 }

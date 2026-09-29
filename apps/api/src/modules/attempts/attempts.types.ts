@@ -18,6 +18,7 @@ export type ResultView = {
   isCorrect: boolean;
   score: number;
   evaluatedAt: Date;
+  learningHandoff?: 'recorded' | 'skipped_skill_unmapped';
 };
 
 export type StartedAttempt = {
@@ -28,10 +29,12 @@ export type StartedAttempt = {
 export type SubmittedAttempt = {
   attempt: AttemptView;
   result: ResultView;
+  manualReviewStatus: 'pending' | null;
   idempotentReplay: boolean;
 };
 
 export type AttemptResult = {
   attempt: AttemptView;
   result: ResultView;
+  manualReviewStatus: 'pending' | null;
 };

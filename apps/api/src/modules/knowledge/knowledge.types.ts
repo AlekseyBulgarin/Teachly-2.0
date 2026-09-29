@@ -1,4 +1,4 @@
-import type { TenantContext } from '../integrations/integrations.types';
+import type { TenantContext } from '../core/core.types';
 
 export type KnowledgeLicenseStatus = 'unknown' | 'allowed' | 'restricted';
 export type KnowledgeExternalAiPermission = 'not_reviewed' | 'allowed' | 'prohibited';

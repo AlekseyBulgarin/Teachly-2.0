@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   const { path } = await context.params;
-  const target = `${process.env.TEACHLY_API_URL ?? 'http://localhost:3000'}/${path.join('/')}${request.nextUrl.search}`;
+  const target = `${process.env.TEACHLY_API_URL ?? 'http://127.0.0.1:3001'}/${path.join('/')}${request.nextUrl.search}`;
   const headers = new Headers();
   headers.set('accept', 'application/json');
   if (request.method !== 'GET') headers.set('content-type', request.headers.get('content-type') ?? 'application/json');

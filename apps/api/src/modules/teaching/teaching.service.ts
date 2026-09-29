@@ -11,7 +11,7 @@ import { developmentAuthEnabled } from '../../common/config';
 import { IdentityService } from '../identity/identity.service';
 import { TenancyService } from '../tenancy/tenancy.service';
 import { UsersService } from '../users/users.service';
-import type { TenantContext } from '../integrations/integrations.types';
+import type { TenantContext } from '../core/core.types';
 import type { AssignmentView, StudentAssignmentItem, StudentRelationshipItem, StudentView } from './teaching.types';
 
 @Injectable()
@@ -74,6 +74,8 @@ export class TeachingService {
   async createAssignment(teacherId: string, studentId: string, taskVersionId: string, context?: TenantContext): Promise<AssignmentView> {
     await this.assertManagesStudent(teacherId, studentId, context);
     const publishedTask = await this.education.getPublishedTaskVersion(taskVersionId, context);
+    if (context) await this.tenancy.assertUserCanAccessWorkspace(teacherId, context);
+    else await this.tenancy.assertUserCanAccessWorkspaceId(teacherId, publishedTask.workspaceId);
     return this.database.db.transaction(async (tx) => {
       const [relationship] = await tx.select().from(teacherStudentRelationships)
         .where(and(eq(teacherStudentRelationships.teacherId, teacherId), eq(teacherStudentRelationships.studentId, studentId), eq(teacherStudentRelationships.status, 'active'))).limit(1);

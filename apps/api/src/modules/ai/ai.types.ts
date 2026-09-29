@@ -1,4 +1,4 @@
-import type { TenantContext } from '../integrations/integrations.types';
+import type { TenantContext } from '../core/core.types';
 
 export const AI_CAPABILITIES = ['grounded_remediation'] as const;
 export type AiCapability = typeof AI_CAPABILITIES[number];

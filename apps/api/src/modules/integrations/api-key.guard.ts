@@ -4,10 +4,15 @@ import type { TeachlyRequest } from '../../common/request-context';
 import { IntegrationsService } from './integrations.service';
 import { REQUIRED_SCOPES_KEY } from './scope.decorator';
 import type { IntegrationScope } from './integrations.types';
+import { CoreAccessService } from '../core/core.access';
 
 @Injectable()
 export class ApiKeyGuard implements CanActivate {
-  constructor(private readonly integrations: IntegrationsService, private readonly reflector: Reflector) {}
+  constructor(
+    private readonly integrations: IntegrationsService,
+    private readonly reflector: Reflector,
+    private readonly coreAccess: CoreAccessService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<TeachlyRequest>();
@@ -16,8 +21,9 @@ export class ApiKeyGuard implements CanActivate {
       ? authorization.slice('Bearer '.length)
       : null;
     if (!secret) throw new UnauthorizedException('Workspace API key required');
-    const tenantContext = await this.integrations.authenticateApiKey(secret);
-    if (!tenantContext) throw new UnauthorizedException('Invalid or revoked workspace API key');
+    const authenticatedContext = await this.integrations.authenticateApiKey(secret);
+    if (!authenticatedContext) throw new UnauthorizedException('Invalid or revoked workspace API key');
+    const tenantContext = this.coreAccess.requireTenantContext(authenticatedContext);
     const required = this.reflector.getAllAndOverride<IntegrationScope[]>(REQUIRED_SCOPES_KEY, [
       context.getHandler(),
       context.getClass(),

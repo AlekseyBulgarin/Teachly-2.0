@@ -4,7 +4,7 @@ import { EducationService } from '../education/education.service';
 import { IntegrationsService } from '../integrations/integrations.service';
 import { LearningService } from '../learning/learning.service';
 import { KNOWLEDGE_RETRIEVAL_PORT, type KnowledgeRetrievalPort } from '../knowledge/knowledge.types';
-import type { TenantContext } from '../integrations/integrations.types';
+import type { TenantContext } from '../core/core.types';
 import type { AiCapability, AiContext, AiContextReference } from './ai.types';
 
 @Injectable()
@@ -27,8 +27,12 @@ export class AiContextAssembler {
     await this.integrations.requireActiveTenantContext(input.context);
     if (!input.learnerRequest.trim()) throw new ForbiddenException('A learner request is required');
     const attemptResult = await this.attempts.getResult(input.learnerId, input.attemptId, input.context);
+    if (!attemptResult.result) throw new ForbiddenException('Manual-review result is not available for AI context');
     const task = await this.education.getPublishedTaskVersion(attemptResult.attempt.taskVersionId, input.context);
     if (task.workspaceId !== input.context.workspaceId) throw new ForbiddenException('Task is outside the workspace');
+    if (!task.task.skillId || !task.task.courseId || !task.skill || !task.course || !task.subject || !task.topic) {
+      throw new ForbiddenException('Curriculum mapping is required for AI context');
+    }
     const learningState = await this.learning.getLearningState(input.learnerId, task.task.skillId, input.context);
     const excerpts = await this.knowledge.retrieveForExternalAi({ context: input.context, limit: 8 });
     const contextReferences: AiContextReference[] = [
@@ -46,7 +50,7 @@ export class AiContextAssembler {
         version: task.taskVersion.version,
         taskType: task.taskVersion.taskType,
         statement: task.taskVersion.content.statement,
-        options: task.taskVersion.content.options,
+        options: task.taskVersion.content.options ?? [],
         evaluationRule: task.taskVersion.evaluationRule,
         subject: task.subject.name,
         course: task.course.name,

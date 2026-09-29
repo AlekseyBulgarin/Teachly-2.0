@@ -3,12 +3,12 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Teachly Ecosystem',
-  description: 'Educational Intelligence infrastructure for modern learning platforms.',
+  description: 'Единое ядро. Связанные образовательные модули. Одна интеграция.',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="ru">
       <body>{children}</body>
     </html>
   );

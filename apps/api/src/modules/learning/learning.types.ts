@@ -70,12 +70,36 @@ export type ResultFactsInput = {
   workspaceId: string;
   learnerId: string;
   taskVersionId: string;
-  courseId: string;
-  skillId: string;
+  courseId: string | null;
+  skillId: string | null;
   submissionId: string;
   resultId: string;
   outcome: ResultOutcome;
   evaluationRule: string;
   correlationId?: string;
   occurredAt?: Date;
+};
+
+export type ExternalResultFactsInput = {
+  workspaceId: string;
+  learnerId: string;
+  taskVersionId: string;
+  courseId: string;
+  skillId: string;
+  observationId: string;
+  outcome: ResultOutcome;
+  occurredAt?: Date;
+};
+
+export type LearningHandoffResult = {
+  status: 'recorded';
+  attemptEvent: LearningEventView;
+  resultEvent: LearningEventView;
+  evidence: SkillEvidenceView | null;
+} | {
+  status: 'skipped';
+  reason: 'skill_unmapped';
+  attemptEvent: LearningEventView;
+  resultEvent: LearningEventView;
+  evidence: null;
 };

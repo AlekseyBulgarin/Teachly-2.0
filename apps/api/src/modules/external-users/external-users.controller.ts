@@ -14,7 +14,7 @@ import { ApiErrorDto } from '../../common/api.dto';
 import { MachineAuthenticated } from '../../common/machine-auth.decorator';
 import { CurrentTenantContext } from '../../common/request-context';
 import { ApiKeyGuard } from '../integrations/api-key.guard';
-import type { TenantContext } from '../integrations/integrations.types';
+import type { TenantContext } from '../core/core.types';
 import { RequireIntegrationScopes } from '../integrations/scope.decorator';
 import { ExternalUserResponseDto, UpsertExternalUserDto } from './external-users.dto';
 import { ExternalUsersService } from './external-users.service';

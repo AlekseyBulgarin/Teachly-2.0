@@ -12,10 +12,14 @@ import { LearningModule } from './modules/learning/learning.module';
 import { TenancyModule } from './modules/tenancy/tenancy.module';
 import { KnowledgeModule } from './modules/knowledge/knowledge.module';
 import { AiModule } from './modules/ai/ai.module';
+import { CoreModule } from './modules/core/core.module';
+import { TaskBankModule } from './modules/assessment/task-bank.module';
 
 @Module({
   imports: [
     DatabaseModule,
+    CoreModule,
+    TaskBankModule,
     IdentityModule,
     UsersModule,
     EducationModule,

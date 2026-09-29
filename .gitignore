@@ -9,3 +9,6 @@ coverage/
 .neon
 .next/
 *.tsbuildinfo
+.playwright-mcp/
+/qa-*.png
+/before-*.png

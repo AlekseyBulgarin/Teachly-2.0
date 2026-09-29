@@ -7,7 +7,7 @@ import { HttpExceptionFilter } from '../src/common/http-exception.filter';
 import { DatabaseService } from '../src/infrastructure/database/database';
 import { externalIdentities, taskVersions, users } from '../src/infrastructure/database/schema';
 import { fixtureIds } from '../src/infrastructure/database/seed';
-import { resetTestDatabase, testDatabase } from './postgres-test';
+import { resetTestDatabase, startTestApp, testDatabase } from './postgres-test';
 import { requestIdMiddleware } from '../src/common/request-id.middleware';
 
 jest.setTimeout(120_000);
@@ -19,17 +19,19 @@ describe('teacher to student vertical slice (PostgreSQL)', () => {
   beforeEach(async () => {
     database = testDatabase();
     await resetTestDatabase(database);
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
+      .overrideProvider(DatabaseService).useValue(database)
+      .compile();
     app = moduleRef.createNestApplication();
     app.use(requestIdMiddleware);
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
     app.useGlobalFilters(new HttpExceptionFilter());
     await app.init();
+    await startTestApp(app);
   });
 
   afterEach(async () => {
     await app?.close();
-    await database?.onModuleDestroy();
   });
 
   async function provisionStudent(name: string) {

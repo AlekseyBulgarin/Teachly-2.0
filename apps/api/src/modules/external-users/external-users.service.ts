@@ -4,7 +4,7 @@ import { DomainError } from '../../common/errors';
 import { DatabaseService } from '../../infrastructure/database/database';
 import { externalUsers, users } from '../../infrastructure/database/schema';
 import { IntegrationsService } from '../integrations/integrations.service';
-import type { TenantContext } from '../integrations/integrations.types';
+import type { TenantContext } from '../core/core.types';
 import type { ExternalUserView } from './external-users.types';
 
 @Injectable()

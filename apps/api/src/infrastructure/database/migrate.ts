@@ -1,6 +1,6 @@
-import 'dotenv/config';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { resolve } from 'node:path';
+import '../../common/config';
 import { DatabaseService } from './database';
 
 export async function applyMigrations(database: DatabaseService): Promise<void> {

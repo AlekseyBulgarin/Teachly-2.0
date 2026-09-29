@@ -17,8 +17,8 @@ export class TaskContentDto {
   @ApiProperty()
   statement!: string;
 
-  @ApiProperty({ type: [TaskOptionDto] })
-  options!: TaskOptionDto[];
+  @ApiProperty({ type: [TaskOptionDto], required: false })
+  options?: TaskOptionDto[];
 }
 
 export class PublicTaskVersionDto {
@@ -54,7 +54,11 @@ export class PublicTaskVersionDto {
       ...taskVersion,
       content: {
         statement: taskVersion.content.statement,
-        options: taskVersion.content.options.map(TaskOptionDto.from),
+        ...(taskVersion.content.options ? { options: taskVersion.content.options.map(TaskOptionDto.from) } : {}),
+        ...(taskVersion.content.title ? { title: taskVersion.content.title } : {}),
+        ...(taskVersion.content.blocks ? { blocks: taskVersion.content.blocks } : {}),
+        ...(taskVersion.content.attachments ? { attachments: taskVersion.content.attachments } : {}),
+        ...(taskVersion.content.metadata ? { metadata: taskVersion.content.metadata } : {}),
       },
     };
   }
@@ -64,17 +68,17 @@ export class TaskReferenceDto {
   @ApiProperty({ format: 'uuid' })
   id!: string;
 
-  @ApiProperty({ format: 'uuid' })
-  subjectId!: string;
+  @ApiProperty({ format: 'uuid', nullable: true })
+  subjectId!: string | null;
 
   @ApiProperty({ format: 'uuid' })
-  courseId!: string;
+  courseId!: string | null;
 
   @ApiProperty({ format: 'uuid' })
-  topicId!: string;
+  topicId!: string | null;
 
   @ApiProperty({ format: 'uuid' })
-  skillId!: string;
+  skillId!: string | null;
 }
 
 export class SubjectDto {
@@ -128,17 +132,17 @@ export class PublishedTaskResponseDto {
   @ApiProperty({ type: TaskReferenceDto })
   task!: TaskReferenceDto;
 
-  @ApiProperty({ type: SubjectDto })
-  subject!: SubjectDto;
+  @ApiProperty({ type: SubjectDto, nullable: true })
+  subject!: SubjectDto | null;
 
-  @ApiProperty({ type: CourseDto })
-  course!: CourseDto;
+  @ApiProperty({ type: CourseDto, nullable: true })
+  course!: CourseDto | null;
 
-  @ApiProperty({ type: TopicDto })
-  topic!: TopicDto;
+  @ApiProperty({ type: TopicDto, nullable: true })
+  topic!: TopicDto | null;
 
-  @ApiProperty({ type: SkillDto })
-  skill!: SkillDto;
+  @ApiProperty({ type: SkillDto, nullable: true })
+  skill!: SkillDto | null;
 
   static from(context: PublishedTaskContext, taskVersion: PublicTaskVersion): PublishedTaskResponseDto {
     return {

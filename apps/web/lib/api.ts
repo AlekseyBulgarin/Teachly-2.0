@@ -17,6 +17,7 @@ export type Integration = { id: string; name: string; organizationId: string; wo
 export type KnowledgeStatus = { sourceId: string; sourceName: string; sourceType: string; sourceStatus: string; sourceLicenseStatus: string; documentId: string; documentTitle: string; documentStatus: string; versionId: string; version: number; versionStatus: string; licenseStatus: string; externalAiPermission: string; approvedAt: string | null };
 export type AiTrace = { requestId: string; capability: string; status: string; provider: string | null; model: string | null; latencyMs: number | null; knowledgeReferences: string[]; outcome: string | null; createdAt: string; completedAt: string | null };
 export type RemediationResponse = { requestId: string; remediation: { summary: string; explanation: string; hint: string; likelyGap: string | null; confidence: number; abstained: boolean }; evidenceRefs: string[]; knowledgeRefs: string[] };
+export type HealthStatus = { status: string; database: string };
 
 export class ApiError extends Error {
   constructor(public readonly status: number, public readonly code: string, message: string) { super(message); }
@@ -38,6 +39,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 type StudentRelationshipRow = { student: Student; relationship: { id: string; status: string; createdAt: string } };
 
 export const api = {
+  health: () => request<HealthStatus>('health'),
   students: () => request<StudentRelationshipRow[]>('students').then((rows) => rows.map((row) => row.student)),
   results: (studentId: string) => request<AttemptResult[]>(`students/${studentId}/results`),
   task: (taskVersionId: string) => request<Task>(`tasks/published/${taskVersionId}`),

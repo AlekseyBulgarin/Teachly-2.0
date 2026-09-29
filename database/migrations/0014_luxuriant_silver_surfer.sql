@@ -1,0 +1,2 @@
+ALTER TABLE "task_source_snapshots" ADD COLUMN "idempotency_key" text NOT NULL;--> statement-breakpoint
+CREATE UNIQUE INDEX "task_snapshots_source_idempotency_unique" ON "task_source_snapshots" USING btree ("task_source_id","workspace_id","idempotency_key");

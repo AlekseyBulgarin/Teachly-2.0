@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
 import { DatabaseService } from '../../infrastructure/database/database';
 import { courses, skills, subjects, taskVersions, tasks, topics } from '../../infrastructure/database/schema';
-import type { TenantContext } from '../integrations/integrations.types';
+import type { TenantContext } from '../core/core.types';
 import type { PublishedTaskContext, PublishedTaskVersion, PublicTaskVersion } from './education.types';
 
 @Injectable()
@@ -14,10 +14,10 @@ export class EducationService {
       .select({ taskVersion: taskVersions, task: tasks, subject: subjects, course: courses, topic: topics, skill: skills })
       .from(taskVersions)
       .innerJoin(tasks, eq(tasks.id, taskVersions.taskId))
-      .innerJoin(subjects, eq(subjects.id, tasks.subjectId))
-      .innerJoin(courses, eq(courses.id, tasks.courseId))
-      .innerJoin(topics, eq(topics.id, tasks.topicId))
-      .innerJoin(skills, eq(skills.id, tasks.skillId))
+        .leftJoin(subjects, eq(subjects.id, tasks.subjectId))
+        .leftJoin(courses, eq(courses.id, tasks.courseId))
+        .leftJoin(topics, eq(topics.id, tasks.topicId))
+        .leftJoin(skills, eq(skills.id, tasks.skillId))
       .where(and(
         eq(taskVersions.id, taskVersionId),
         eq(taskVersions.status, 'published'),
@@ -39,10 +39,10 @@ export class EducationService {
       .select({ taskVersion: taskVersions, task: tasks, subject: subjects, course: courses, topic: topics, skill: skills })
       .from(taskVersions)
       .innerJoin(tasks, eq(tasks.id, taskVersions.taskId))
-      .innerJoin(subjects, eq(subjects.id, tasks.subjectId))
-      .innerJoin(courses, eq(courses.id, tasks.courseId))
-      .innerJoin(topics, eq(topics.id, tasks.topicId))
-      .innerJoin(skills, eq(skills.id, tasks.skillId))
+        .leftJoin(subjects, eq(subjects.id, tasks.subjectId))
+        .leftJoin(courses, eq(courses.id, tasks.courseId))
+        .leftJoin(topics, eq(topics.id, tasks.topicId))
+        .leftJoin(skills, eq(skills.id, tasks.skillId))
       .where(and(
         eq(taskVersions.status, 'published'),
         context ? eq(taskVersions.workspaceId, context.workspaceId) : undefined,
@@ -53,17 +53,24 @@ export class EducationService {
   toPublicTaskVersion(taskVersion: PublishedTaskVersion): PublicTaskVersion {
     return {
       ...taskVersion,
-      content: { statement: taskVersion.content.statement, options: taskVersion.content.options },
+      content: {
+        statement: taskVersion.content.statement,
+        ...(taskVersion.content.options ? { options: taskVersion.content.options } : {}),
+        ...(taskVersion.content.title ? { title: taskVersion.content.title } : {}),
+        ...(taskVersion.content.blocks ? { blocks: taskVersion.content.blocks } : {}),
+        ...(taskVersion.content.attachments ? { attachments: taskVersion.content.attachments } : {}),
+        ...(taskVersion.content.metadata ? { metadata: taskVersion.content.metadata } : {}),
+      },
     };
   }
 
   private toPublishedTaskContext(row: {
     taskVersion: typeof taskVersions.$inferSelect;
     task: typeof tasks.$inferSelect;
-    subject: typeof subjects.$inferSelect;
-    course: typeof courses.$inferSelect;
-    topic: typeof topics.$inferSelect;
-    skill: typeof skills.$inferSelect;
+    subject: typeof subjects.$inferSelect | null;
+    course: typeof courses.$inferSelect | null;
+    topic: typeof topics.$inferSelect | null;
+    skill: typeof skills.$inferSelect | null;
   }): PublishedTaskContext {
     return {
       workspaceId: row.taskVersion.workspaceId,
@@ -73,7 +80,7 @@ export class EducationService {
         version: row.taskVersion.version,
         taskType: row.taskVersion.taskType,
         status: 'published',
-        content: row.taskVersion.content,
+        content: row.taskVersion.content as PublishedTaskVersion['content'],
         evaluationRule: row.taskVersion.evaluationRule,
         publishedAt: row.taskVersion.publishedAt!,
         createdAt: row.taskVersion.createdAt,
@@ -85,10 +92,10 @@ export class EducationService {
         topicId: row.task.topicId,
         skillId: row.task.skillId,
       },
-      subject: { id: row.subject.id, code: row.subject.code, name: row.subject.name },
-      course: { id: row.course.id, subjectId: row.course.subjectId, name: row.course.name },
-      topic: { id: row.topic.id, courseId: row.topic.courseId, name: row.topic.name },
-      skill: { id: row.skill.id, topicId: row.skill.topicId, name: row.skill.name },
+      subject: row.subject ? { id: row.subject.id, code: row.subject.code, name: row.subject.name } : null,
+      course: row.course ? { id: row.course.id, subjectId: row.course.subjectId, name: row.course.name } : null,
+      topic: row.topic ? { id: row.topic.id, courseId: row.topic.courseId, name: row.topic.name } : null,
+      skill: row.skill ? { id: row.skill.id, topicId: row.skill.topicId, name: row.skill.name } : null,
     };
   }
 }

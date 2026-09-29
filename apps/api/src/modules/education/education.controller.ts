@@ -2,7 +2,7 @@ import { Controller, Get, Param, ParseUUIDPipe } from '@nestjs/common';
 import { ApiBadRequestResponse, ApiOkResponse, ApiParam, ApiTags } from '@nestjs/swagger';
 import { ApiErrorDto } from '../../common/api.dto';
 import { OptionalTenantContext } from '../../common/request-context';
-import type { TenantContext } from '../integrations/integrations.types';
+import type { TenantContext } from '../core/core.types';
 import { PublishedTaskResponseDto } from './education.dto';
 import { EducationService } from './education.service';
 

@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { DomainError } from '../../common/errors';
 import { AuditService } from '../audit/audit.service';
 import { ExternalUsersService } from '../external-users/external-users.service';
-import type { TenantContext } from '../integrations/integrations.types';
+import type { TenantContext } from '../core/core.types';
 import { AiRuntime, AiRuntimeError } from './ai-runtime.service';
 import type { AiExecutionResult } from './ai.types';
 import type { PartnerRemediationRequestDto } from './partner-remediation.dto';

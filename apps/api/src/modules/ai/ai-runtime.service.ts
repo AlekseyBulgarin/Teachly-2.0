@@ -1,8 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { createHash } from 'node:crypto';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { DatabaseService } from '../../infrastructure/database/database';
 import { aiEvaluationRecords, aiRequests, aiUsageRecords } from '../../infrastructure/database/schema';
+import { requireTenantContext } from '../core/core.access';
+import type { TenantContext } from '../core/core.types';
 import { AuditService } from '../audit/audit.service';
 import { AI_PROVIDER, type AiProvider } from './ai-provider';
 import { AiContextAssembler } from './ai-context-assembler';
@@ -39,7 +41,14 @@ export class AiRuntime {
 
   async execute(input: AiExecutionInput): Promise<AiExecutionResult> {
     if (!input.idempotencyKey.trim()) throw new AiRuntimeError('invalid_input', 'An idempotency key is required');
-    const context = await this.assembler.assemble(input);
+    const assembledContext = await this.assembler.assemble(input);
+    const context = {
+      ...assembledContext,
+      contextReferences: [
+        { type: 'integration', id: input.context.integrationId },
+        ...assembledContext.contextReferences,
+      ],
+    };
     const requestHash = this.hash({ capability: input.capability, learnerId: input.learnerId, context });
     const existing = await this.findExisting(input);
     if (existing) {
@@ -136,9 +145,13 @@ export class AiRuntime {
     }
   }
 
-  async listRecent(workspaceId: string) {
+  async listRecent(context: TenantContext) {
+    const tenant = requireTenantContext(context);
     const rows = await this.database.db.select().from(aiRequests)
-      .where(eq(aiRequests.workspaceId, workspaceId))
+      .where(and(
+        eq(aiRequests.workspaceId, tenant.workspaceId),
+        sql`${aiRequests.contextReferences} @> ${JSON.stringify([{ type: 'integration', id: tenant.integrationId }])}::jsonb`,
+      ))
       .orderBy(aiRequests.createdAt)
       .limit(20);
     return rows.reverse().map((row) => ({

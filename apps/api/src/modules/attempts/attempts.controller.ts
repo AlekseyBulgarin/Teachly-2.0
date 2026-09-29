@@ -3,7 +3,7 @@ import { ApiBadRequestResponse, ApiCreatedResponse, ApiOkResponse, ApiParam, Api
 import { ApiErrorDto } from '../../common/api.dto';
 import { CurrentPrincipal, OptionalTenantContext } from '../../common/request-context';
 import type { AuthenticatedPrincipal } from '../identity/auth.types';
-import type { TenantContext } from '../integrations/integrations.types';
+import type { TenantContext } from '../core/core.types';
 import { AttemptsService } from './attempts.service';
 import {
   AttemptResultResponseDto,

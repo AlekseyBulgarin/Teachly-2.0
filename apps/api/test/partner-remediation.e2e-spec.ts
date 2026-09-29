@@ -11,11 +11,11 @@ import { AI_PROVIDER } from '../src/modules/ai/ai-provider';
 import { FakeAiProvider } from '../src/modules/ai/fake-ai-provider';
 import { ExternalUsersService } from '../src/modules/external-users/external-users.service';
 import { IntegrationsService } from '../src/modules/integrations/integrations.service';
-import type { TenantContext } from '../src/modules/integrations/integrations.types';
+import type { TenantContext } from '../src/modules/core/core.types';
 import { TeachingService } from '../src/modules/teaching/teaching.service';
 import { TenancyService } from '../src/modules/tenancy/tenancy.service';
 import { requestIdMiddleware } from '../src/common/request-id.middleware';
-import { resetTestDatabase, testDatabase } from './postgres-test';
+import { resetTestDatabase, startTestApp, testDatabase } from './postgres-test';
 
 jest.setTimeout(240_000);
 
@@ -29,6 +29,7 @@ describe('Partner grounded remediation API (PostgreSQL)', () => {
     await resetTestDatabase(database);
     fakeProvider = new FakeAiProvider();
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
+      .overrideProvider(DatabaseService).useValue(database)
       .overrideProvider(AI_PROVIDER)
       .useValue(fakeProvider)
       .compile();
@@ -37,11 +38,11 @@ describe('Partner grounded remediation API (PostgreSQL)', () => {
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
     app.useGlobalFilters(new HttpExceptionFilter());
     await app.init();
+    await startTestApp(app);
   });
 
   afterEach(async () => {
     await app?.close();
-    await database?.onModuleDestroy();
   });
 
   async function createKey(
@@ -116,6 +117,14 @@ describe('Partner grounded remediation API (PostgreSQL)', () => {
     expect(JSON.stringify(response.body)).not.toContain('correctOptionId');
     expect(response.body).not.toHaveProperty('provider');
     expect(response.body).not.toHaveProperty('model');
+
+    const otherIntegration = await createKey(fixtureIds.organization, fixtureIds.workspace, 'Second integration');
+    const ownTraces = await request(app.getHttpServer()).get('/v1/ai-requests')
+      .set('Authorization', `Bearer ${tenant.key.secret}`).expect(200);
+    const otherTraces = await request(app.getHttpServer()).get('/v1/ai-requests')
+      .set('Authorization', `Bearer ${otherIntegration.key.secret}`).expect(200);
+    expect(ownTraces.body.map((trace: { requestId: string }) => trace.requestId)).toContain(response.body.requestId);
+    expect(otherTraces.body.map((trace: { requestId: string }) => trace.requestId)).not.toContain(response.body.requestId);
   });
 
   it('fails closed across integrations, workspaces, and mapped learner ownership', async () => {

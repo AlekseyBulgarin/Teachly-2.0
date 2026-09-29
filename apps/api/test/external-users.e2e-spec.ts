@@ -4,9 +4,10 @@ import { Test } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
 import { HttpExceptionFilter } from '../src/common/http-exception.filter';
 import { requestIdMiddleware } from '../src/common/request-id.middleware';
+import { DatabaseService } from '../src/infrastructure/database/database';
 import { IntegrationsService } from '../src/modules/integrations/integrations.service';
 import { TenancyService } from '../src/modules/tenancy/tenancy.service';
-import { resetTestDatabase, testDatabase } from './postgres-test';
+import { resetTestDatabase, startTestApp, testDatabase } from './postgres-test';
 
 jest.setTimeout(120_000);
 
@@ -17,17 +18,19 @@ describe('B2B external users API (PostgreSQL)', () => {
   beforeEach(async () => {
     database = testDatabase();
     await resetTestDatabase(database);
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
+      .overrideProvider(DatabaseService).useValue(database)
+      .compile();
     app = moduleRef.createNestApplication();
     app.use(requestIdMiddleware);
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
     app.useGlobalFilters(new HttpExceptionFilter());
     await app.init();
+    await startTestApp(app);
   });
 
   afterEach(async () => {
     await app?.close();
-    await database?.onModuleDestroy();
   });
 
   async function createTenant(name: string) {
@@ -74,6 +77,14 @@ describe('B2B external users API (PostgreSQL)', () => {
     await request(app.getHttpServer()).get(`/v1/external-users/${created.body.id}`).set(auth).expect(200);
     const otherAuth = { Authorization: `Bearer ${other.key.secret}` };
     await request(app.getHttpServer()).get(`/v1/external-users/${created.body.id}`).set(otherAuth).expect(404);
+  });
+
+  it('fails closed on every current machine route without tenant authentication', async () => {
+    await request(app.getHttpServer()).get('/v1/integration').expect(401);
+    await request(app.getHttpServer()).get('/v1/external-users').expect(401);
+    await request(app.getHttpServer()).get('/v1/knowledge/status').expect(401);
+    await request(app.getHttpServer()).get('/v1/ai-requests').expect(401);
+    await request(app.getHttpServer()).post('/v1/remediations').send({}).expect(401);
   });
 
   it('rejects unknown, revoked, and insufficient-scope API keys', async () => {

@@ -4,8 +4,10 @@ import { DatabaseService } from '../../infrastructure/database/database';
 import { apiKeys, integrations, organizations, workspaces } from '../../infrastructure/database/schema';
 import { AuditService } from '../audit/audit.service';
 import { TenancyService } from '../tenancy/tenancy.service';
+import { requireTenantContext } from '../core/core.access';
+import type { TenantContext } from '../core/core.types';
 import { apiKeyHashMatches, apiKeyPrefix, generateApiKey } from './api-key.crypto';
-import type { CreatedApiKey, IntegrationScope, IntegrationView, TenantContext } from './integrations.types';
+import type { CreatedApiKey, IntegrationScope, IntegrationView } from './integrations.types';
 import { integrationScopes } from './integrations.types';
 
 @Injectable()
@@ -122,13 +124,14 @@ export class IntegrationsService {
   }
 
   async requireActiveTenantContext(context: TenantContext): Promise<void> {
-    if (context.principal.type !== 'api_key') throw new NotFoundException('Active integration not found');
+    const tenant = requireTenantContext(context);
+    if (tenant.principal.type !== 'api_key') throw new NotFoundException('Active integration not found');
     const integration = await this.requireActiveIntegration(
-      context.organizationId,
-      context.workspaceId,
-      context.integrationId,
+      tenant.organizationId,
+      tenant.workspaceId,
+      tenant.integrationId,
     );
-    if (integration.id !== context.integrationId) throw new NotFoundException('Active integration not found');
+    if (integration.id !== tenant.integrationId) throw new NotFoundException('Active integration not found');
   }
 
   async getCurrent(context: TenantContext): Promise<IntegrationView> {

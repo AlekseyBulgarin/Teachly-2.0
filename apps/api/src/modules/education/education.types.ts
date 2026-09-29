@@ -11,8 +11,12 @@ export type PublishedTaskVersion = {
   status: 'published';
   content: {
     statement: string;
-    options: TaskOption[];
-    correctOptionId: string;
+    options?: TaskOption[];
+    correctOptionId?: string;
+    title?: string;
+    blocks?: Array<Record<string, unknown>>;
+    attachments?: Array<{ reference: string; label?: string }>;
+    metadata?: Record<string, string | number | boolean>;
   };
   evaluationRule: string;
   publishedAt: Date;
@@ -22,7 +26,11 @@ export type PublishedTaskVersion = {
 export type PublicTaskVersion = Omit<PublishedTaskVersion, 'content'> & {
   content: {
     statement: string;
-    options: TaskOption[];
+    options?: TaskOption[];
+    title?: string;
+    blocks?: Array<Record<string, unknown>>;
+    attachments?: Array<{ reference: string; label?: string }>;
+    metadata?: Record<string, string | number | boolean>;
   };
 };
 
@@ -31,13 +39,13 @@ export type PublishedTaskContext = {
   taskVersion: PublishedTaskVersion;
   task: {
     id: string;
-    subjectId: string;
-    courseId: string;
-    topicId: string;
-    skillId: string;
+    subjectId: string | null;
+    courseId: string | null;
+    topicId: string | null;
+    skillId: string | null;
   };
-  subject: { id: string; code: string; name: string };
-  course: { id: string; subjectId: string; name: string };
-  topic: { id: string; courseId: string; name: string };
-  skill: { id: string; topicId: string; name: string };
+  subject: { id: string; code: string; name: string } | null;
+  course: { id: string; subjectId: string; name: string } | null;
+  topic: { id: string; courseId: string; name: string } | null;
+  skill: { id: string; topicId: string; name: string } | null;
 };

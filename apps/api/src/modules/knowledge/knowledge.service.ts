@@ -23,7 +23,7 @@ import type {
   KnowledgeVersionImportInput,
   RetrievedKnowledgeExcerpt,
 } from './knowledge.types';
-import type { TenantContext } from '../integrations/integrations.types';
+import type { TenantContext } from '../core/core.types';
 
 @Injectable()
 export class KnowledgeService implements KnowledgeRetrievalPort {

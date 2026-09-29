@@ -10,7 +10,7 @@ Test state transitions such as publish, start, submit, assign, complete, moderat
 
 ## Integration and Database Tests
 
-Use a real PostgreSQL-compatible test environment for transactions, constraints, tenant scoping, migrations, task-version references, and concurrent submission behavior. Test queue/job persistence separately from worker execution.
+Use a real PostgreSQL-compatible test environment for transactions, constraints, tenant scoping, migrations, task-version references, and concurrent submission behavior. Test queue/job persistence separately from worker execution. Local runs use the embedded PostgreSQL lifecycle — see [Local PostgreSQL E2E Setup](./e2e-postgres.md).
 
 ## API Tests
 
