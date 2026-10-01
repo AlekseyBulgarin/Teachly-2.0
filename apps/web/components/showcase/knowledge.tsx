@@ -3,7 +3,7 @@
 import { BookOpen, BrainCircuit, CheckCircle2, Database, FileCheck2, ShieldCheck } from 'lucide-react';
 import { useEcosystem } from '@/lib/ecosystem-context';
 import { EmptyState, IconCard, PageHeader, SectionCard, StatusBadge } from '@/components/ui';
-import { PipelineStep } from '@/components/showcase/shared';
+import { EcosystemNextStep, PipelineStep } from '@/components/showcase/shared';
 
 export function KnowledgePage() {
   const { t, locale, knowledge, approvedKnowledge } = useEcosystem();
@@ -14,5 +14,6 @@ export function KnowledgePage() {
       {knowledge.length ? <div className="divide-y divide-[var(--border)]">{knowledge.map((item) => <div key={item.versionId} className="flex flex-col gap-3 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7"><div><p className="text-base font-semibold text-slate-100">{item.documentTitle}</p><p className="mt-1 text-sm text-slate-500">{item.sourceName} · {locale === 'ru' ? 'версия' : 'version'} {item.version}</p></div><div className="flex flex-wrap gap-2"><StatusBadge status={item.versionStatus} locale={locale} /><StatusBadge status={item.externalAiPermission} locale={locale} /></div></div>)}</div> : <EmptyState text={t('knowledge.empty')} />}
     </SectionCard>
     <div className="grid gap-4 md:grid-cols-3"><IconCard icon={FileCheck2} title={t('knowledge.value1')} detail="" /><IconCard icon={ShieldCheck} title={t('knowledge.value2')} detail="" /><IconCard icon={CheckCircle2} title={t('knowledge.value3')} detail="" /></div>
+    <EcosystemNextStep locale={locale} module="knowledge" href="/ai" />
   </div>;
 }

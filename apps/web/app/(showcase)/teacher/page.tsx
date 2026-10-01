@@ -1,5 +1,5 @@
-import { TeacherPage } from '@/components/showcase/teacher';
+import { redirect } from 'next/navigation';
 
 export default function Page() {
-  return <TeacherPage />;
+  redirect('/student-profile');
 }

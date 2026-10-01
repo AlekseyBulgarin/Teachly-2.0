@@ -16,14 +16,22 @@
 }
 
 * { box-sizing: border-box; }
-html { background: var(--canvas); }
-body { margin: 0; min-height: 100vh; background: radial-gradient(900px 520px at 86% -14%, rgba(25, 201, 139, .08), transparent 65%), var(--canvas); color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+html { background: var(--canvas); scroll-behavior: smooth; scroll-padding-top: 104px; }
+body { margin: 0; min-height: 100vh; background: radial-gradient(900px 520px at 86% -14%, rgba(25, 201, 139, .08), transparent 65%), var(--canvas); color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
 button, input { font: inherit; }
 button { cursor: pointer; }
 button:disabled { cursor: not-allowed; }
 ::selection { background: rgba(25, 201, 139, .28); }
 a:focus-visible, button:focus-visible, [role='button']:focus-visible { outline: 2px solid rgba(69, 230, 168, .8); outline-offset: 3px; }
+.interactive { transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease; }
+.interactive:active { transform: scale(.985); }
+.showcase-page { animation: showcase-enter 380ms cubic-bezier(.2,.8,.2,1) both; }
+.section-reveal { animation: section-enter 460ms cubic-bezier(.2,.8,.2,1) both; }
+.section-reveal[data-delay='1'] { animation-delay: 70ms; }
+.section-reveal[data-delay='2'] { animation-delay: 130ms; }
+@keyframes showcase-enter { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes section-enter { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, .2); background-clip: content-box; border: 3px solid transparent; border-radius: 999px; }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
