@@ -19,6 +19,54 @@ export type AiTrace = { requestId: string; capability: string; status: string; p
 export type RemediationResponse = { requestId: string; remediation: { summary: string; explanation: string; hint: string; likelyGap: string | null; confidence: number; abstained: boolean }; evidenceRefs: string[]; knowledgeRefs: string[] };
 export type HealthStatus = { status: string; database: string };
 
+export type PublicTaskVersion = {
+  id: string;
+  taskId: string;
+  version: number;
+  taskType: string;
+  status: string;
+  content: { statement: string; title?: string; options?: Array<{ id: string; label: string }> };
+  evaluationRule: string;
+  publishedAt: string | null;
+  createdAt: string;
+};
+export type PublishedTask = PublicTaskVersion;
+export type TheoryBlock = { type: string; text?: string; items?: string[]; latex?: string };
+export type TheoryMaterial = {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string | null;
+  status: string;
+  curriculum: { subjectId: string | null; courseId: string | null; topicId: string | null; skillId: string | null };
+  taskIds: string[];
+  version: { id: string; version: number; status: string; content: { blocks: TheoryBlock[] } };
+};
+export type TrainerSessionItem = {
+  id: string;
+  position: number;
+  status: string;
+  task: PublicTaskVersion;
+  attemptId: string;
+  result: { outcome: string; isCorrect: boolean; score: number } | null;
+};
+export type TrainerSession = {
+  id: string;
+  status: string;
+  progress: { completed: number; total: number };
+  current: TrainerSessionItem | null;
+  latestResult: { outcome: string; isCorrect: boolean; score: number } | null;
+  canComplete: boolean;
+  idempotentReplay: boolean;
+};
+export type TrainerTeacherSignal = { type: string; skillId: string; evidenceCount: number; recentOutcomes: string[] } | null;
+export type TrainerSubmitResponse = {
+  submitted: { attempt: { id: string; status: string }; result: { outcome: string; isCorrect: boolean; score: number; evaluationRule: string } };
+  theory: TheoryMaterial[];
+  teacherSignal: TrainerTeacherSignal;
+  session: TrainerSession;
+};
+
 export class ApiError extends Error {
   constructor(public readonly status: number, public readonly code: string, message: string) { super(message); }
 }
@@ -49,4 +97,11 @@ export const api = {
   knowledge: () => request<KnowledgeStatus[]>('v1/knowledge/status'),
   aiTraces: () => request<AiTrace[]>('v1/ai-requests'),
   remediation: (body: { externalUserId: string; attemptId: string; learnerQuestion?: string; idempotencyKey: string }) => request<RemediationResponse>('v1/remediations', { method: 'POST', body: JSON.stringify(body), headers: { 'x-request-id': crypto.randomUUID() } }),
+  publishedTasks: (signal?: AbortSignal) => request<PublishedTask[]>('v1/assessment/tasks', { signal }),
+  theoryMaterials: (signal?: AbortSignal) => request<TheoryMaterial[]>('v1/theory/materials', { signal }),
+  trainerStart: (body: { idempotencyKey: string }, signal?: AbortSignal) => request<TrainerSession>('v1/trainer/sessions', { method: 'POST', body: JSON.stringify(body), signal }),
+  trainerCurrent: (sessionId: string, signal?: AbortSignal) => request<TrainerSession>(`v1/trainer/sessions/${sessionId}/current`, { signal }),
+  trainerSubmit: (sessionId: string, body: { itemId: string; idempotencyKey: string; answer: { optionId: string } }, signal?: AbortSignal) => request<TrainerSubmitResponse>(`v1/trainer/sessions/${sessionId}/submissions`, { method: 'POST', body: JSON.stringify(body), signal }),
+  trainerNext: (sessionId: string, signal?: AbortSignal) => request<TrainerSession>(`v1/trainer/sessions/${sessionId}/next`, { method: 'POST', body: '{}', signal }),
+  trainerComplete: (sessionId: string, signal?: AbortSignal) => request<TrainerSession>(`v1/trainer/sessions/${sessionId}/complete`, { method: 'POST', body: '{}', signal }),
 };

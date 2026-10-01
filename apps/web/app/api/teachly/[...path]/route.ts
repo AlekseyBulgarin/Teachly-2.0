@@ -1,25 +1,145 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+const allowedGetRoutes = [
+  /^health$/,
+  /^students$/,
+  /^students\/[0-9a-f-]+\/results$/i,
+  /^students\/[0-9a-f-]+\/learning-state$/i,
+  /^tasks\/published\/[0-9a-f-]+$/i,
+  /^v1\/external-users$/,
+  /^v1\/integration$/,
+  /^v1\/knowledge\/status$/,
+  /^v1\/ai-requests$/,
+  /^v1\/assessment\/tasks$/,
+  /^v1\/theory\/materials$/,
+  /^v1\/trainer\/sessions\/[0-9a-f-]+$/i,
+  /^v1\/trainer\/sessions\/[0-9a-f-]+\/current$/i,
+];
+
+const allowedPostRoutes = [
+  /^v1\/remediations$/,
+  /^v1\/trainer\/sessions$/,
+  /^v1\/trainer\/sessions\/[0-9a-f-]+\/(submissions|next|complete)$/i,
+];
+
+function isAllowed(method: string, path: string): boolean {
+  const routes = method === 'GET' ? allowedGetRoutes : method === 'POST' ? allowedPostRoutes : [];
+  return routes.some((route) => route.test(path));
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+}
+
+function publicTheoryBlock(value: unknown) {
+  const block = asRecord(value);
+  return {
+    type: block.type,
+    ...(typeof block.text === 'string' ? { text: block.text } : {}),
+    ...(typeof block.latex === 'string' ? { latex: block.latex } : {}),
+    ...(Array.isArray(block.items) && block.items.every((item) => typeof item === 'string')
+      ? { items: block.items }
+      : {}),
+  };
+}
+
+function publicTheoryMaterial(value: unknown) {
+  const material = asRecord(value);
+  const version = asRecord(material.version);
+  const content = asRecord(version.content);
+  const curriculum = asRecord(material.curriculum);
+  return {
+    id: material.id,
+    title: material.title,
+    description: material.description,
+    category: material.category,
+    status: material.status,
+    curriculum: {
+      subjectId: curriculum.subjectId,
+      courseId: curriculum.courseId,
+      topicId: curriculum.topicId,
+      skillId: curriculum.skillId,
+    },
+    taskIds: Array.isArray(material.taskIds) ? material.taskIds : [],
+    version: {
+      id: version.id,
+      version: version.version,
+      status: version.status,
+      content: { blocks: Array.isArray(content.blocks) ? content.blocks.map(publicTheoryBlock) : [] },
+    },
+  };
+}
+
+function sanitizeResponse(path: string, value: unknown): unknown {
+  if (path === 'v1/theory/materials') {
+    return Array.isArray(value) ? value.map(publicTheoryMaterial) : [];
+  }
+  if (/^v1\/trainer\/sessions\/[0-9a-f-]+\/submissions$/i.test(path)) {
+    const response = asRecord(value);
+    return {
+      ...response,
+      theory: Array.isArray(response.theory) ? response.theory.map(publicTheoryMaterial) : [],
+    };
+  }
+  return value;
+}
+
 async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   const { path } = await context.params;
-  const target = `${process.env.TEACHLY_API_URL ?? 'http://127.0.0.1:3001'}/${path.join('/')}${request.nextUrl.search}`;
+  const joinedPath = path.join('/');
+  if (!isAllowed(request.method, joinedPath)) {
+    return NextResponse.json({ code: 'DEMO_ROUTE_NOT_ALLOWED', message: 'This API route is not available through the Showcase proxy' }, { status: 403 });
+  }
+  const target = `${process.env.TEACHLY_API_URL ?? 'http://127.0.0.1:3001'}/${joinedPath}${request.nextUrl.search}`;
   const headers = new Headers();
   headers.set('accept', 'application/json');
   if (request.method !== 'GET') headers.set('content-type', request.headers.get('content-type') ?? 'application/json');
-  if (path[0] === 'v1') {
+  if (joinedPath.startsWith('v1/')) {
     headers.set('authorization', `Bearer ${process.env.TEACHLY_DEMO_API_KEY ?? 'tlk_00000000000000dd.teachly-demo-key'}`);
-  } else {
+  } else if (joinedPath !== 'health') {
+    // Legacy read-only Showcase endpoints. The allowlist above prevents authoring access.
     headers.set('x-dev-user', 'teacher');
   }
   const requestId = request.headers.get('x-request-id');
   if (requestId) headers.set('x-request-id', requestId);
   try {
+    let body: string | undefined;
+    if (request.method !== 'GET') {
+      body = await request.text();
+      if (joinedPath === 'v1/trainer/sessions') {
+        let input: Record<string, unknown>;
+        try {
+          input = body ? JSON.parse(body) as Record<string, unknown> : {};
+        } catch {
+          return NextResponse.json({ code: 'INVALID_JSON', message: 'Request body must be valid JSON' }, { status: 400 });
+        }
+        const configuredTaskIds = process.env.TEACHLY_DEMO_TASK_IDS?.split(',').map((value) => value.trim()).filter(Boolean);
+        body = JSON.stringify({
+          ...input,
+          externalLearnerId: process.env.TEACHLY_DEMO_EXTERNAL_LEARNER_ID ?? 'demo-learner-01',
+          taskIds: configuredTaskIds?.length
+            ? configuredTaskIds
+            : ['00000000-0000-4000-8000-000000000007', '00000000-0000-4000-8000-000000000026'],
+        });
+      }
+    }
     const response = await fetch(target, {
       method: request.method,
       headers,
-      body: request.method === 'GET' ? undefined : await request.text(),
+      body,
       cache: 'no-store',
     });
+    if (!response.ok) {
+      return NextResponse.json(
+        { code: 'TEACHLY_API_ERROR', message: 'The live Teachly demo request could not be completed' },
+        { status: response.status },
+      );
+    }
+    if (joinedPath === 'v1/theory/materials' || joinedPath.endsWith('/submissions')) {
+      return NextResponse.json(sanitizeResponse(joinedPath, await response.json()), { status: response.status });
+    }
     return new NextResponse(response.body, {
       status: response.status,
       headers: { 'content-type': response.headers.get('content-type') ?? 'application/json' },

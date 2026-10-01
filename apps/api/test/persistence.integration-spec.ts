@@ -2,7 +2,7 @@ import { and, eq, sql } from 'drizzle-orm';
 import { DatabaseService } from '../src/infrastructure/database/database';
 import { fixtureIds, seedDevelopmentFixtures } from '../src/infrastructure/database/seed';
 import { applyMigrations } from '../src/infrastructure/database/migrate';
-import { assignments, attempts, auditEvents, externalIdentities, results, submissions, taskVersions, tasks, teacherStudentRelationships, users } from '../src/infrastructure/database/schema';
+import { apiKeys, assignments, attempts, auditEvents, externalIdentities, results, submissions, taskVersions, tasks, teacherStudentRelationships, theoryMaterials, theoryMaterialTasks, theoryVersions, users } from '../src/infrastructure/database/schema';
 import { AttemptsService } from '../src/modules/attempts/attempts.service';
 import { AuditService } from '../src/modules/audit/audit.service';
 import { EducationService } from '../src/modules/education/education.service';
@@ -44,10 +44,25 @@ describe('Phase 2 PostgreSQL invariants', () => {
   it('runs clean migrations and converges when seeded twice', async () => {
     await applyMigrations(database);
     await seedDevelopmentFixtures(database);
-    for (const table of [users, tasks, taskVersions]) {
-      const rows = await database.db.select({ count: sql<number>`count(*)::int` }).from(table);
-      expect(rows[0]?.count).toBe(table === users ? 2 : 1);
-    }
+    await seedDevelopmentFixtures(database);
+    expect((await database.db.select({ count: sql<number>`count(*)::int` }).from(users))[0]?.count).toBe(2);
+    expect((await database.db.select({ count: sql<number>`count(*)::int` }).from(tasks))[0]?.count).toBe(2);
+    expect((await database.db.select({ count: sql<number>`count(*)::int` }).from(taskVersions))[0]?.count).toBe(2);
+    expect((await database.db.select({ count: sql<number>`count(*)::int` }).from(theoryMaterials))[0]?.count).toBe(2);
+    expect((await database.db.select({ count: sql<number>`count(*)::int` }).from(theoryVersions))[0]?.count).toBe(2);
+    expect((await database.db.select({ count: sql<number>`count(*)::int` }).from(theoryMaterialTasks))[0]?.count).toBe(2);
+    const seededVersions = await database.db.select().from(taskVersions);
+    expect(seededVersions.find((row) => row.id === fixtureIds.version)?.content.correctOptionId).toBe('a');
+    expect(seededVersions.find((row) => row.id === fixtureIds.secondVersion)?.content.correctOptionId).toBe('b');
+    const seededTheory = await database.db.select().from(theoryVersions);
+    expect(seededTheory.map((row) => row.metadata.taskIds).sort()).toEqual([
+      [fixtureIds.secondTask],
+      [fixtureIds.task],
+    ].sort());
+    const [demoKey] = await database.db.select().from(apiKeys).where(eq(apiKeys.id, fixtureIds.apiKey));
+    expect(demoKey?.scopes).toEqual([
+      'external_users:read', 'remediation:write', 'assessment:read', 'theory:read', 'trainer:read', 'trainer:write',
+    ]);
     const version = await database.db.select().from(taskVersions).where(eq(taskVersions.id, fixtureIds.version));
     expect(version[0]?.provenance.licenseStatus).toBe('development_only');
   });

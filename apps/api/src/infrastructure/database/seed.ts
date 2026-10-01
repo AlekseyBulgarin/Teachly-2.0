@@ -9,7 +9,8 @@ import {
   integrations, knowledgeChunks, knowledgeDocumentVersions, knowledgeDocuments,
   knowledgeRawImports, knowledgeSources, learningEvents, memberships, organizations,
   results, skills, subjects, submissions, taskVersions, tasks, topics,
-  teacherStudentRelationships, users, workspaces, attempts, skillEvidence,
+  teacherStudentRelationships, theoryMaterials, theoryMaterialTasks, theoryVersions,
+  users, workspaces, attempts, skillEvidence,
 } from './schema';
 
 const id = (n: number) => `00000000-0000-4000-8000-${n.toString().padStart(12, '0')}`;
@@ -21,6 +22,9 @@ export const fixtureIds = {
   knowledgeSource: id(17), knowledgeDocument: id(18), knowledgeRawImport: id(19),
   knowledgeVersion: id(20), knowledgeChunk: id(21), attemptEvent: id(22),
   resultEvent: id(23), evidence: id(24), apiKey: id(25),
+  secondTask: id(26), secondVersion: id(27),
+  firstTheory: id(28), firstTheoryVersion: id(29), firstTheoryTask: id(30),
+  secondTheory: id(31), secondTheoryVersion: id(32), secondTheoryTask: id(33),
 };
 
 export const demoApiKey = 'tlk_00000000000000dd.teachly-demo-key';
@@ -89,8 +93,16 @@ export async function seedDevelopmentFixtures(
       name: 'Demo reference client key',
       keyPrefix: demoApiKey.slice(0, demoApiKey.indexOf('.')),
       keyHash: hashApiKey(demoApiKey),
-      scopes: ['external_users:read', 'external_users:write', 'remediation:write'],
-    }).onConflictDoNothing();
+      scopes: ['external_users:read', 'remediation:write', 'assessment:read', 'theory:read', 'trainer:read', 'trainer:write'],
+    }).onConflictDoUpdate({
+      target: apiKeys.id,
+      set: {
+        name: 'Demo reference client key',
+        keyPrefix: demoApiKey.slice(0, demoApiKey.indexOf('.')),
+        keyHash: hashApiKey(demoApiKey),
+        scopes: ['external_users:read', 'remediation:write', 'assessment:read', 'theory:read', 'trainer:read', 'trainer:write'],
+      },
+    });
     await tx.insert(externalUsers).values({
       id: fixtureIds.externalUser,
       organizationId: fixtureIds.organization,
@@ -99,6 +111,124 @@ export async function seedDevelopmentFixtures(
       learnerId: fixtureIds.student,
       externalUserId: 'demo-learner-01',
     }).onConflictDoNothing();
+    await tx.insert(tasks).values({
+      id: fixtureIds.secondTask,
+      workspaceId: fixtureIds.workspace,
+      subjectId: fixtureIds.subject,
+      courseId: fixtureIds.course,
+      topicId: fixtureIds.topic,
+      skillId: fixtureIds.skill,
+      sourceKind: 'internal_fixture',
+    }).onConflictDoNothing();
+    await tx.insert(taskVersions).values({
+      id: fixtureIds.secondVersion,
+      taskId: fixtureIds.secondTask,
+      workspaceId: fixtureIds.workspace,
+      version: 1,
+      taskType: 'single-choice',
+      status: 'published',
+      content: {
+        statement: 'Which action keeps an educational evaluation authoritative?',
+        options: [
+          { id: 'a', label: 'Let the browser decide whether the answer is correct' },
+          { id: 'b', label: 'Evaluate the submitted answer on the server' },
+          { id: 'c', label: 'Store only the selected option in local state' },
+        ],
+        correctOptionId: 'b',
+      },
+      answerSchema: { type: 'single-choice', required: true },
+      evaluationRule: 'single-choice.v1',
+      provenance: {
+        sourceKind: 'internal_fixture',
+        sourceIdentifier: 'teachly-demo-authoritative-evaluation',
+        licenseStatus: 'development_only',
+        fixtureVersion: '1',
+      },
+      publishedAt: new Date('2026-01-01T00:01:00.000Z'),
+    }).onConflictDoNothing();
+
+    const theoryFixtures = [
+      {
+        materialId: fixtureIds.firstTheory,
+        versionId: fixtureIds.firstTheoryVersion,
+        linkId: fixtureIds.firstTheoryTask,
+        taskId: fixtureIds.task,
+        title: 'Deterministic evaluation',
+        description: 'Why the same answer must produce the same result.',
+        category: 'Evaluation',
+        blocks: [
+          { type: 'heading', text: 'A predictable learning rule' },
+          { type: 'paragraph', text: 'A deterministic evaluator returns the same outcome for the same task version and answer.' },
+          { type: 'callout', text: 'The server evaluates the answer; the browser only displays the result.' },
+        ],
+        publishedAt: new Date('2026-01-01T00:02:00.000Z'),
+      },
+      {
+        materialId: fixtureIds.secondTheory,
+        versionId: fixtureIds.secondTheoryVersion,
+        linkId: fixtureIds.secondTheoryTask,
+        taskId: fixtureIds.secondTask,
+        title: 'Authoritative assessment',
+        description: 'How Teachly keeps evaluation rules outside the client.',
+        category: 'Architecture',
+        blocks: [
+          { type: 'heading', text: 'One source of truth' },
+          { type: 'paragraph', text: 'The published task version and server-side rule define how a submission is evaluated.' },
+          { type: 'list', items: ['The client sends an answer.', 'Teachly evaluates it.', 'The learner receives the recorded outcome.'] },
+        ],
+        publishedAt: new Date('2026-01-01T00:03:00.000Z'),
+      },
+    ];
+    for (const theory of theoryFixtures) {
+      const metadata = {
+        title: theory.title,
+        description: theory.description,
+        category: theory.category,
+        subjectId: fixtureIds.subject,
+        courseId: fixtureIds.course,
+        topicId: fixtureIds.topic,
+        skillId: fixtureIds.skill,
+        taskIds: [theory.taskId],
+      };
+      await tx.insert(theoryMaterials).values({
+        id: theory.materialId,
+        organizationId: fixtureIds.organization,
+        workspaceId: fixtureIds.workspace,
+        title: theory.title,
+        description: theory.description,
+        category: theory.category,
+        subjectId: fixtureIds.subject,
+        courseId: fixtureIds.course,
+        topicId: fixtureIds.topic,
+        skillId: fixtureIds.skill,
+        status: 'published',
+        createdByUserId: fixtureIds.teacher,
+        createdAt: theory.publishedAt,
+        updatedAt: theory.publishedAt,
+      }).onConflictDoNothing();
+      await tx.insert(theoryVersions).values({
+        id: theory.versionId,
+        materialId: theory.materialId,
+        workspaceId: fixtureIds.workspace,
+        version: 1,
+        status: 'published',
+        content: { blocks: theory.blocks },
+        metadata,
+        createdByUserId: fixtureIds.teacher,
+        publishedByUserId: fixtureIds.teacher,
+        publishedByPrincipal: 'seed:demo',
+        publishedAt: theory.publishedAt,
+        createdAt: theory.publishedAt,
+        updatedAt: theory.publishedAt,
+      }).onConflictDoNothing();
+      await tx.insert(theoryMaterialTasks).values({
+        id: theory.linkId,
+        materialId: theory.materialId,
+        workspaceId: fixtureIds.workspace,
+        taskId: theory.taskId,
+        createdAt: theory.publishedAt,
+      }).onConflictDoNothing();
+    }
     await tx.insert(assignments).values({
       id: fixtureIds.assignment,
       workspaceId: fixtureIds.workspace,

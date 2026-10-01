@@ -1,2 +1,3 @@
 import { CapabilityPage } from '@/components/showcase/capabilities';
-export default function Page() { return <CapabilityPage capability="trainer" />; }
+import { TrainerDemo } from '@/components/showcase/demos/trainer-demo';
+export default function Page() { return <CapabilityPage capability="trainer" demo={<TrainerDemo />} />; }

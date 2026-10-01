@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui";
 import { PipelineStep } from "@/components/showcase/shared";
 import { QuickSectionNav } from "@/components/showcase/quick-section-nav";
+import { ModuleDemoSection } from "@/components/showcase/module-demo";
 
 type CapabilityKey =
   | "tasks"
@@ -398,24 +400,27 @@ const icons: Record<CapabilityKey, LucideIcon> = {
   progress: Activity,
 };
 
-export function CapabilityPage({ capability }: { capability: CapabilityKey }) {
-  const { locale } = useEcosystem();
+export function CapabilityPage({ capability, demo }: { capability: CapabilityKey; demo?: ReactNode }) {
+  const { locale, t } = useEcosystem();
   const item = copy[locale][capability];
   const Icon = icons[capability];
-  const nav =
+  const base =
     locale === "ru"
       ? [
           { id: "overview", label: "Обзор" },
           { id: "benefits", label: "Возможности" },
           { id: "flow", label: "Как работает" },
-          { id: "next", label: "Дальше" },
         ]
       : [
           { id: "overview", label: "Overview" },
           { id: "benefits", label: "Benefits" },
           { id: "flow", label: "How it works" },
-          { id: "next", label: "Next" },
         ];
+  const nav = [
+    ...base,
+    ...(demo ? [{ id: "demo", label: t("demo.nav") }] : []),
+    locale === "ru" ? { id: "next", label: "Дальше" } : { id: "next", label: "Next" },
+  ];
   return (
     <div className="flex flex-col gap-14 lg:gap-20">
       <div id="overview">
@@ -480,6 +485,7 @@ export function CapabilityPage({ capability }: { capability: CapabilityKey }) {
           </div>
         </SectionCard>
       </div>
+      {demo ? <ModuleDemoSection>{demo}</ModuleDemoSection> : null}
       <section
         id="next"
         className="section-reveal scroll-mt-28 rounded-3xl border border-white/[.09] bg-[linear-gradient(135deg,rgba(69,230,168,.1),transparent_56%),var(--surface)] p-7 sm:p-9 lg:flex lg:items-center lg:justify-between lg:gap-8"
