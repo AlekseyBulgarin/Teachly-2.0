@@ -25,7 +25,7 @@ button:disabled { cursor: not-allowed; }
 a:focus-visible, button:focus-visible, [role='button']:focus-visible { outline: 2px solid rgba(69, 230, 168, .8); outline-offset: 3px; }
 .interactive { transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease; }
 .interactive:active { transform: scale(.985); }
-.showcase-page { animation: showcase-enter 380ms cubic-bezier(.2,.8,.2,1) both; }
+.showcase-page { animation: showcase-enter 380ms cubic-bezier(.2,.8,.2,1); }
 .section-reveal { animation: section-enter 460ms cubic-bezier(.2,.8,.2,1) both; }
 .section-reveal[data-delay='1'] { animation-delay: 70ms; }
 .section-reveal[data-delay='2'] { animation-delay: 130ms; }

@@ -3,7 +3,7 @@ import type { PublicTaskVersion } from '../education/education.types';
 export type AttemptView = {
   id: string;
   taskVersionId: string;
-  assignmentId: string;
+  assignmentId: string | null;
   status: 'started' | 'submitted';
   startedAt: Date;
   submittedAt: Date | null;

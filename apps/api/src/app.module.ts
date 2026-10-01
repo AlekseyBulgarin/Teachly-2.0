@@ -14,12 +14,18 @@ import { KnowledgeModule } from './modules/knowledge/knowledge.module';
 import { AiModule } from './modules/ai/ai.module';
 import { CoreModule } from './modules/core/core.module';
 import { TaskBankModule } from './modules/assessment/task-bank.module';
+import { TheoryModule } from './modules/theory/theory.module';
+import { TrainerModule } from './modules/trainer/trainer.module';
+import { WhiteboardModule } from './modules/whiteboard/whiteboard.module';
 
 @Module({
   imports: [
     DatabaseModule,
     CoreModule,
     TaskBankModule,
+    TheoryModule,
+    TrainerModule,
+    WhiteboardModule,
     IdentityModule,
     UsersModule,
     EducationModule,

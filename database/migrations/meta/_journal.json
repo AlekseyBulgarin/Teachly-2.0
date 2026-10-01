@@ -120,6 +120,34 @@
       "when": 1790609865967,
       "tag": "0016_panoramic_alex_wilder",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1790612000000,
+      "tag": "0017_theory_v1",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790614000000,
+      "tag": "0018_trainer_v1",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790867463606,
+      "tag": "0019_whiteboard_v1",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1790870798151,
+      "tag": "0020_whiteboard_resources",
+      "breakpoints": true
     }
   ]
 }

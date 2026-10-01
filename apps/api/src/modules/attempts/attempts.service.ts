@@ -52,6 +52,19 @@ export class AttemptsService {
     });
   }
 
+  async startTrainer(learnerId: string, taskVersionId: string, workspaceId: string): Promise<StartedAttempt> {
+    const task = await this.education.getPublishedTaskVersion(taskVersionId);
+    if (task.workspaceId !== workspaceId) throw new NotFoundException('Published task version not found');
+    const [attempt] = await this.database.db.insert(attempts).values({
+      studentId: learnerId,
+      taskVersionId,
+      workspaceId,
+    }).returning();
+    if (!attempt) throw new Error('Trainer attempt creation failed');
+    await this.audit.record(learnerId, 'trainer_attempt_started', 'attempt', attempt.id, { taskVersionId }, workspaceId);
+    return { attempt: this.toAttemptView(attempt), task: this.education.toPublicTaskVersion(task.taskVersion) };
+  }
+
   async submit(studentId: string, attemptId: string, idempotencyKey: string, answer: unknown, context?: TenantContext): Promise<SubmittedAttempt> {
     return this.database.transaction(async () => {
       const [attempt] = await this.database.db.select()

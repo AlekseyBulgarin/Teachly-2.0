@@ -1,6 +1,9 @@
 export const integrationScopes = [
   'external_users:read', 'external_users:write', 'remediation:write',
   'assessment:read', 'assessment:answer:read', 'assessment:write', 'assessment:manage',
+  'theory:read', 'theory:write', 'theory:manage',
+  'trainer:read', 'trainer:write',
+  'whiteboard:read', 'whiteboard:write',
 ] as const;
 export type IntegrationScope = typeof integrationScopes[number];
 

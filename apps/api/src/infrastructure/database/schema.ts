@@ -363,6 +363,91 @@ export const taskVersions = pgTable(
   }),
 );
 
+export const theoryMaterials = pgTable('theory_materials', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id').notNull(),
+  workspaceId: uuid('workspace_id').notNull(),
+  title: text('title').notNull(),
+  description: text('description').default('').notNull(),
+  category: text('category'),
+  subjectId: uuid('subject_id').references(() => subjects.id, { onDelete: 'restrict' }),
+  courseId: uuid('course_id').references(() => courses.id, { onDelete: 'restrict' }),
+  topicId: uuid('topic_id').references(() => topics.id, { onDelete: 'restrict' }),
+  skillId: uuid('skill_id').references(() => skills.id, { onDelete: 'restrict' }),
+  status: text('status').default('draft').notNull(),
+  createdByUserId: uuid('created_by_user_id').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  workspaceFk: foreignKey({
+    name: 'theory_materials_workspace_fk',
+    columns: [table.workspaceId, table.organizationId],
+    foreignColumns: [workspaces.id, workspaces.organizationId],
+  }).onDelete('restrict'),
+  courseWorkspaceFk: foreignKey({
+    name: 'theory_materials_course_workspace_fk',
+    columns: [table.courseId, table.workspaceId],
+    foreignColumns: [courses.id, courses.workspaceId],
+  }).onDelete('restrict'),
+  materialWorkspaceUnique: uniqueIndex('theory_materials_id_workspace_unique').on(table.id, table.workspaceId),
+  statusCheck: check('theory_materials_status_check', sql`${table.status} IN ('draft', 'published')`),
+}));
+
+export const theoryVersions = pgTable('theory_versions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  materialId: uuid('material_id').notNull(),
+  workspaceId: uuid('workspace_id').notNull(),
+  version: integer('version').notNull(),
+  status: text('status').default('draft').notNull(),
+  content: jsonb('content').$type<{ blocks: Array<Record<string, unknown>> }>().notNull(),
+  metadata: jsonb('metadata').$type<{
+    title: string; description: string; category: string | null;
+    subjectId: string | null; courseId: string | null; topicId: string | null; skillId: string | null;
+    taskIds: string[];
+  }>().notNull(),
+  createdByUserId: uuid('created_by_user_id').references(() => users.id, { onDelete: 'set null' }),
+  publishedByUserId: uuid('published_by_user_id').references(() => users.id, { onDelete: 'set null' }),
+  publishedByPrincipal: text('published_by_principal'),
+  publishedAt: timestamp('published_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  materialWorkspaceFk: foreignKey({
+    name: 'theory_versions_material_workspace_fk',
+    columns: [table.materialId, table.workspaceId],
+    foreignColumns: [theoryMaterials.id, theoryMaterials.workspaceId],
+  }).onDelete('restrict'),
+  materialVersionUnique: uniqueIndex('theory_versions_material_version_unique').on(table.materialId, table.version),
+  versionWorkspaceUnique: uniqueIndex('theory_versions_id_workspace_unique').on(table.id, table.workspaceId),
+  oneDraftPerMaterial: uniqueIndex('theory_versions_one_draft_per_material_unique')
+    .on(table.materialId).where(sql`${table.status} = 'draft'`),
+  statusCheck: check('theory_versions_status_check', sql`${table.status} IN ('draft', 'published')`),
+  publishedState: check('theory_versions_published_state_check', sql`
+    (${table.status} = 'draft' AND ${table.publishedAt} IS NULL)
+    OR (${table.status} = 'published' AND ${table.publishedAt} IS NOT NULL AND ${table.publishedByPrincipal} IS NOT NULL)
+  `),
+}));
+
+export const theoryMaterialTasks = pgTable('theory_material_tasks', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  materialId: uuid('material_id').notNull(),
+  workspaceId: uuid('workspace_id').notNull(),
+  taskId: uuid('task_id').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  materialWorkspaceFk: foreignKey({
+    name: 'theory_material_tasks_material_workspace_fk',
+    columns: [table.materialId, table.workspaceId],
+    foreignColumns: [theoryMaterials.id, theoryMaterials.workspaceId],
+  }).onDelete('cascade'),
+  taskWorkspaceFk: foreignKey({
+    name: 'theory_material_tasks_task_workspace_fk',
+    columns: [table.taskId, table.workspaceId],
+    foreignColumns: [tasks.id, tasks.workspaceId],
+  }).onDelete('restrict'),
+  materialTaskUnique: uniqueIndex('theory_material_tasks_material_task_unique').on(table.materialId, table.taskId),
+}));
+
 export const assignments = pgTable('assignments', {
   id: uuid('id').defaultRandom().primaryKey(),
   workspaceId: uuid('workspace_id').notNull(),
@@ -387,7 +472,7 @@ export const attempts = pgTable('attempts', {
   workspaceId: uuid('workspace_id').notNull(),
   studentId: uuid('student_id').notNull().references(() => users.id, { onDelete: 'restrict' }),
   taskVersionId: uuid('task_version_id').notNull().references(() => taskVersions.id, { onDelete: 'restrict' }),
-  assignmentId: uuid('assignment_id').notNull().references(() => assignments.id, { onDelete: 'restrict' }),
+  assignmentId: uuid('assignment_id').references(() => assignments.id, { onDelete: 'restrict' }),
   status: attemptStatusEnum('status').default('started').notNull(),
   startedAt: timestamp('started_at', { withTimezone: true }).defaultNow().notNull(),
   submittedAt: timestamp('submitted_at', { withTimezone: true }),
@@ -465,6 +550,74 @@ export const results = pgTable('results', {
     columns: [table.attemptId, table.submissionId, table.workspaceId],
     foreignColumns: [submissions.attemptId, submissions.id, submissions.workspaceId],
   }).onDelete('restrict'),
+}));
+
+export const trainerSessions = pgTable('trainer_sessions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id').notNull(),
+  workspaceId: uuid('workspace_id').notNull(),
+  integrationId: uuid('integration_id').notNull(),
+  externalUserId: uuid('external_user_id').notNull().references(() => externalUsers.id, { onDelete: 'restrict' }),
+  learnerId: uuid('learner_id').notNull().references(() => users.id, { onDelete: 'restrict' }),
+  subjectId: uuid('subject_id').references(() => subjects.id, { onDelete: 'restrict' }),
+  courseId: uuid('course_id').references(() => courses.id, { onDelete: 'restrict' }),
+  topicId: uuid('topic_id').references(() => topics.id, { onDelete: 'restrict' }),
+  skillId: uuid('skill_id').references(() => skills.id, { onDelete: 'restrict' }),
+  idempotencyKey: text('idempotency_key').notNull(),
+  status: text('status').default('active').notNull(),
+  startedAt: timestamp('started_at', { withTimezone: true }).defaultNow().notNull(),
+  completedAt: timestamp('completed_at', { withTimezone: true }),
+}, (table) => ({
+  integrationTenantFk: foreignKey({
+    name: 'trainer_sessions_integration_tenant_fk',
+    columns: [table.organizationId, table.workspaceId, table.integrationId],
+    foreignColumns: [integrations.organizationId, integrations.workspaceId, integrations.id],
+  }).onDelete('restrict'),
+  courseWorkspaceFk: foreignKey({
+    name: 'trainer_sessions_course_workspace_fk',
+    columns: [table.courseId, table.workspaceId],
+    foreignColumns: [courses.id, courses.workspaceId],
+  }).onDelete('restrict'),
+  sessionWorkspaceUnique: uniqueIndex('trainer_sessions_id_workspace_unique').on(table.id, table.workspaceId),
+  idempotencyUnique: uniqueIndex('trainer_sessions_idempotency_unique').on(table.workspaceId, table.integrationId, table.externalUserId, table.idempotencyKey),
+  statusCheck: check('trainer_sessions_status_check', sql`${table.status} IN ('active', 'completed')`),
+  completionState: check('trainer_sessions_completion_state_check', sql`
+    (${table.status} = 'active' AND ${table.completedAt} IS NULL)
+    OR (${table.status} = 'completed' AND ${table.completedAt} IS NOT NULL)
+  `),
+}));
+
+export const trainerSessionItems = pgTable('trainer_session_items', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  sessionId: uuid('session_id').notNull(),
+  workspaceId: uuid('workspace_id').notNull(),
+  position: integer('position').notNull(),
+  taskVersionId: uuid('task_version_id').notNull(),
+  attemptId: uuid('attempt_id').references(() => attempts.id, { onDelete: 'restrict' }),
+  resultId: uuid('result_id').references(() => results.id, { onDelete: 'restrict' }),
+  status: text('status').default('pending').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  sessionWorkspaceFk: foreignKey({
+    name: 'trainer_session_items_session_workspace_fk',
+    columns: [table.sessionId, table.workspaceId],
+    foreignColumns: [trainerSessions.id, trainerSessions.workspaceId],
+  }).onDelete('cascade'),
+  taskVersionWorkspaceFk: foreignKey({
+    name: 'trainer_session_items_task_version_workspace_fk',
+    columns: [table.taskVersionId, table.workspaceId],
+    foreignColumns: [taskVersions.id, taskVersions.workspaceId],
+  }).onDelete('restrict'),
+  attemptWorkspaceFk: foreignKey({
+    name: 'trainer_session_items_attempt_workspace_fk',
+    columns: [table.attemptId, table.workspaceId],
+    foreignColumns: [attempts.id, attempts.workspaceId],
+  }).onDelete('restrict'),
+  sessionPositionUnique: uniqueIndex('trainer_session_items_session_position_unique').on(table.sessionId, table.position),
+  sessionTaskVersionUnique: uniqueIndex('trainer_session_items_session_task_version_unique').on(table.sessionId, table.taskVersionId),
+  itemWorkspaceUnique: uniqueIndex('trainer_session_items_id_workspace_unique').on(table.id, table.workspaceId),
+  statusCheck: check('trainer_session_items_status_check', sql`${table.status} IN ('pending', 'started', 'submitted')`),
 }));
 
 export const externalResultObservations = pgTable('external_result_observations', {
@@ -860,6 +1013,76 @@ export const aiEvaluationRecords = pgTable('ai_evaluation_records', {
     foreignColumns: [aiRequests.id, aiRequests.workspaceId],
   }).onDelete('cascade'),
   evaluationRequestUnique: uniqueIndex('ai_evaluation_records_request_unique').on(table.workspaceId, table.aiRequestId),
+}));
+
+export const whiteboards = pgTable('whiteboards', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id').notNull(),
+  workspaceId: uuid('workspace_id').notNull(),
+  integrationId: uuid('integration_id').notNull(),
+  title: text('title').notNull(),
+  externalReference: text('external_reference'),
+  status: text('status').default('active').notNull(),
+  currentRevision: integer('current_revision').default(0).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  integrationTenantFk: foreignKey({
+    name: 'whiteboards_integration_tenant_fk',
+    columns: [table.organizationId, table.workspaceId, table.integrationId],
+    foreignColumns: [integrations.organizationId, integrations.workspaceId, integrations.id],
+  }).onDelete('restrict'),
+  boardWorkspaceUnique: uniqueIndex('whiteboards_id_workspace_unique').on(table.id, table.workspaceId),
+  statusCheck: check('whiteboards_status_check', sql`${table.status} IN ('active', 'archived')`),
+}));
+
+export const whiteboardSnapshots = pgTable('whiteboard_snapshots', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  boardId: uuid('board_id').notNull(),
+  workspaceId: uuid('workspace_id').notNull(),
+  revision: integer('revision').notNull(),
+  data: jsonb('data').$type<Record<string, unknown>>().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  boardWorkspaceFk: foreignKey({
+    name: 'whiteboard_snapshots_board_workspace_fk',
+    columns: [table.boardId, table.workspaceId],
+    foreignColumns: [whiteboards.id, whiteboards.workspaceId],
+  }).onDelete('cascade'),
+  boardRevisionUnique: uniqueIndex('whiteboard_snapshots_board_revision_unique').on(table.boardId, table.revision),
+  snapshotWorkspaceUnique: uniqueIndex('whiteboard_snapshots_id_workspace_unique').on(table.id, table.workspaceId),
+}));
+
+export const whiteboardResources = pgTable('whiteboard_resources', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  boardId: uuid('board_id').notNull(),
+  workspaceId: uuid('workspace_id').notNull(),
+  resourceType: text('resource_type').notNull(),
+  taskVersionId: uuid('task_version_id'),
+  theoryVersionId: uuid('theory_version_id'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  boardWorkspaceFk: foreignKey({
+    name: 'whiteboard_resources_board_workspace_fk',
+    columns: [table.boardId, table.workspaceId],
+    foreignColumns: [whiteboards.id, whiteboards.workspaceId],
+  }).onDelete('cascade'),
+  taskVersionWorkspaceFk: foreignKey({
+    name: 'whiteboard_resources_task_version_workspace_fk',
+    columns: [table.taskVersionId, table.workspaceId],
+    foreignColumns: [taskVersions.id, taskVersions.workspaceId],
+  }).onDelete('restrict'),
+  theoryVersionWorkspaceFk: foreignKey({
+    name: 'whiteboard_resources_theory_version_workspace_fk',
+    columns: [table.theoryVersionId, table.workspaceId],
+    foreignColumns: [theoryVersions.id, theoryVersions.workspaceId],
+  }).onDelete('restrict'),
+  boardTaskUnique: uniqueIndex('whiteboard_resources_board_task_unique').on(table.boardId, table.taskVersionId),
+  boardTheoryUnique: uniqueIndex('whiteboard_resources_board_theory_unique').on(table.boardId, table.theoryVersionId),
+  typeReferenceCheck: check('whiteboard_resources_type_reference_check', sql`
+    (${table.resourceType} = 'task' AND ${table.taskVersionId} IS NOT NULL AND ${table.theoryVersionId} IS NULL)
+    OR (${table.resourceType} = 'theory' AND ${table.theoryVersionId} IS NOT NULL AND ${table.taskVersionId} IS NULL)
+  `),
 }));
 
 export type User = typeof users.$inferSelect;

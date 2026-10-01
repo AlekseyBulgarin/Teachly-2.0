@@ -31,8 +31,8 @@ export class AttemptDto {
   @ApiProperty({ format: 'uuid' })
   taskVersionId!: string;
 
-  @ApiProperty({ format: 'uuid' })
-  assignmentId!: string;
+  @ApiProperty({ format: 'uuid', nullable: true })
+  assignmentId!: string | null;
 
   @ApiProperty({ enum: ['started', 'submitted'] })
   status!: 'started' | 'submitted';
