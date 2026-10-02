@@ -4,7 +4,7 @@ import { developmentAuthEnabled, requiredEnvironment } from '../../common/config
 import { buildInternalFixture } from '../../modules/education/fixtures/internal-fixture';
 import { SKILL_EVIDENCE_RULE } from '../../modules/learning/learning.rules';
 import { DatabaseService } from './database';
-import { hashApiKey } from '../../modules/integrations/api-key.crypto';
+import { apiKeyPrefix, hashApiKey } from '../../modules/integrations/api-key.crypto';
 import {
   apiKeys, assignments, courses, externalIdentities, externalUsers,
   integrations, knowledgeChunks, knowledgeDocumentVersions, knowledgeDocuments,
@@ -58,12 +58,25 @@ const SEED_ASSESSMENT_CHAINS: SeedAssessmentChain[] = [
 
 export const demoApiKey = 'tlk_00000000000000dd.teachly-demo-key';
 
+export const demoApiKeyScopes = [
+  'assessment:read',
+  'theory:read',
+  'trainer:read',
+  'trainer:write',
+  'learner_intelligence:read',
+  'whiteboard:read',
+  'whiteboard:write',
+] as const;
+
 export async function seedDevelopmentFixtures(
   database: DatabaseService,
-  options: { includeDemoRecords?: boolean } = {},
+  options: { includeDemoRecords?: boolean; apiKey?: string; allowProductionDemo?: boolean } = {},
 ): Promise<void> {
-  if (!developmentAuthEnabled()) throw new Error('Development fixture seeding requires explicitly enabled development authentication');
+  if (!developmentAuthEnabled() && !options.allowProductionDemo) {
+    throw new Error('Development fixture seeding requires explicitly enabled development authentication');
+  }
   const includeDemoRecords = options.includeDemoRecords ?? true;
+  const seededApiKey = options.apiKey ?? demoApiKey;
   const fixture = buildInternalFixture();
   await database.db.transaction(async (tx) => {
     await tx.insert(users).values([
@@ -120,16 +133,16 @@ export async function seedDevelopmentFixtures(
       workspaceId: fixtureIds.workspace,
       integrationId: fixtureIds.integration,
       name: 'Demo reference client key',
-      keyPrefix: demoApiKey.slice(0, demoApiKey.indexOf('.')),
-      keyHash: hashApiKey(demoApiKey),
-      scopes: ['external_users:read', 'remediation:write', 'assessment:read', 'theory:read', 'trainer:read', 'trainer:write', 'learner_intelligence:read'],
+      keyPrefix: seededApiKey.slice(0, seededApiKey.indexOf('.')),
+      keyHash: hashApiKey(seededApiKey),
+      scopes: [...demoApiKeyScopes],
     }).onConflictDoUpdate({
       target: apiKeys.id,
       set: {
         name: 'Demo reference client key',
-        keyPrefix: demoApiKey.slice(0, demoApiKey.indexOf('.')),
-        keyHash: hashApiKey(demoApiKey),
-        scopes: ['external_users:read', 'remediation:write', 'assessment:read', 'theory:read', 'trainer:read', 'trainer:write', 'learner_intelligence:read'],
+        keyPrefix: seededApiKey.slice(0, seededApiKey.indexOf('.')),
+        keyHash: hashApiKey(seededApiKey),
+        scopes: [...demoApiKeyScopes],
       },
     });
     await tx.insert(externalUsers).values({
@@ -576,6 +589,24 @@ export async function seedDevelopmentFixtures(
       eq(knowledgeDocumentVersions.id, fixtureIds.knowledgeVersion),
       eq(knowledgeDocumentVersions.status, 'draft'),
     ));
+  });
+}
+
+export async function seedProductionDemoFixtures(database: DatabaseService): Promise<void> {
+  if (process.env.NODE_ENV !== 'production' || process.env.DEV_AUTH_ENABLED !== 'false') {
+    throw new Error('Production demo seeding requires NODE_ENV=production and DEV_AUTH_ENABLED=false');
+  }
+  if (process.env.TEACHLY_DEMO_SEED_ENABLED !== 'true') {
+    throw new Error('Production demo seeding requires TEACHLY_DEMO_SEED_ENABLED=true');
+  }
+  const productionApiKey = process.env.TEACHLY_DEMO_API_KEY;
+  const productionKeySecret = productionApiKey?.split('.')[1];
+  if (!productionApiKey || !apiKeyPrefix(productionApiKey) || !productionKeySecret || productionKeySecret.length < 32 || productionApiKey === demoApiKey) {
+    throw new Error('TEACHLY_DEMO_API_KEY must be a non-development Teachly API key');
+  }
+  await seedDevelopmentFixtures(database, {
+    apiKey: productionApiKey,
+    allowProductionDemo: true,
   });
 }
 

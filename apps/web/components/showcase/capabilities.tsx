@@ -71,7 +71,7 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
       next: "Посмотрите, как один учебный материал становится понятной теорией.",
       nextAction: "Открыть теорию",
       nextHref: "/theory",
-      status: "COMING NEXT",
+      status: "LIVE",
     },
     variants: {
       eyebrow: "Варианты",
@@ -119,7 +119,7 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
       next: "Посмотрите, как образовательный AI использует этот контекст.",
       nextAction: "Открыть AI",
       nextHref: "/ai",
-      status: "COMING NEXT",
+      status: "LIVE",
     },
     trainer: {
       eyebrow: "Тренажёр",
@@ -143,31 +143,31 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
       next: "Посмотрите, как Teachly помогает понять учебный результат.",
       nextAction: "Открыть прогресс",
       nextHref: "/progress",
-      status: "PLANNED",
+      status: "LIVE",
     },
     whiteboard: {
       eyebrow: "Онлайн-доска",
-      title: "Собирайте объяснение и совместную работу вокруг учебной задачи.",
+      title: "Объясняйте ход решения на наглядной учебной доске.",
       description:
-        "Онлайн-доска — пространство для работы с материалом, когда группе или преподавателю нужно объяснить ход мысли наглядно.",
+        "Онлайн-доска — пространство для визуальной работы с материалом. В этой демоверсии черновики сохраняются на сервере и переживают перезагрузку страницы; совместное редактирование пока не входит в модуль.",
       audience: "Для преподавателя, группы и ученика",
       outcomes: [
-        "Наглядная совместная работа",
+        "Наглядная работа с материалом",
         "Единый учебный сценарий",
         "Контекст для следующего шага",
       ],
       flowTitle: "Как модуль работает в экосистеме",
       flow: [
         "Преподаватель открывает учебную задачу",
-        "Группа разбирает материал вместе",
-        "Контекст сохраняется для следующих модулей",
+        "Ученик или преподаватель разбирает материал на доске",
+        "Работа сохраняется на сервере платформы",
       ],
       ecosystem:
         "Онлайн-доска дополняет обучение, не становясь отдельным несвязанным инструментом.",
       next: "Посмотрите платформу, которая объединяет модули.",
       nextAction: "Открыть платформу",
       nextHref: "/platform",
-      status: "PLANNED",
+      status: "LIVE",
     },
     "student-profile": {
       eyebrow: "Профиль ученика",
@@ -241,7 +241,7 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
       next: "See how learning material becomes clear theory.",
       nextAction: "Open theory",
       nextHref: "/theory",
-      status: "COMING NEXT",
+      status: "LIVE",
     },
     variants: {
       eyebrow: "Variants",
@@ -289,7 +289,7 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
       next: "See how Educational AI uses this context.",
       nextAction: "Open AI",
       nextHref: "/ai",
-      status: "COMING NEXT",
+      status: "LIVE",
     },
     trainer: {
       eyebrow: "Trainer",
@@ -313,31 +313,31 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
       next: "See how Teachly makes a learning outcome easier to understand.",
       nextAction: "Open progress",
       nextHref: "/progress",
-      status: "PLANNED",
+      status: "LIVE",
     },
     whiteboard: {
       eyebrow: "Whiteboard",
-      title: "Bring explanation and collaboration around a learning task.",
+      title: "Explain the path to a solution on a visual learning board.",
       description:
-        "The whiteboard is a space to work with material when a group or teacher needs to explain thinking visually.",
+        "The whiteboard supports visual work with learning material. In this demo, drafts are saved on the server and survive a page reload; real-time collaboration is not included yet.",
       audience: "For teachers, groups and learners",
       outcomes: [
-        "Visual collaboration",
+        "Visual work with learning material",
         "One learning scenario",
         "Context for the next step",
       ],
       flowTitle: "How it works in the ecosystem",
       flow: [
         "A teacher opens a learning task",
-        "The group works through material together",
-        "Context is retained for connected modules",
+        "A learner or teacher works through material on the board",
+        "The work is saved to the platform server",
       ],
       ecosystem:
         "The whiteboard complements learning without becoming another disconnected tool.",
       next: "See the platform that connects the modules.",
       nextAction: "Open platform",
       nextHref: "/platform",
-      status: "PLANNED",
+      status: "LIVE",
     },
     "student-profile": {
       eyebrow: "Learner profile",

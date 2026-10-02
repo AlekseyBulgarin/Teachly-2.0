@@ -20,7 +20,7 @@ const navGroups: NavGroup[] = [
     { path: '/variants', key: 'variants', icon: PanelsTopLeft, label: { ru: 'Варианты', en: 'Variants' }, detail: { ru: 'Гибкие сценарии', en: 'Flexible scenarios' } },
     { path: '/theory', key: 'theory', icon: BookOpen, label: { ru: 'Теория', en: 'Theory' }, detail: { ru: 'Понятный контекст', en: 'Clear context' } },
     { path: '/trainer', key: 'trainer', icon: GraduationCap, label: { ru: 'Тренажёр', en: 'Trainer' }, detail: { ru: 'Практика и поддержка', en: 'Practice and support' } },
-    { path: '/whiteboard', key: 'whiteboard', icon: PanelsTopLeft, label: { ru: 'Онлайн-доска', en: 'Whiteboard' }, detail: { ru: 'Совместная работа', en: 'Shared work' } },
+    { path: '/whiteboard', key: 'whiteboard', icon: PanelsTopLeft, label: { ru: 'Онлайн-доска', en: 'Whiteboard' }, detail: { ru: 'Визуальная работа', en: 'Visual workspace' } },
   ] },
   { label: { ru: 'Интеллект', en: 'Intelligence' }, items: [
     { path: '/ai', key: 'ai', icon: BrainCircuit, label: { ru: 'AI', en: 'AI' }, detail: { ru: 'Помощь в обучении', en: 'Learning support' } },
@@ -45,17 +45,24 @@ function ShellFrame({ children }: { children: ReactNode }) {
   const { t, locale, setLocale, apiStatus, refreshing, reload } = useEcosystem();
   const [mobileNav, setMobileNav] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
+  const openNavRef = useRef<HTMLButtonElement>(null);
+  const closeNavRef = useRef<HTMLButtonElement>(null);
   const active = nav.find((item) => item.path !== '/ecosystem#contact' && pathname.startsWith(item.path)) ?? nav[0];
 
   // Mobile drawer: lock body scroll, handle Escape key, close on overlay click
   useEffect(() => {
     if (!mobileNav) return;
     sidebarRef.current?.scrollTo({ top: 0 });
+    closeNavRef.current?.focus();
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const onKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') setMobileNav(false); };
     document.addEventListener('keydown', onKeyDown);
-    return () => { document.body.style.overflow = originalOverflow; document.removeEventListener('keydown', onKeyDown); };
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.removeEventListener('keydown', onKeyDown);
+      openNavRef.current?.focus();
+    };
   }, [mobileNav]);
 
   // Close drawer on navigation (mobile)
@@ -63,10 +70,10 @@ function ShellFrame({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[var(--canvas)] text-slate-100 lg:grid lg:grid-cols-[304px_minmax(0,1fr)]">
-      <aside ref={sidebarRef} className={`fixed inset-y-0 left-0 z-50 flex w-[min(88vw,336px)] flex-col overflow-y-auto border-r border-[var(--border)] bg-[var(--sidebar)] px-5 py-6 transition-transform duration-200 sm:px-6 sm:py-7 lg:sticky lg:top-0 lg:h-screen lg:w-[304px] lg:translate-x-0 ${mobileNav ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside ref={sidebarRef} role={mobileNav ? 'dialog' : undefined} aria-modal={mobileNav ? true : undefined} aria-label={mobileNav ? t('shell.navPrimary') : undefined} className={`fixed inset-y-0 left-0 z-50 flex w-[min(88vw,336px)] flex-col overflow-y-auto border-r border-[var(--border)] bg-[var(--sidebar)] px-5 py-6 transition-transform duration-200 sm:px-6 sm:py-7 lg:sticky lg:top-0 lg:h-screen lg:w-[304px] lg:translate-x-0 ${mobileNav ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex items-center justify-between">
           <Brand t={t} onNavigate={handleNavClick} />
-          <button className="rounded-lg p-2 text-slate-400 hover:bg-white/[.06] hover:text-slate-100 lg:hidden" onClick={() => setMobileNav(false)} aria-label={t('shell.closeNav')}>
+          <button ref={closeNavRef} type="button" className="rounded-lg p-2 text-slate-400 hover:bg-white/[.06] hover:text-slate-100 lg:hidden" onClick={() => setMobileNav(false)} aria-label={t('shell.closeNav')}>
             <X aria-hidden="true" />
           </button>
         </div>
@@ -96,7 +103,7 @@ function ShellFrame({ children }: { children: ReactNode }) {
         <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--canvas)]/90 backdrop-blur-xl lg:sticky lg:top-0">
           <div className="mx-auto flex min-h-[76px] w-full max-w-[1480px] items-center justify-between gap-4 px-5 sm:px-8 lg:px-12">
             <div className="flex min-w-0 items-center gap-3">
-              <button className="rounded-xl border border-[var(--border)] bg-white/[.035] p-2.5 text-slate-300 hover:bg-white/[.07] lg:hidden" onClick={() => setMobileNav(true)} aria-label={t('shell.openNav')}><Menu aria-hidden="true" /></button>
+              <button ref={openNavRef} type="button" className="rounded-xl border border-[var(--border)] bg-white/[.035] p-2.5 text-slate-300 hover:bg-white/[.07] lg:hidden" onClick={() => setMobileNav(true)} aria-label={t('shell.openNav')}><Menu aria-hidden="true" /></button>
               <div className="min-w-0"><p className="truncate text-[11px] font-medium uppercase tracking-[.18em] text-slate-500">{t('shell.workspace')}</p><p className="mt-1 truncate text-sm font-semibold text-slate-100">{active.label[locale]}</p></div>
             </div>
             <div className="flex shrink-0 items-center gap-2 sm:gap-3">

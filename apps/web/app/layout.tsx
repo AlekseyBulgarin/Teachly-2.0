@@ -4,6 +4,12 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'Teachly Ecosystem',
   description: 'Единое ядро. Связанные образовательные модули. Одна интеграция.',
+  applicationName: 'Teachly',
+  openGraph: {
+    type: 'website',
+    title: 'Teachly Ecosystem',
+    description: 'Единое ядро. Связанные образовательные модули. Одна интеграция.',
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

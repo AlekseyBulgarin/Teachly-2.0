@@ -18,11 +18,98 @@ const ExcalidrawComponent = dynamic(
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
+export type PersistedAppState = Pick<
+  AppState,
+  | 'viewBackgroundColor'
+  | 'gridSize'
+  | 'gridStep'
+  | 'gridModeEnabled'
+  | 'theme'
+  | 'zoom'
+  | 'scrollX'
+  | 'scrollY'
+>;
+
 export type BoardData = {
   elements: readonly ExcalidrawElement[];
-  appState: AppState;
+  appState: PersistedAppState;
   files: BinaryFiles;
 };
+
+const ZOOM_MIN = 0.1;
+const ZOOM_MAX = 30;
+
+function defaultPersistedAppState(): PersistedAppState {
+  return {
+    viewBackgroundColor: '#ffffff',
+    gridSize: 20,
+    gridStep: 5,
+    gridModeEnabled: false,
+    theme: 'light',
+    zoom: { value: 1 } as AppState['zoom'],
+    scrollX: 0,
+    scrollY: 0,
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function readFiniteNumber(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function pickPersistedAppState(value: unknown): PersistedAppState {
+  const appState = defaultPersistedAppState();
+  if (!isRecord(value)) return appState;
+
+  const theme = value.theme;
+  if (theme === 'light' || theme === 'dark') appState.theme = theme;
+
+  const viewBackgroundColor = value.viewBackgroundColor;
+  if (typeof viewBackgroundColor === 'string' && viewBackgroundColor.length > 0) {
+    appState.viewBackgroundColor = viewBackgroundColor;
+  }
+
+  const gridModeEnabled = value.gridModeEnabled;
+  if (typeof gridModeEnabled === 'boolean') appState.gridModeEnabled = gridModeEnabled;
+
+  const gridSize = readFiniteNumber(value.gridSize);
+  if (gridSize !== null && gridSize >= 0) appState.gridSize = gridSize;
+
+  const gridStep = readFiniteNumber(value.gridStep);
+  if (gridStep !== null && gridStep > 0) appState.gridStep = gridStep;
+
+  const scrollX = readFiniteNumber(value.scrollX);
+  if (scrollX !== null) appState.scrollX = scrollX;
+
+  const scrollY = readFiniteNumber(value.scrollY);
+  if (scrollY !== null) appState.scrollY = scrollY;
+
+  const zoom = value.zoom;
+  if (isRecord(zoom)) {
+    const zoomValue = readFiniteNumber(zoom.value);
+    if (zoomValue !== null) {
+      appState.zoom = {
+        value: Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoomValue)),
+      } as AppState['zoom'];
+    }
+  }
+
+  return appState;
+}
+
+function normalizeBoardData(value: unknown): BoardData | null {
+  if (!isRecord(value)) return null;
+  const elements = value.elements;
+  if (!Array.isArray(elements)) return null;
+  return {
+    elements: elements as readonly ExcalidrawElement[],
+    appState: pickPersistedAppState(value.appState),
+    files: isRecord(value.files) ? (value.files as BinaryFiles) : {},
+  };
+}
 
 type LoadBoard = (boardId: string) => Promise<BoardData | null>;
 type SaveBoard = (boardId: string, data: BoardData) => Promise<void>;
@@ -35,6 +122,17 @@ export interface TeachlyWhiteboardProps {
   debounceMs?: number;
   onSaveStatusChange?: (status: SaveStatus) => void;
   initialData?: BoardData | null;
+  language?: string;
+  labels?: {
+    loading: string;
+    loadError: string;
+    retry: string;
+    saving: string;
+    saved: string;
+    saveError: string;
+    idle: string;
+    retrySave: string;
+  };
 }
 
 export function TeachlyWhiteboard({
@@ -45,6 +143,17 @@ export function TeachlyWhiteboard({
   debounceMs = 1000,
   onSaveStatusChange,
   initialData,
+  language = 'en',
+  labels = {
+    loading: 'Loading whiteboard…',
+    loadError: 'Failed to load board',
+    retry: 'Retry',
+    saving: 'Saving…',
+    saved: 'Saved',
+    saveError: 'Save failed',
+    idle: 'Idle',
+    retrySave: 'Retry save',
+  },
 }: TeachlyWhiteboardProps) {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [isLoading, setIsLoading] = useState(!initialData);
@@ -76,18 +185,23 @@ export function TeachlyWhiteboard({
     [onSaveStatusChange]
   );
 
+  const normalizedInitialData = useMemo<BoardData | null>(
+    () => (initialData ? normalizeBoardData(initialData) : null),
+    [initialData]
+  );
+
   useEffect(() => {
-    if (initialData && excalidrawAPI) {
-      excalidrawAPI.addFiles(Object.values(initialData.files));
+    if (normalizedInitialData && excalidrawAPI) {
+      excalidrawAPI.addFiles(Object.values(normalizedInitialData.files));
       excalidrawAPI.updateScene({
-        elements: initialData.elements,
-        appState: initialData.appState,
+        elements: normalizedInitialData.elements,
+        appState: normalizedInitialData.appState,
       });
     }
-  }, [initialData, excalidrawAPI]);
+  }, [normalizedInitialData, excalidrawAPI]);
 
   const loadInitialData = useCallback(async () => {
-    if (initialData) {
+    if (normalizedInitialData) {
       setIsLoading(false);
       return;
     }
@@ -95,7 +209,7 @@ export function TeachlyWhiteboard({
     try {
       setIsLoading(true);
       setError(null);
-      const data = await loadBoard(boardId);
+      const data = normalizeBoardData(await loadBoard(boardId));
       if (!isMountedRef.current) return;
       setLoadedData(data);
       const api = excalidrawAPIRef.current;
@@ -108,14 +222,14 @@ export function TeachlyWhiteboard({
       }
     } catch (err) {
       if (isMountedRef.current) {
-        setError(err instanceof Error ? err.message : 'Failed to load board');
+        setError(err instanceof Error ? err.message : labels.loadError);
       }
     } finally {
       if (isMountedRef.current) {
         setIsLoading(false);
       }
     }
-  }, [boardId, loadBoard, initialData]);
+  }, [boardId, loadBoard, normalizedInitialData, labels.loadError]);
 
   useEffect(() => {
     loadInitialData();
@@ -123,7 +237,7 @@ export function TeachlyWhiteboard({
 
   const handleChange = useCallback(
     (elements: readonly OrderedExcalidrawElement[], appState: AppState, files: BinaryFiles) => {
-      const data: BoardData = { elements, appState, files };
+      const data: BoardData = { elements, appState: pickPersistedAppState(appState), files };
       pendingDataRef.current = data;
 
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
@@ -146,12 +260,12 @@ export function TeachlyWhiteboard({
         } catch (err) {
           if (isMountedRef.current) {
             applySaveStatus('error');
-            setError(err instanceof Error ? err.message : 'Failed to save board');
+            setError(err instanceof Error ? err.message : labels.saveError);
           }
         }
       }, debounceMs);
     },
-    [boardId, saveBoard, debounceMs, applySaveStatus]
+    [boardId, saveBoard, debounceMs, applySaveStatus, labels.saveError]
   );
 
   const handleLibraryChange = useCallback(
@@ -190,12 +304,12 @@ export function TeachlyWhiteboard({
     } catch (err) {
       if (isMountedRef.current) {
         applySaveStatus('error');
-        setError(err instanceof Error ? err.message : 'Failed to save board');
+        setError(err instanceof Error ? err.message : labels.saveError);
       }
     }
-  }, [boardId, saveBoard, applySaveStatus]);
+  }, [boardId, saveBoard, applySaveStatus, labels.saveError]);
 
-  const boardData = initialData ?? loadedData;
+  const boardData = normalizedInitialData ?? loadedData;
   const initialDataForExcalidraw = useMemo<ImportedDataState | undefined>(
     () =>
       boardData
@@ -224,11 +338,11 @@ export function TeachlyWhiteboard({
       <div
         className={`flex min-h-[500px] w-full items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] ${className}`}
         role="status"
-        aria-label="Loading whiteboard"
+        aria-label={labels.loading}
       >
         <div className="flex flex-col items-center gap-4 text-slate-500">
           <div className="size-8 border-2 border-emerald-300/30 border-t-emerald-300 rounded-full animate-spin" />
-          <p className="text-sm font-medium">Loading whiteboard…</p>
+          <p className="text-sm font-medium">{labels.loading}</p>
         </div>
       </div>
     );
@@ -251,7 +365,7 @@ export function TeachlyWhiteboard({
             onClick={retryLoad}
             className="rounded-lg border border-amber-200/20 px-4 py-2 text-sm font-semibold text-amber-100 hover:bg-amber-200/10"
           >
-            Retry
+            {labels.retry}
           </button>
         </div>
       </div>
@@ -267,6 +381,7 @@ export function TeachlyWhiteboard({
           onLibraryChange={handleLibraryChange}
           initialData={initialDataForExcalidraw}
           UIOptions={uiOptions}
+          langCode={language}
           theme="dark"
           autoFocus={true}
         />
@@ -288,12 +403,12 @@ export function TeachlyWhiteboard({
           />
           <span className="capitalize">
             {saveStatus === 'saving'
-              ? 'Saving…'
+              ? labels.saving
               : saveStatus === 'saved'
-              ? 'Saved'
+              ? labels.saved
               : saveStatus === 'error'
-              ? 'Save failed'
-              : 'Idle'}
+              ? labels.saveError
+              : labels.idle}
           </span>
         </div>
 
@@ -302,7 +417,7 @@ export function TeachlyWhiteboard({
             onClick={retrySave}
             className="rounded-lg border border-amber-200/20 px-3 py-1.5 text-xs font-semibold text-amber-100 hover:bg-amber-200/10"
           >
-            Retry save
+            {labels.retrySave}
           </button>
         )}
       </div>

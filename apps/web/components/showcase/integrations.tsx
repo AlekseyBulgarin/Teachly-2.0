@@ -6,13 +6,10 @@ import {
   Layers3,
   Network,
   ShieldCheck,
-  UsersRound,
 } from "lucide-react";
-import { useState } from "react";
 import { useEcosystem } from "@/lib/ecosystem-context";
 import {
-  InfoRow,
-  MetricCard,
+  IconCard,
   PageHeader,
   SectionCard,
   StatusBadge,
@@ -24,14 +21,12 @@ import {
 } from "@/components/showcase/shared";
 import { QuickSectionNav } from "@/components/showcase/quick-section-nav";
 
-const requestExample = `POST /v1/remediations
+const requestExample = `GET /v1/learner-intelligence/profile?externalUserId=<CUSTOMER_USER_ID>
 Authorization: Bearer <SERVER_SIDE_KEY>
-
-{ "externalUserId": "...", "attemptId": "..." }`;
+Accept: application/json`;
 
 export function IntegrationsPage() {
-  const { t, locale, integration, externalUsers, traces } = useEcosystem();
-  const [details, setDetails] = useState(false);
+  const { t, locale } = useEcosystem();
   return (
     <div className="flex flex-col gap-12 lg:gap-16">
       <div id="overview" className="scroll-mt-28">
@@ -90,63 +85,19 @@ export function IntegrationsPage() {
           title={t("integrations.connectionTitle")}
           detail={t("integrations.connectionDetail")}
           icon={Network}
-          action={
-            <StatusBadge
-              status={integration ? "LIVE" : "PLANNED"}
-              locale={locale}
-            />
-          }
+          action={<StatusBadge status="LIVE" locale={locale} />}
         >
-          <div className="grid gap-4 p-5 sm:grid-cols-2 sm:p-7">
-            <MetricCard
-              label={t("integrations.connected")}
-              value={integration?.name ?? t("common.noData")}
+          <div className="grid gap-4 p-5 sm:p-7">
+            <IconCard
+              title={t("integrations.connected")}
               detail={t("integrations.connectionDetail")}
               icon={Network}
             />
-            <MetricCard
-              label={t("integrations.users")}
-              value={externalUsers.length}
-              detail={t("overview.learnersDetail")}
-              icon={UsersRound}
-              tone="blue"
-            />
-            <MetricCard
-              label={t("integrations.traces")}
-              value={traces.length}
-              detail={t("overview.aiRequestsDetail")}
+            <IconCard
+              title={t("integrations.details")}
+              detail={t("integrations.detailsNote")}
               icon={Layers3}
-              tone="amber"
             />
-          </div>
-          <div className="border-t border-[var(--border)] px-5 py-4 sm:px-7">
-            <button
-              onClick={() => setDetails((value) => !value)}
-              className="text-xs font-semibold text-emerald-200 hover:text-emerald-100"
-            >
-              {details ? t("platform.hideDetails") : t("integrations.details")}
-            </button>
-            {details && (
-              <div className="mt-5 grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl bg-[var(--surface-raised)] p-5">
-                  <InfoRow
-                    label={t("common.status")}
-                    value={integration?.status ?? "—"}
-                    tone="green"
-                  />
-                  <div className="mt-4">
-                    <InfoRow
-                      label="Workspace"
-                      value={integration?.workspaceId.slice(0, 8) ?? "—"}
-                      mono
-                    />
-                  </div>
-                </div>
-                <p className="rounded-2xl bg-[var(--surface-raised)] p-5 text-sm leading-6 text-slate-500">
-                  {t("integrations.detailsNote")}
-                </p>
-              </div>
-            )}
           </div>
         </SectionCard>
         <section className="rounded-3xl border border-emerald-300/15 bg-emerald-300/[.05] p-6 sm:p-8">

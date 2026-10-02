@@ -1,31 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Whiteboard V1 is proxied exactly: create one board, then read and write that
+// single board's state. Listing boards, board metadata, patch/archive, delete,
+// and resource attachment are deliberately not proxied, so a visitor can never
+// enumerate or reach another visitor's board. The UUID requirement keeps the
+// state routes from matching any other whiteboard path.
+const whiteboardCreateRoute = /^v1\/whiteboards$/;
+const whiteboardStateRoute =
+  /^v1\/whiteboards\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/state$/i;
+
 const allowedGetRoutes = [
   /^health$/,
-  /^students$/,
-  /^students\/[0-9a-f-]+\/results$/i,
-  /^students\/[0-9a-f-]+\/learning-state$/i,
-  /^tasks\/published\/[0-9a-f-]+$/i,
-  /^v1\/external-users$/,
-  /^v1\/integration$/,
-  /^v1\/knowledge\/status$/,
-  /^v1\/ai-requests$/,
   /^v1\/assessment\/tasks$/,
   /^v1\/theory\/materials$/,
   /^v1\/trainer\/sessions\/[0-9a-f-]+$/i,
   /^v1\/trainer\/sessions\/[0-9a-f-]+\/current$/i,
   /^v1\/learner-intelligence\/profile$/,
   /^v1\/learner-intelligence\/progress$/,
+  whiteboardStateRoute,
 ];
 
 const allowedPostRoutes = [
-  /^v1\/remediations$/,
   /^v1\/trainer\/sessions$/,
   /^v1\/trainer\/sessions\/[0-9a-f-]+\/(submissions|next|complete)$/i,
+  whiteboardCreateRoute,
 ];
 
+const allowedPutRoutes = [whiteboardStateRoute];
+
 function isAllowed(method: string, path: string): boolean {
-  const routes = method === 'GET' ? allowedGetRoutes : method === 'POST' ? allowedPostRoutes : [];
+  const routes = method === 'GET'
+    ? allowedGetRoutes
+    : method === 'POST'
+      ? allowedPostRoutes
+      : method === 'PUT'
+        ? allowedPutRoutes
+        : [];
   return routes.some((route) => route.test(path));
 }
 
@@ -74,16 +84,77 @@ function publicTheoryMaterial(value: unknown) {
   };
 }
 
+function publicTrainerItem(value: unknown) {
+  const item = asRecord(value);
+  const result = asRecord(item.result);
+  return {
+    id: item.id,
+    position: item.position,
+    status: item.status,
+    task: item.task,
+    result: item.result ? {
+      outcome: result.outcome,
+      isCorrect: result.isCorrect,
+      score: result.score,
+    } : null,
+  };
+}
+
+function publicTrainerSession(value: unknown) {
+  const session = asRecord(value);
+  const latestResult = asRecord(session.latestResult);
+  return {
+    id: session.id,
+    status: session.status,
+    progress: session.progress,
+    current: session.current ? publicTrainerItem(session.current) : null,
+    latestResult: session.latestResult ? {
+      outcome: latestResult.outcome,
+      isCorrect: latestResult.isCorrect,
+      score: latestResult.score,
+    } : null,
+    canComplete: session.canComplete,
+    idempotentReplay: session.idempotentReplay,
+  };
+}
+
+function publicWhiteboardCreate(value: unknown) {
+  const board = asRecord(value);
+  return { id: board.id, currentRevision: board.currentRevision };
+}
+
 function sanitizeResponse(path: string, value: unknown): unknown {
+  if (whiteboardCreateRoute.test(path)) {
+    return publicWhiteboardCreate(value);
+  }
   if (path === 'v1/theory/materials') {
     return Array.isArray(value) ? value.map(publicTheoryMaterial) : [];
   }
   if (/^v1\/trainer\/sessions\/[0-9a-f-]+\/submissions$/i.test(path)) {
     const response = asRecord(value);
+    const submitted = asRecord(response.submitted);
+    const submittedResult = asRecord(submitted.result);
+    const teacherSignal = asRecord(response.teacherSignal);
     return {
-      ...response,
+      submitted: {
+        result: {
+          outcome: submittedResult.outcome,
+          isCorrect: submittedResult.isCorrect,
+          score: submittedResult.score,
+          evaluationRule: submittedResult.evaluationRule,
+        },
+      },
       theory: Array.isArray(response.theory) ? response.theory.map(publicTheoryMaterial) : [],
+      teacherSignal: response.teacherSignal ? {
+        type: teacherSignal.type,
+        evidenceCount: teacherSignal.evidenceCount,
+        recentOutcomes: teacherSignal.recentOutcomes,
+      } : null,
+      session: publicTrainerSession(response.session),
     };
+  }
+  if (/^v1\/trainer\/sessions(?:\/[0-9a-f-]+(?:\/current|\/next|\/complete)?)?$/i.test(path)) {
+    return publicTrainerSession(value);
   }
   return value;
 }
@@ -94,6 +165,15 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   if (!isAllowed(request.method, joinedPath)) {
     return NextResponse.json({ code: 'DEMO_ROUTE_NOT_ALLOWED', message: 'This API route is not available through the Showcase proxy' }, { status: 403 });
   }
+  const configuredApiBaseUrl = process.env.TEACHLY_API_URL
+    ?? (process.env.NODE_ENV === 'production' ? null : 'http://127.0.0.1:3001');
+  if (!configuredApiBaseUrl) {
+    return NextResponse.json(
+      { code: 'DEMO_NOT_CONFIGURED', message: 'The live Teachly demo is not configured' },
+      { status: 503 },
+    );
+  }
+  const apiBaseUrl = configuredApiBaseUrl.replace(/\/+$/, '');
   // The learner identity is server-owned: the browser can never choose which
   // external learner to read. Any client-supplied value is discarded.
   const isLearnerIntelligence = joinedPath === 'v1/learner-intelligence/profile' || joinedPath === 'v1/learner-intelligence/progress';
@@ -110,9 +190,9 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
     const searchParams = new URLSearchParams(request.nextUrl.search);
     searchParams.delete('externalUserId');
     searchParams.set('externalUserId', demoLearnerId);
-    target = `${process.env.TEACHLY_API_URL ?? 'http://127.0.0.1:3001'}/${joinedPath}?${searchParams.toString()}`;
+    target = `${apiBaseUrl}/${joinedPath}?${searchParams.toString()}`;
   } else {
-    target = `${process.env.TEACHLY_API_URL ?? 'http://127.0.0.1:3001'}/${joinedPath}${request.nextUrl.search}`;
+    target = `${apiBaseUrl}/${joinedPath}${request.nextUrl.search}`;
   }
   const headers = new Headers();
   headers.set('accept', 'application/json');
@@ -127,9 +207,6 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
       );
     }
     headers.set('authorization', `Bearer ${demoApiKey}`);
-  } else if (joinedPath !== 'health') {
-    // Legacy read-only Showcase endpoints. The allowlist above prevents authoring access.
-    headers.set('x-dev-user', 'teacher');
   }
   const requestId = request.headers.get('x-request-id');
   if (requestId) headers.set('x-request-id', requestId);
@@ -144,13 +221,30 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
         } catch {
           return NextResponse.json({ code: 'INVALID_JSON', message: 'Request body must be valid JSON' }, { status: 400 });
         }
+        const demoLearnerId = process.env.TEACHLY_DEMO_EXTERNAL_LEARNER_ID
+          ?? (process.env.NODE_ENV === 'production' ? null : 'demo-learner-01');
+        if (!demoLearnerId) {
+          return NextResponse.json(
+            { code: 'DEMO_NOT_CONFIGURED', message: 'The live Teachly demo is not configured' },
+            { status: 503 },
+          );
+        }
         const configuredTaskIds = process.env.TEACHLY_DEMO_TASK_IDS?.split(',').map((value) => value.trim()).filter(Boolean);
+        const taskIds = configuredTaskIds?.length
+          ? configuredTaskIds
+          : process.env.NODE_ENV === 'production'
+            ? null
+            : ['00000000-0000-4000-8000-000000000007', '00000000-0000-4000-8000-000000000026'];
+        if (!taskIds) {
+          return NextResponse.json(
+            { code: 'DEMO_NOT_CONFIGURED', message: 'The live Teachly demo is not configured' },
+            { status: 503 },
+          );
+        }
         body = JSON.stringify({
-          ...input,
-          externalLearnerId: process.env.TEACHLY_DEMO_EXTERNAL_LEARNER_ID ?? 'demo-learner-01',
-          taskIds: configuredTaskIds?.length
-            ? configuredTaskIds
-            : ['00000000-0000-4000-8000-000000000007', '00000000-0000-4000-8000-000000000026'],
+          idempotencyKey: input.idempotencyKey,
+          externalLearnerId: demoLearnerId,
+          taskIds,
         });
       }
     }
@@ -166,7 +260,7 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
         { status: response.status },
       );
     }
-    if (joinedPath === 'v1/theory/materials' || joinedPath.endsWith('/submissions')) {
+    if (whiteboardCreateRoute.test(joinedPath) || joinedPath === 'v1/theory/materials' || joinedPath.startsWith('v1/trainer/sessions')) {
       return NextResponse.json(sanitizeResponse(joinedPath, await response.json()), { status: response.status });
     }
     return new NextResponse(response.body, {
@@ -180,3 +274,4 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
 
 export const GET = proxy;
 export const POST = proxy;
+export const PUT = proxy;

@@ -129,7 +129,6 @@ export type TrainerSessionItem = {
   position: number;
   status: string;
   task: PublicTaskVersion;
-  attemptId: string;
   result: { outcome: string; isCorrect: boolean; score: number } | null;
 };
 export type TrainerSession = {
@@ -141,13 +140,17 @@ export type TrainerSession = {
   canComplete: boolean;
   idempotentReplay: boolean;
 };
-export type TrainerTeacherSignal = { type: string; skillId: string; evidenceCount: number; recentOutcomes: string[] } | null;
+export type TrainerTeacherSignal = { type: string; evidenceCount: number; recentOutcomes: string[] } | null;
 export type TrainerSubmitResponse = {
-  submitted: { attempt: { id: string; status: string }; result: { outcome: string; isCorrect: boolean; score: number; evaluationRule: string } };
+  submitted: { result: { outcome: string; isCorrect: boolean; score: number; evaluationRule: string } };
   theory: TheoryMaterial[];
   teacherSignal: TrainerTeacherSignal;
   session: TrainerSession;
 };
+
+export type WhiteboardCreate = { id: string; currentRevision: number };
+export type WhiteboardState = { id: string; revision: number; data: Record<string, unknown> | null };
+export type WhiteboardSaveResult = { revision: number };
 
 export class ApiError extends Error {
   constructor(public readonly status: number, public readonly code: string, message: string) { super(message); }
@@ -189,4 +192,13 @@ export const api = {
   learnerProfile: (signal?: AbortSignal) => request<LearnerProfile>('v1/learner-intelligence/profile', { signal }),
   learnerProgress: (options?: { groupBy?: LearnerGroupBy; signal?: AbortSignal }) =>
     request<LearnerProgress>(`v1/learner-intelligence/progress?groupBy=${options?.groupBy ?? 'skill'}`, { signal: options?.signal }),
+  whiteboardCreate: (title: string) =>
+    request<WhiteboardCreate>('v1/whiteboards', { method: 'POST', body: JSON.stringify({ title }) }),
+  whiteboardState: (boardId: string, signal?: AbortSignal) =>
+    request<WhiteboardState>(`v1/whiteboards/${boardId}/state`, { signal }),
+  whiteboardSave: (boardId: string, expectedRevision: number, data: Record<string, unknown>) =>
+    request<WhiteboardSaveResult>(`v1/whiteboards/${boardId}/state`, {
+      method: 'PUT',
+      body: JSON.stringify({ expectedRevision, data }),
+    }),
 };

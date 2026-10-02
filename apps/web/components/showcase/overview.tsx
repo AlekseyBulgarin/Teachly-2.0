@@ -42,7 +42,7 @@ const modules: ProductModule[] = [
     path: "/tasks",
     group: "learning",
     icon: ListChecks,
-    status: "COMING NEXT",
+    status: "LIVE",
     ru: [
       "База заданий",
       "Практика, связанная с учебным контекстом.",
@@ -74,7 +74,7 @@ const modules: ProductModule[] = [
     path: "/theory",
     group: "learning",
     icon: BookOpen,
-    status: "COMING NEXT",
+    status: "LIVE",
     ru: [
       "Теория",
       "Проверенный материал рядом с практикой.",
@@ -90,7 +90,7 @@ const modules: ProductModule[] = [
     path: "/trainer",
     group: "learning",
     icon: GraduationCap,
-    status: "PLANNED",
+    status: "LIVE",
     ru: [
       "Тренажёр",
       "Самостоятельная практика с понятным следующим шагом.",
@@ -106,16 +106,16 @@ const modules: ProductModule[] = [
     path: "/whiteboard",
     group: "learning",
     icon: PanelsTopLeft,
-    status: "PLANNED",
+    status: "LIVE",
     ru: [
       "Онлайн-доска",
       "Наглядная работа вокруг учебной задачи.",
-      "Поддерживает объяснение и совместную работу в одном контексте.",
+      "Поддерживает визуальное объяснение; совместное редактирование запланировано.",
     ],
     en: [
       "Whiteboard",
       "Visual work around a learning task.",
-      "Supports explanation and collaboration in one context.",
+      "Supports visual explanation; real-time collaboration is planned.",
     ],
   },
   {
@@ -138,7 +138,7 @@ const modules: ProductModule[] = [
     path: "/student-profile",
     group: "intelligence",
     icon: UserRound,
-    status: "COMING NEXT",
+    status: "LIVE",
     ru: [
       "Профиль ученика",
       "Одна картина вместо разрозненных событий.",

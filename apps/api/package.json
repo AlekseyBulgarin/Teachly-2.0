@@ -14,7 +14,8 @@
     "test:e2e": "jest --config jest.postgres.config.cjs --runInBand --testRegex=\\.e2e-spec\\.ts$",
     "db:generate": "drizzle-kit generate --config drizzle.config.ts",
     "db:migrate": "tsx src/infrastructure/database/migrate.ts",
-    "db:seed": "tsx src/infrastructure/database/seed.ts"
+    "db:seed": "tsx src/infrastructure/database/seed.ts",
+    "db:seed:demo": "tsx src/infrastructure/database/seed-production-demo.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",

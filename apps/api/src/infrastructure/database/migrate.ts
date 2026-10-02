@@ -9,6 +9,9 @@ export async function applyMigrations(database: DatabaseService): Promise<void> 
 
 if (require.main === module) {
   void (async () => {
+    if (process.env.DATABASE_URL_UNPOOLED) {
+      process.env.DATABASE_URL = process.env.DATABASE_URL_UNPOOLED;
+    }
     const database = new DatabaseService();
     try { await applyMigrations(database); }
     finally { await database.onModuleDestroy(); }

@@ -56,41 +56,9 @@ export function EcosystemProvider({ children }: { children: ReactNode }) {
     setApiStatus('checking');
     setRefreshing(true);
     try {
-      const [healthResult, studentsResult, externalResult, integrationResult, knowledgeResult, tracesResult] = await Promise.allSettled([
-        api.health(), api.students(), api.externalUsers(), api.integration(), api.knowledge(), api.aiTraces(),
-      ]);
-      const health = healthResult.status === 'fulfilled' ? healthResult.value : undefined;
-      const students = studentsResult.status === 'fulfilled' ? studentsResult.value : [];
+      const health = await api.health();
       setApiStatus(health?.status === 'ok' && health.database === 'ok' ? 'healthy' : 'unavailable');
-      setExternalUsers(externalResult.status === 'fulfilled' ? externalResult.value : []);
-      setIntegration(integrationResult.status === 'fulfilled' ? integrationResult.value : null);
-      setKnowledge(knowledgeResult.status === 'fulfilled' ? knowledgeResult.value : []);
-      setTraces(tracesResult.status === 'fulfilled' ? tracesResult.value : []);
-      
-      // Only set soft error if ALL critical calls fail - don't show raw errors
-      const allFailed = healthResult.status === 'rejected' && studentsResult.status === 'rejected' && integrationResult.status === 'rejected';
-      if (allFailed) setError(translate(locale, 'softError'));
-      
-      const base = students.map((student) => ({ student, results: [], loading: true }));
-      setLearners(base);
-      setSelectedId((current) => current ?? students[0]?.id);
-      const enriched = await Promise.all(base.map(async (item) => {
-        try {
-          const results = await api.results(item.student.id);
-          const incorrect = results.find((row) => row.result.outcome === 'incorrect');
-          const task = incorrect ? await api.task(incorrect.attempt.taskVersionId) : undefined;
-          const state = task ? await api.learningState(item.student.id, task.task.skillId) : undefined;
-          return { ...item, results, task, state, loading: false };
-        } catch {
-          // Don't propagate individual learner errors - keep page usable
-          return { ...item, loading: false };
-        }
-      }));
-      setLearners(enriched);
-      const firstAttempt = enriched.flatMap((item) => item.results).find((item) => item.result.outcome === 'incorrect');
-      setSelectedAttemptId((current) => current ?? firstAttempt?.attempt.id);
     } catch {
-      // Top-level catch should not happen with Promise.allSettled, but handle gracefully
       setApiStatus('unavailable');
       setError(translate(locale, 'softError'));
     } finally {
@@ -106,6 +74,10 @@ export function EcosystemProvider({ children }: { children: ReactNode }) {
     void reload();
   }, []);
 
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
+
   const selected = learners.find((item) => item.student.id === selectedId) ?? learners[0];
   const attempts = useMemo(() => learners.flatMap((item) => item.results), [learners]);
   const incorrectAttempts = useMemo(() => learners.flatMap((item) => item.results.filter((result) => result.result.outcome === 'incorrect').map((result) => ({ ...result, learner: item.student }))), [learners]);
@@ -119,26 +91,7 @@ export function EcosystemProvider({ children }: { children: ReactNode }) {
   };
 
   const requestRemediation = async () => {
-    const externalUser = externalUsers[0];
-    if (!selectedAttempt || !externalUser) {
-      setActionError(translate(locale, 'softError'));
-      return;
-    }
-    setActionError(undefined);
-    setRemediation(null);
-    try {
-      const result = await api.remediation({
-        externalUserId: externalUser.externalUserId,
-        attemptId: selectedAttempt.attempt.id,
-        learnerQuestion: 'Help explain what I should review without revealing the answer.',
-        idempotencyKey: `showcase-remediation-${selectedAttempt.attempt.id}`,
-      });
-      setRemediation(result);
-      setTraces(await api.aiTraces());
-    } catch {
-      // Don't expose technical error messages - show soft fallback
-      setActionError(translate(locale, 'ai.unavailable'));
-    }
+    setActionError(translate(locale, 'ai.unavailable'));
   };
 
   const value = useMemo<EcosystemContextValue>(() => ({

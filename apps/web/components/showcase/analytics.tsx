@@ -1,36 +1,15 @@
 "use client";
 
 import {
-  Activity,
   BarChart3,
-  BrainCircuit,
-  FileCheck2,
-  Target,
-  UsersRound,
 } from "lucide-react";
 import { useEcosystem } from "@/lib/ecosystem-context";
-import {
-  MetricCard,
-  PageHeader,
-  SectionCard,
-  StatusBadge,
-} from "@/components/ui";
+import { PageHeader, StatusBadge } from "@/components/ui";
 import { EcosystemNextStep } from "@/components/showcase/shared";
 import { QuickSectionNav } from "@/components/showcase/quick-section-nav";
 
 export function AnalyticsPage() {
-  const {
-    t,
-    locale,
-    learners,
-    attempts,
-    incorrectAttempts,
-    traces,
-    approvedKnowledge,
-  } = useEcosystem();
-  const correct = attempts.filter(
-    (item) => item.result.outcome === "correct",
-  ).length;
+  const { t, locale } = useEcosystem();
   return (
     <div className="flex flex-col gap-12 lg:gap-16">
       <div id="overview" className="scroll-mt-28">
@@ -54,52 +33,7 @@ export function AnalyticsPage() {
               ]
         }
       />
-      <div id="signals" className="scroll-mt-28">
-        <SectionCard
-          title={t("analytics.liveTitle")}
-          detail={t("analytics.liveDetail")}
-          icon={BarChart3}
-        >
-          <div className="grid gap-4 p-5 sm:grid-cols-2 sm:p-7 xl:grid-cols-5">
-            <MetricCard
-              label={t("analytics.learners")}
-              value={learners.length}
-              detail={t("overview.learnersDetail")}
-              icon={UsersRound}
-            />
-            <MetricCard
-              label={t("analytics.attempts")}
-              value={attempts.length}
-              detail={t("overview.attemptsDetail")}
-              icon={Activity}
-              tone="blue"
-            />
-            <MetricCard
-              label={t("analytics.incorrect")}
-              value={incorrectAttempts.length}
-              detail={t("analytics.preview1Detail")}
-              icon={Target}
-              tone="amber"
-            />
-            <MetricCard
-              label={t("analytics.ai")}
-              value={traces.length}
-              detail={t("overview.aiRequestsDetail")}
-              icon={BrainCircuit}
-            />
-            <MetricCard
-              label={t("analytics.knowledge")}
-              value={approvedKnowledge.length}
-              detail={t("knowledge.inventoryDetail")}
-              icon={FileCheck2}
-            />
-          </div>
-          <p className="border-t border-[var(--border)] px-5 py-4 text-xs text-slate-500 sm:px-7">
-            {correct} {t("analytics.correct")}
-          </p>
-        </SectionCard>
-      </div>
-      <section className="grid gap-8 lg:grid-cols-[.7fr_1.3fr] lg:items-start">
+      <section id="signals" className="scroll-mt-28 grid gap-8 lg:grid-cols-[.7fr_1.3fr] lg:items-start">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[.22em] text-emerald-300">
             {t("analytics.preview")}

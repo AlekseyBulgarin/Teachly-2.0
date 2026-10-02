@@ -1,19 +1,15 @@
 "use client";
 
 import {
-  ArrowDown,
-  ArrowUp,
   Layers3,
   Network,
   ShieldCheck,
   Sparkles,
   UsersRound,
 } from "lucide-react";
-import { useState } from "react";
 import { useEcosystem } from "@/lib/ecosystem-context";
 import {
   IconCard,
-  InfoRow,
   PageHeader,
   SectionCard,
   StatusBadge,
@@ -22,8 +18,7 @@ import { EcosystemNextStep } from "@/components/showcase/shared";
 import { QuickSectionNav } from "@/components/showcase/quick-section-nav";
 
 export function PlatformPage() {
-  const { t, locale, integration, externalUsers, traces } = useEcosystem();
-  const [details, setDetails] = useState(false);
+  const { t, locale } = useEcosystem();
   return (
     <div className="flex flex-col gap-12 lg:gap-16">
       <div id="overview" className="scroll-mt-28">
@@ -97,57 +92,12 @@ export function PlatformPage() {
           title={t("platform.connection")}
           detail={t("platform.connectionDetail")}
           icon={Network}
-          action={
-            <StatusBadge
-              status={integration ? "LIVE" : "PLANNED"}
-              locale={locale}
-            />
-          }
+          action={<StatusBadge status="LIVE" locale={locale} />}
         >
-          <div className="grid gap-4 p-5 sm:grid-cols-2 sm:p-7">
-            <Stat
-              label={t("platform.connected")}
-              value={integration?.name ?? t("common.noData")}
-            />
-            <Stat
-              label={t("platform.users")}
-              value={String(externalUsers.length)}
-            />
-            <Stat label={t("platform.history")} value={String(traces.length)} />
-          </div>
-          <div className="border-t border-[var(--border)] px-5 py-4 sm:px-7">
-            <button
-              onClick={() => setDetails((value) => !value)}
-              className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-200 hover:text-emerald-100"
-            >
-              {details ? t("platform.hideDetails") : t("platform.details")}
-              {details ? (
-                <ArrowUp aria-hidden="true" size={14} />
-              ) : (
-                <ArrowDown aria-hidden="true" size={14} />
-              )}
-            </button>
-            {details && (
-              <div className="mt-5 grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl bg-[var(--surface-raised)] p-5">
-                  <InfoRow
-                    label="Status"
-                    value={integration?.status ?? "—"}
-                    tone="green"
-                  />
-                  <div className="mt-4">
-                    <InfoRow
-                      label="Organization"
-                      value={integration?.organizationId.slice(0, 8) ?? "—"}
-                      mono
-                    />
-                  </div>
-                </div>
-                <p className="rounded-2xl bg-[var(--surface-raised)] p-5 text-sm leading-6 text-slate-500">
-                  {t("platform.note")}
-                </p>
-              </div>
-            )}
+          <div className="grid gap-4 p-5 sm:grid-cols-3 sm:p-7">
+            <Stat label={t("platform.customer")} value={t("platform.customerDetail")} />
+            <Stat label={t("platform.core")} value={t("platform.coreDetail")} />
+            <Stat label={t("platform.modules")} value={t("platform.modulesDetail")} />
           </div>
         </SectionCard>
       </div>
@@ -193,7 +143,7 @@ function Stat({ label, value }: { label: string; value: string }) {
       <p className="text-[10px] font-bold uppercase tracking-[.15em] text-slate-500">
         {label}
       </p>
-      <p className="mt-3 break-words text-base font-semibold text-slate-100">
+      <p className="mt-3 break-words text-sm font-medium leading-6 text-slate-200">
         {value}
       </p>
     </div>

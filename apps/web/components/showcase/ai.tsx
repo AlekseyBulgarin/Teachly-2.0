@@ -12,30 +12,12 @@ import {
   Zap,
 } from "lucide-react";
 import { useEcosystem } from "@/lib/ecosystem-context";
-import {
-  ErrorState,
-  Fact,
-  PageHeader,
-  SectionCard,
-  StatusBadge,
-} from "@/components/ui";
-import {
-  EcosystemNextStep,
-  PipelineStep,
-  shortId,
-} from "@/components/showcase/shared";
+import { PageHeader, SectionCard, StatusBadge } from "@/components/ui";
+import { EcosystemNextStep, PipelineStep } from "@/components/showcase/shared";
 import { QuickSectionNav } from "@/components/showcase/quick-section-nav";
 
 export function AiPage() {
-  const {
-    t,
-    locale,
-    selected,
-    selectedAttempt,
-    remediation,
-    actionError,
-    requestRemediation,
-  } = useEcosystem();
+  const { t, locale } = useEcosystem();
   return (
     <div className="flex flex-col gap-12 lg:gap-16">
       <div id="overview" className="scroll-mt-28">
@@ -135,88 +117,20 @@ export function AiPage() {
           detail={t("ai.contextDetail")}
           icon={ShieldCheck}
         >
-          <div className="grid gap-3 p-5 sm:grid-cols-2 sm:p-7">
-            <Fact
-              label={t("ai.task")}
-              value={selected?.task?.topic.name ?? "—"}
-            />
-            <Fact
-              label={t("ai.result")}
-              value={selectedAttempt?.result.outcome ?? "—"}
-            />
-            <Fact
-              label={t("ai.knowledge")}
-              value={selected ? t("common.live") : t("common.preview")}
-            />
-            <Fact
-              label={t("labels.learner")}
-              value={selected?.student.displayName ?? "—"}
-            />
-          </div>
-          <div className="border-t border-[var(--border)] px-5 py-4 text-xs leading-5 text-slate-500 sm:px-7">
+          <div className="p-5 text-sm leading-7 text-slate-400 sm:p-7">
             {t("ai.requestDetail")}
           </div>
         </SectionCard>
         <SectionCard
-          title={remediation ? t("ai.live") : t("ai.proposal")}
-          detail={remediation ? t("ai.requestDetail") : t("ai.previewDetail")}
+          title={t("ai.proposal")}
+          detail={t("ai.previewDetail")}
           icon={Sparkles}
-          action={
-            <StatusBadge
-              status={remediation ? "LIVE" : "COMING NEXT"}
-              locale={locale}
-            />
-          }
+          action={<StatusBadge status="COMING NEXT" locale={locale} />}
         >
           <div className="p-5 sm:p-7">
-            {actionError && (
-              <ErrorState
-                message={t("ai.unavailable")}
-                retry={() => void requestRemediation()}
-                retryLabel={t("shell.retry")}
-              />
-            )}
-            {remediation ? (
-              <div className="flex flex-col gap-5">
-                <div>
-                  <p className="text-xl font-semibold text-slate-50">
-                    {remediation.remediation.summary}
-                  </p>
-                  <p className="mt-3 text-sm leading-7 text-slate-400">
-                    {remediation.remediation.explanation}
-                  </p>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Fact
-                    label={t("ai.hint")}
-                    value={remediation.remediation.hint}
-                  />
-                  <Fact
-                    label={t("ai.gap")}
-                    value={remediation.remediation.likelyGap ?? "—"}
-                  />
-                </div>
-                <p className="text-xs text-slate-500">
-                  {Math.round(remediation.remediation.confidence * 100)}%{" "}
-                  {locale === "ru" ? "уверенность" : "confidence"} ·{" "}
-                  {shortId(remediation.requestId)}
-                </p>
-              </div>
-            ) : (
-              <div>
-                <p className="max-w-xl text-sm leading-7 text-slate-400">
-                  {t("ai.previewDetail")}
-                </p>
-                <button
-                  onClick={() => void requestRemediation()}
-                  disabled={!selectedAttempt}
-                  className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[var(--green)] px-5 py-3.5 text-sm font-semibold text-slate-950 transition hover:bg-[var(--green-accent)] disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {t("ai.request")}
-                  <Zap aria-hidden="true" size={16} />
-                </button>
-              </div>
-            )}
+            <p className="max-w-xl text-sm leading-7 text-slate-400">
+              {t("ai.previewDetail")}
+            </p>
           </div>
         </SectionCard>
       </div>
