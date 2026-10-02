@@ -49,3 +49,10 @@ export type PublishedTaskContext = {
   topic: { id: string; courseId: string; name: string } | null;
   skill: { id: string; topicId: string; name: string } | null;
 };
+
+export type CurriculumDescriptor = {
+  subject: { code: string; name: string };
+  course: { id: string; name: string };
+  topic: { id: string; name: string };
+  skill: { id: string; name: string };
+};

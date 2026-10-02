@@ -148,6 +148,13 @@
       "when": 1790870798151,
       "tag": "0020_whiteboard_resources",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1790900000000,
+      "tag": "0021_learner_intelligence_v1",
+      "breakpoints": true
     }
   ]
 }

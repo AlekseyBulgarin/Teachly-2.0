@@ -19,6 +19,88 @@ export type AiTrace = { requestId: string; capability: string; status: string; p
 export type RemediationResponse = { requestId: string; remediation: { summary: string; explanation: string; hint: string; likelyGap: string | null; confidence: number; abstained: boolean }; evidenceRefs: string[]; knowledgeRefs: string[] };
 export type HealthStatus = { status: string; database: string };
 
+export type LearnerCurriculum = {
+  subject: { code: string; name: string };
+  course: { id: string; name: string };
+  topic: { id: string; name: string };
+  skill: { id: string; name: string };
+};
+export type LearnerStateStatus = 'insufficient_evidence' | 'needs_practice' | 'showing_progress';
+export type LearnerTrendStatus = 'insufficient_history' | 'improving' | 'stable' | 'regressing';
+export type LearnerOutcome = 'correct' | 'incorrect' | 'invalid';
+export type LearnerGroupBy = 'skill' | 'topic' | 'course' | 'subject';
+export type LearnerSkillStates = { observed: number; byStatus: Record<LearnerStateStatus, number> };
+export type LearnerOutcomeSummary = {
+  evidenceCount: number;
+  correct: number;
+  incorrect: number;
+  invalid: number;
+  outcomeRate: number | null;
+};
+export type LearnerSkillState = {
+  rule: string;
+  status: LearnerStateStatus;
+  evidenceCount: number;
+  recentOutcomes: LearnerOutcome[];
+  lastObservedAt: string | null;
+  asOf: string;
+};
+export type LearnerSkillTrend = { rule: string; status: LearnerTrendStatus; currentCorrect: number; previousCorrect: number };
+export type LearnerSkill = {
+  curriculum: LearnerCurriculum;
+  state: LearnerSkillState;
+  trend: LearnerSkillTrend;
+  window: LearnerOutcomeSummary;
+  taskEvidenceCount: number;
+  trainerEvidenceCount: number;
+};
+export type LearnerDimensionGroup = LearnerOutcomeSummary & {
+  reference: { id?: string; code?: string; name?: string };
+  observedSkillCount: number;
+  skillStates: LearnerSkillStates;
+};
+export type LearnerActivityItem = {
+  occurredAt: string;
+  origin: 'assessment' | 'trainer' | 'external_observation';
+  outcome: LearnerOutcome;
+  curriculum: LearnerCurriculum;
+};
+export type LearnerProfile = {
+  learner: { externalUserId: string; status: string };
+  asOf: string;
+  activity: LearnerOutcomeSummary & { firstObservedAt: string | null; lastObservedAt: string | null; activeDays: number };
+  attempts: {
+    started: number;
+    submitted: number;
+    evaluated: number;
+    correct: number;
+    incorrect: number;
+    invalid: number;
+    outcomeRate: number | null;
+    mappedResults: number;
+    firstStartedAt: string | null;
+    lastActivityAt: string | null;
+  };
+  mappingCoverage: { evaluatedResults: number; withSkillEvidence: number };
+  skills: LearnerSkillStates;
+  strengths: LearnerSkill[];
+  needsPractice: LearnerSkill[];
+  trainer: { sessionsStarted: number; sessionsCompleted: number; itemsSubmitted: number; lastActivityAt: string | null };
+  recentActivity: LearnerActivityItem[];
+};
+export type LearnerProgress = {
+  learner: { externalUserId: string; status: string };
+  asOf: string;
+  window: { from: string; to: string };
+  summary: LearnerOutcomeSummary;
+  mappingCoverage: { evaluatedResults: number; withSkillEvidence: number };
+  skillStates: LearnerSkillStates;
+  activityByDay: Array<{ date: string; evidenceCount: number }>;
+  groupBy: LearnerGroupBy;
+  dimensions: Array<LearnerSkill | LearnerDimensionGroup>;
+  recentOutcomeTrend: Array<{ curriculum: LearnerCurriculum; trend: LearnerSkillTrend }>;
+};
+
 export type PublicTaskVersion = {
   id: string;
   taskId: string;
@@ -104,4 +186,7 @@ export const api = {
   trainerSubmit: (sessionId: string, body: { itemId: string; idempotencyKey: string; answer: { optionId: string } }, signal?: AbortSignal) => request<TrainerSubmitResponse>(`v1/trainer/sessions/${sessionId}/submissions`, { method: 'POST', body: JSON.stringify(body), signal }),
   trainerNext: (sessionId: string, signal?: AbortSignal) => request<TrainerSession>(`v1/trainer/sessions/${sessionId}/next`, { method: 'POST', body: '{}', signal }),
   trainerComplete: (sessionId: string, signal?: AbortSignal) => request<TrainerSession>(`v1/trainer/sessions/${sessionId}/complete`, { method: 'POST', body: '{}', signal }),
+  learnerProfile: (signal?: AbortSignal) => request<LearnerProfile>('v1/learner-intelligence/profile', { signal }),
+  learnerProgress: (options?: { groupBy?: LearnerGroupBy; signal?: AbortSignal }) =>
+    request<LearnerProgress>(`v1/learner-intelligence/progress?groupBy=${options?.groupBy ?? 'skill'}`, { signal: options?.signal }),
 };

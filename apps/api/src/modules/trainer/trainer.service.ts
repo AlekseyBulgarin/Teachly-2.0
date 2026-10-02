@@ -1,5 +1,5 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { and, asc, eq, ne } from 'drizzle-orm';
+import { and, asc, eq, ne, sql } from 'drizzle-orm';
 import { DomainError } from '../../common/errors';
 import { DatabaseService } from '../../infrastructure/database/database';
 import { results, trainerSessionItems, trainerSessions } from '../../infrastructure/database/schema';
@@ -11,7 +11,7 @@ import type { TenantContext } from '../core/core.types';
 import { LearningService } from '../learning/learning.service';
 import { TheoryService } from '../theory/theory.service';
 import type { CreateTrainerSessionDto, SubmitTrainerAnswerDto } from './trainer.dto';
-import type { TrainerSessionItemView } from './trainer.types';
+import type { LearnerTrainerSummary, TrainerSessionItemView } from './trainer.types';
 
 @Injectable()
 export class TrainerService {
@@ -121,6 +121,44 @@ export class TrainerService {
     return { ...(await this.sessionView(tenant, completed)), idempotentReplay: false };
   }
 
+  async getLearnerIntelligenceSummary(
+    tenant: TenantContext,
+    externalUserMappingId: string,
+  ): Promise<LearnerTrainerSummary> {
+    const [summary] = await this.database.db.select({
+      sessionsStarted: sql<number>`count(distinct ${trainerSessions.id})::int`,
+      sessionsCompleted: sql<number>`count(distinct ${trainerSessions.id}) filter (where ${trainerSessions.status} = 'completed')::int`,
+      itemsSubmitted: sql<number>`count(${trainerSessionItems.id}) filter (where ${trainerSessionItems.status} = 'submitted')::int`,
+      lastActivityAt: sql<Date | null>`max(coalesce(${trainerSessions.completedAt}, ${trainerSessionItems.updatedAt}, ${trainerSessions.startedAt}))`,
+    }).from(trainerSessions).leftJoin(trainerSessionItems, and(
+      eq(trainerSessionItems.sessionId, trainerSessions.id),
+      eq(trainerSessionItems.workspaceId, trainerSessions.workspaceId),
+    )).where(and(
+      eq(trainerSessions.organizationId, tenant.organizationId),
+      eq(trainerSessions.workspaceId, tenant.workspaceId),
+      eq(trainerSessions.integrationId, tenant.integrationId),
+      eq(trainerSessions.externalUserId, externalUserMappingId),
+    ));
+    const resultRows = await this.database.db.select({ resultId: trainerSessionItems.resultId })
+      .from(trainerSessionItems).innerJoin(trainerSessions, and(
+        eq(trainerSessions.id, trainerSessionItems.sessionId),
+        eq(trainerSessions.workspaceId, trainerSessionItems.workspaceId),
+      )).where(and(
+        eq(trainerSessions.organizationId, tenant.organizationId),
+        eq(trainerSessions.workspaceId, tenant.workspaceId),
+        eq(trainerSessions.integrationId, tenant.integrationId),
+        eq(trainerSessions.externalUserId, externalUserMappingId),
+        eq(trainerSessionItems.status, 'submitted'),
+      ));
+    return {
+      sessionsStarted: summary?.sessionsStarted ?? 0,
+      sessionsCompleted: summary?.sessionsCompleted ?? 0,
+      itemsSubmitted: summary?.itemsSubmitted ?? 0,
+      lastActivityAt: summary?.lastActivityAt ? new Date(String(summary.lastActivityAt)) : null,
+      resultIds: resultRows.flatMap((row) => row.resultId ? [row.resultId] : []),
+    };
+  }
+
   private async ensureCurrentAttempt(tenant: TenantContext, session: typeof trainerSessions.$inferSelect) {
     return this.database.transaction(async () => {
       const [item] = await this.database.db.select().from(trainerSessionItems).where(and(
@@ -129,7 +167,7 @@ export class TrainerService {
         ne(trainerSessionItems.status, 'submitted'),
       )).orderBy(asc(trainerSessionItems.position)).for('update', { of: trainerSessionItems }).limit(1);
       if (!item || item.attemptId) return;
-      const started = await this.attempts.startTrainer(session.learnerId, item.taskVersionId, tenant.workspaceId);
+      const started = await this.attempts.startTrainer(session.learnerId, item.taskVersionId, tenant);
       await this.database.db.update(trainerSessionItems).set({ attemptId: started.attempt.id, status: 'started', updatedAt: new Date() })
         .where(and(eq(trainerSessionItems.id, item.id), eq(trainerSessionItems.status, 'pending')));
     });

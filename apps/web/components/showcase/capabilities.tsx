@@ -191,7 +191,7 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
       next: "Посмотрите, как Teachly показывает движение в обучении.",
       nextAction: "Открыть прогресс",
       nextHref: "/progress",
-      status: "COMING NEXT",
+      status: "LIVE",
     },
     progress: {
       eyebrow: "Прогресс",
@@ -361,7 +361,7 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
       next: "See how Teachly presents learning movement.",
       nextAction: "Open progress",
       nextHref: "/progress",
-      status: "COMING NEXT",
+      status: "LIVE",
     },
     progress: {
       eyebrow: "Progress",

@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { and, eq } from 'drizzle-orm';
 import { developmentAuthEnabled, requiredEnvironment } from '../../common/config';
 import { buildInternalFixture } from '../../modules/education/fixtures/internal-fixture';
+import { SKILL_EVIDENCE_RULE } from '../../modules/learning/learning.rules';
 import { DatabaseService } from './database';
 import { hashApiKey } from '../../modules/integrations/api-key.crypto';
 import {
@@ -11,6 +12,7 @@ import {
   results, skills, subjects, submissions, taskVersions, tasks, topics,
   teacherStudentRelationships, theoryMaterials, theoryMaterialTasks, theoryVersions,
   users, workspaces, attempts, skillEvidence,
+  trainerSessions, trainerSessionItems,
 } from './schema';
 
 const id = (n: number) => `00000000-0000-4000-8000-${n.toString().padStart(12, '0')}`;
@@ -25,7 +27,34 @@ export const fixtureIds = {
   secondTask: id(26), secondVersion: id(27),
   firstTheory: id(28), firstTheoryVersion: id(29), firstTheoryTask: id(30),
   secondTheory: id(31), secondTheoryVersion: id(32), secondTheoryTask: id(33),
+  secondSkill: id(34), trainerSession: id(35), trainerItem: id(36),
+  trainerAttempt: id(240), trainerSubmission: id(241), trainerResult: id(242),
+  trainerResultEvent: id(243), trainerEvidence: id(244),
 };
+
+type SeedAssessmentChain = {
+  skillId: string;
+  taskVersionId: string;
+  at: string;
+  selectedOptionId: string;
+  correctOptionId: string;
+  outcome: 'correct' | 'incorrect';
+};
+
+const SEED_ASSESSMENT_CHAINS: SeedAssessmentChain[] = [
+  { skillId: fixtureIds.skill, taskVersionId: fixtureIds.version, at: '2026-09-03T10:00:00.000Z', selectedOptionId: 'b', correctOptionId: 'a', outcome: 'incorrect' },
+  { skillId: fixtureIds.skill, taskVersionId: fixtureIds.version, at: '2026-09-06T10:00:00.000Z', selectedOptionId: 'b', correctOptionId: 'a', outcome: 'incorrect' },
+  { skillId: fixtureIds.skill, taskVersionId: fixtureIds.version, at: '2026-09-08T10:00:00.000Z', selectedOptionId: 'a', correctOptionId: 'a', outcome: 'correct' },
+  { skillId: fixtureIds.skill, taskVersionId: fixtureIds.version, at: '2026-09-11T10:00:00.000Z', selectedOptionId: 'b', correctOptionId: 'a', outcome: 'incorrect' },
+  { skillId: fixtureIds.skill, taskVersionId: fixtureIds.version, at: '2026-09-14T10:00:00.000Z', selectedOptionId: 'b', correctOptionId: 'a', outcome: 'incorrect' },
+  { skillId: fixtureIds.skill, taskVersionId: fixtureIds.version, at: '2026-09-17T10:00:00.000Z', selectedOptionId: 'b', correctOptionId: 'a', outcome: 'incorrect' },
+  { skillId: fixtureIds.secondSkill, taskVersionId: fixtureIds.secondVersion, at: '2026-09-05T10:00:00.000Z', selectedOptionId: 'a', correctOptionId: 'b', outcome: 'incorrect' },
+  { skillId: fixtureIds.secondSkill, taskVersionId: fixtureIds.secondVersion, at: '2026-09-07T10:00:00.000Z', selectedOptionId: 'a', correctOptionId: 'b', outcome: 'incorrect' },
+  { skillId: fixtureIds.secondSkill, taskVersionId: fixtureIds.secondVersion, at: '2026-09-09T10:00:00.000Z', selectedOptionId: 'b', correctOptionId: 'b', outcome: 'correct' },
+  { skillId: fixtureIds.secondSkill, taskVersionId: fixtureIds.secondVersion, at: '2026-09-12T10:00:00.000Z', selectedOptionId: 'b', correctOptionId: 'b', outcome: 'correct' },
+  { skillId: fixtureIds.secondSkill, taskVersionId: fixtureIds.secondVersion, at: '2026-09-15T10:00:00.000Z', selectedOptionId: 'b', correctOptionId: 'b', outcome: 'correct' },
+  { skillId: fixtureIds.secondSkill, taskVersionId: fixtureIds.secondVersion, at: '2026-09-18T10:00:00.000Z', selectedOptionId: 'b', correctOptionId: 'b', outcome: 'correct' },
+];
 
 export const demoApiKey = 'tlk_00000000000000dd.teachly-demo-key';
 
@@ -93,14 +122,14 @@ export async function seedDevelopmentFixtures(
       name: 'Demo reference client key',
       keyPrefix: demoApiKey.slice(0, demoApiKey.indexOf('.')),
       keyHash: hashApiKey(demoApiKey),
-      scopes: ['external_users:read', 'remediation:write', 'assessment:read', 'theory:read', 'trainer:read', 'trainer:write'],
+      scopes: ['external_users:read', 'remediation:write', 'assessment:read', 'theory:read', 'trainer:read', 'trainer:write', 'learner_intelligence:read'],
     }).onConflictDoUpdate({
       target: apiKeys.id,
       set: {
         name: 'Demo reference client key',
         keyPrefix: demoApiKey.slice(0, demoApiKey.indexOf('.')),
         keyHash: hashApiKey(demoApiKey),
-        scopes: ['external_users:read', 'remediation:write', 'assessment:read', 'theory:read', 'trainer:read', 'trainer:write'],
+        scopes: ['external_users:read', 'remediation:write', 'assessment:read', 'theory:read', 'trainer:read', 'trainer:write', 'learner_intelligence:read'],
       },
     });
     await tx.insert(externalUsers).values({
@@ -111,15 +140,20 @@ export async function seedDevelopmentFixtures(
       learnerId: fixtureIds.student,
       externalUserId: 'demo-learner-01',
     }).onConflictDoNothing();
+    await tx.insert(skills).values({
+      id: fixtureIds.secondSkill,
+      topicId: fixtureIds.topic,
+      name: 'Keep authority on the server',
+    }).onConflictDoNothing();
     await tx.insert(tasks).values({
       id: fixtureIds.secondTask,
       workspaceId: fixtureIds.workspace,
       subjectId: fixtureIds.subject,
       courseId: fixtureIds.course,
       topicId: fixtureIds.topic,
-      skillId: fixtureIds.skill,
+      skillId: fixtureIds.secondSkill,
       sourceKind: 'internal_fixture',
-    }).onConflictDoNothing();
+    }).onConflictDoUpdate({ target: tasks.id, set: { skillId: fixtureIds.secondSkill } });
     await tx.insert(taskVersions).values({
       id: fixtureIds.secondVersion,
       taskId: fixtureIds.secondTask,
@@ -239,13 +273,14 @@ export async function seedDevelopmentFixtures(
     await tx.insert(attempts).values({
       id: fixtureIds.attempt,
       workspaceId: fixtureIds.workspace,
+      integrationId: fixtureIds.integration,
       studentId: fixtureIds.student,
       taskVersionId: fixtureIds.version,
       assignmentId: fixtureIds.assignment,
       status: 'submitted',
       startedAt: new Date('2026-01-02T10:00:00.000Z'),
       submittedAt: new Date('2026-01-02T10:04:00.000Z'),
-    }).onConflictDoNothing();
+    }).onConflictDoUpdate({ target: attempts.id, set: { integrationId: fixtureIds.integration } });
     await tx.insert(submissions).values({
       id: fixtureIds.submission,
       attemptId: fixtureIds.attempt,
@@ -263,13 +298,16 @@ export async function seedDevelopmentFixtures(
       outcome: 'incorrect',
       isCorrect: false,
       score: 0,
-      details: { selectedOptionId: 'b', correctOptionId: 'a' },
+      details: { selectedOptionId: 'b', correctOptionId: 'a', learningHandoff: 'recorded' },
       evaluatedAt: new Date('2026-01-02T10:04:01.000Z'),
-    }).onConflictDoNothing();
+    }).onConflictDoUpdate({ target: results.id, set: {
+      details: { selectedOptionId: 'b', correctOptionId: 'a', learningHandoff: 'recorded' },
+    } });
     await tx.insert(learningEvents).values([
       {
         id: fixtureIds.attemptEvent,
         workspaceId: fixtureIds.workspace,
+        integrationId: fixtureIds.integration,
         eventType: 'attempt_submitted',
         learnerId: fixtureIds.student,
         source: 'teachly_authoritative', sourceType: 'submission', sourceId: fixtureIds.submission,
@@ -279,6 +317,7 @@ export async function seedDevelopmentFixtures(
       {
         id: fixtureIds.resultEvent,
         workspaceId: fixtureIds.workspace,
+        integrationId: fixtureIds.integration,
         eventType: 'result_recorded',
         learnerId: fixtureIds.student,
         source: 'teachly_authoritative', sourceType: 'result', sourceId: fixtureIds.result,
@@ -286,7 +325,9 @@ export async function seedDevelopmentFixtures(
         outcome: 'incorrect', evaluationRule: 'single-choice.v1',
         occurredAt: new Date('2026-01-02T10:04:01.000Z'),
       },
-    ]).onConflictDoNothing();
+    ]).onConflictDoUpdate({ target: [learningEvents.workspaceId, learningEvents.eventType, learningEvents.sourceType, learningEvents.sourceId], set: {
+      integrationId: fixtureIds.integration,
+    } });
     await tx.insert(skillEvidence).values({
       id: fixtureIds.evidence,
       workspaceId: fixtureIds.workspace,
@@ -294,10 +335,189 @@ export async function seedDevelopmentFixtures(
       courseId: fixtureIds.course,
       skillId: fixtureIds.skill,
       learningEventId: fixtureIds.resultEvent,
-      rule: 'result-recorded.v1',
+      rule: SKILL_EVIDENCE_RULE,
       outcome: 'incorrect',
       occurredAt: new Date('2026-01-02T10:04:01.000Z'),
     }).onConflictDoNothing();
+
+    const assessmentChains = SEED_ASSESSMENT_CHAINS.map((chain, index) => {
+      const startedAt = new Date(chain.at);
+      return {
+        ...chain,
+        index,
+        startedAt,
+        submittedAt: new Date(startedAt.getTime() + 120_000),
+        evaluatedAt: new Date(startedAt.getTime() + 121_000),
+        attemptId: id(100 + index),
+        submissionId: id(120 + index),
+        resultId: id(140 + index),
+        learningEventId: id(160 + index),
+        evidenceId: id(180 + index),
+      };
+    });
+    const attemptRows: Array<typeof attempts.$inferInsert> = assessmentChains.map((row) => ({
+      id: row.attemptId,
+      workspaceId: fixtureIds.workspace,
+      integrationId: fixtureIds.integration,
+      studentId: fixtureIds.student,
+      taskVersionId: row.taskVersionId,
+      status: 'submitted',
+      startedAt: row.startedAt,
+      submittedAt: row.submittedAt,
+    }));
+    await tx.insert(attempts).values(attemptRows).onConflictDoNothing();
+    const submissionRows: Array<typeof submissions.$inferInsert> = assessmentChains.map((row) => ({
+      id: row.submissionId,
+      attemptId: row.attemptId,
+      workspaceId: fixtureIds.workspace,
+      idempotencyKey: `demo-li-assessment-${row.index}`,
+      answer: { optionId: row.selectedOptionId },
+      createdAt: row.submittedAt,
+    }));
+    await tx.insert(submissions).values(submissionRows).onConflictDoNothing();
+    const resultRows: Array<typeof results.$inferInsert> = assessmentChains.map((row) => ({
+      id: row.resultId,
+      attemptId: row.attemptId,
+      submissionId: row.submissionId,
+      workspaceId: fixtureIds.workspace,
+      evaluationRule: 'single-choice.v1',
+      outcome: row.outcome,
+      isCorrect: row.outcome === 'correct',
+      score: row.outcome === 'correct' ? 1 : 0,
+      details: { selectedOptionId: row.selectedOptionId, correctOptionId: row.correctOptionId, learningHandoff: 'recorded' },
+      evaluatedAt: row.evaluatedAt,
+    }));
+    await tx.insert(results).values(resultRows).onConflictDoNothing();
+    const learningEventRows: Array<typeof learningEvents.$inferInsert> = assessmentChains.map((row) => ({
+      id: row.learningEventId,
+      workspaceId: fixtureIds.workspace,
+      integrationId: fixtureIds.integration,
+      eventType: 'result_recorded',
+      learnerId: fixtureIds.student,
+      source: 'teachly_authoritative',
+      sourceType: 'result',
+      sourceId: row.resultId,
+      taskVersionId: row.taskVersionId,
+      courseId: fixtureIds.course,
+      skillId: row.skillId,
+      outcome: row.outcome,
+      evaluationRule: 'single-choice.v1',
+      occurredAt: row.evaluatedAt,
+      createdAt: row.evaluatedAt,
+    }));
+    await tx.insert(learningEvents).values(learningEventRows).onConflictDoNothing();
+    const evidenceRows: Array<typeof skillEvidence.$inferInsert> = assessmentChains.map((row) => ({
+      id: row.evidenceId,
+      workspaceId: fixtureIds.workspace,
+      learnerId: fixtureIds.student,
+      courseId: fixtureIds.course,
+      skillId: row.skillId,
+      learningEventId: row.learningEventId,
+      rule: SKILL_EVIDENCE_RULE,
+      outcome: row.outcome,
+      occurredAt: row.evaluatedAt,
+      createdAt: row.evaluatedAt,
+    }));
+    await tx.insert(skillEvidence).values(evidenceRows).onConflictDoNothing();
+
+    const trainerAttemptStartedAt = new Date('2026-09-20T10:00:00.000Z');
+    const trainerSubmittedAt = new Date('2026-09-20T10:02:00.000Z');
+    const trainerEvaluatedAt = new Date('2026-09-20T10:02:01.000Z');
+    await tx.insert(attempts).values([{
+      id: fixtureIds.trainerAttempt,
+      workspaceId: fixtureIds.workspace,
+      integrationId: fixtureIds.integration,
+      studentId: fixtureIds.student,
+      taskVersionId: fixtureIds.secondVersion,
+      status: 'submitted',
+      startedAt: trainerAttemptStartedAt,
+      submittedAt: trainerSubmittedAt,
+    } satisfies typeof attempts.$inferInsert]).onConflictDoNothing();
+    await tx.insert(submissions).values([{
+      id: fixtureIds.trainerSubmission,
+      attemptId: fixtureIds.trainerAttempt,
+      workspaceId: fixtureIds.workspace,
+      idempotencyKey: 'demo-trainer-submission-1',
+      answer: { optionId: 'b' },
+      createdAt: trainerSubmittedAt,
+    } satisfies typeof submissions.$inferInsert]).onConflictDoNothing();
+    await tx.insert(results).values([{
+      id: fixtureIds.trainerResult,
+      attemptId: fixtureIds.trainerAttempt,
+      submissionId: fixtureIds.trainerSubmission,
+      workspaceId: fixtureIds.workspace,
+      evaluationRule: 'single-choice.v1',
+      outcome: 'correct',
+      isCorrect: true,
+      score: 1,
+      details: { selectedOptionId: 'b', correctOptionId: 'b', learningHandoff: 'recorded' },
+      evaluatedAt: trainerEvaluatedAt,
+    } satisfies typeof results.$inferInsert]).onConflictDoNothing();
+    await tx.insert(learningEvents).values([{
+      id: fixtureIds.trainerResultEvent,
+      workspaceId: fixtureIds.workspace,
+      integrationId: fixtureIds.integration,
+      eventType: 'result_recorded',
+      learnerId: fixtureIds.student,
+      source: 'teachly_authoritative',
+      sourceType: 'result',
+      sourceId: fixtureIds.trainerResult,
+      taskVersionId: fixtureIds.secondVersion,
+      courseId: fixtureIds.course,
+      skillId: fixtureIds.secondSkill,
+      outcome: 'correct',
+      evaluationRule: 'single-choice.v1',
+      occurredAt: trainerEvaluatedAt,
+      createdAt: trainerEvaluatedAt,
+    } satisfies typeof learningEvents.$inferInsert]).onConflictDoNothing();
+    await tx.insert(skillEvidence).values([{
+      id: fixtureIds.trainerEvidence,
+      workspaceId: fixtureIds.workspace,
+      learnerId: fixtureIds.student,
+      courseId: fixtureIds.course,
+      skillId: fixtureIds.secondSkill,
+      learningEventId: fixtureIds.trainerResultEvent,
+      rule: SKILL_EVIDENCE_RULE,
+      outcome: 'correct',
+      occurredAt: trainerEvaluatedAt,
+      createdAt: trainerEvaluatedAt,
+    } satisfies typeof skillEvidence.$inferInsert]).onConflictDoNothing();
+    const [storedTrainerItem] = await tx.select({ id: trainerSessionItems.id }).from(trainerSessionItems)
+      .where(eq(trainerSessionItems.id, fixtureIds.trainerItem)).limit(1);
+    if (!storedTrainerItem) {
+      await tx.insert(trainerSessions).values([{
+        id: fixtureIds.trainerSession,
+        organizationId: fixtureIds.organization,
+        workspaceId: fixtureIds.workspace,
+        integrationId: fixtureIds.integration,
+        externalUserId: fixtureIds.externalUser,
+        learnerId: fixtureIds.student,
+        subjectId: fixtureIds.subject,
+        courseId: fixtureIds.course,
+        topicId: fixtureIds.topic,
+        skillId: fixtureIds.secondSkill,
+        idempotencyKey: 'demo-trainer-session-1',
+        status: 'active',
+        startedAt: new Date('2026-09-20T09:55:00.000Z'),
+      } satisfies typeof trainerSessions.$inferInsert]).onConflictDoNothing();
+      await tx.insert(trainerSessionItems).values([{
+        id: fixtureIds.trainerItem,
+        sessionId: fixtureIds.trainerSession,
+        workspaceId: fixtureIds.workspace,
+        position: 1,
+        taskVersionId: fixtureIds.secondVersion,
+        attemptId: fixtureIds.trainerAttempt,
+        resultId: fixtureIds.trainerResult,
+        status: 'submitted',
+        createdAt: trainerAttemptStartedAt,
+        updatedAt: trainerEvaluatedAt,
+      } satisfies typeof trainerSessionItems.$inferInsert]).onConflictDoNothing();
+      await tx.update(trainerSessions).set({
+        status: 'completed',
+        completedAt: new Date('2026-09-20T10:05:00.000Z'),
+      }).where(eq(trainerSessions.id, fixtureIds.trainerSession));
+    }
+
     await tx.insert(knowledgeSources).values({
       id: fixtureIds.knowledgeSource,
       workspaceId: fixtureIds.workspace,

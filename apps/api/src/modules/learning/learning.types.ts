@@ -4,9 +4,11 @@ export type LearningEventSource = typeof learningEventSources[number];
 export type LearningEventType = 'attempt_submitted' | 'result_recorded';
 export type ResultOutcome = 'correct' | 'incorrect' | 'invalid';
 export type LearningStateStatus = 'insufficient_evidence' | 'needs_practice' | 'showing_progress';
+export type LearningTrendStatus = 'insufficient_history' | 'improving' | 'regressing' | 'stable';
 
 export type LearningEventInput = {
   workspaceId: string;
+  integrationId?: string | null;
   learnerId: string;
   eventType: LearningEventType;
   source: LearningEventSource;
@@ -24,6 +26,7 @@ export type LearningEventInput = {
 export type LearningEventView = {
   id: string;
   workspaceId: string;
+  integrationId: string | null;
   eventType: LearningEventType;
   learnerId: string;
   source: LearningEventSource;
@@ -68,6 +71,7 @@ export type LearningState = {
 
 export type ResultFactsInput = {
   workspaceId: string;
+  integrationId?: string | null;
   learnerId: string;
   taskVersionId: string;
   courseId: string | null;
@@ -82,6 +86,7 @@ export type ResultFactsInput = {
 
 export type ExternalResultFactsInput = {
   workspaceId: string;
+  integrationId: string;
   learnerId: string;
   taskVersionId: string;
   courseId: string;
@@ -89,6 +94,13 @@ export type ExternalResultFactsInput = {
   observationId: string;
   outcome: ResultOutcome;
   occurredAt?: Date;
+};
+
+export type LearningTrend = {
+  rule: 'learning_trend.v1';
+  status: LearningTrendStatus;
+  currentCorrect: number;
+  previousCorrect: number;
 };
 
 export type LearningHandoffResult = {

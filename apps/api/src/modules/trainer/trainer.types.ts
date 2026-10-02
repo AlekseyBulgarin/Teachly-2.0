@@ -12,3 +12,10 @@ export type TrainerSessionItemView = {
   result: ResultView | null;
 };
 
+export type LearnerTrainerSummary = {
+  sessionsStarted: number;
+  sessionsCompleted: number;
+  itemsSubmitted: number;
+  lastActivityAt: Date | null;
+  resultIds: string[];
+};

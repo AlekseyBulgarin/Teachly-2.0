@@ -60,7 +60,7 @@ describe('AI runtime foundation (PostgreSQL)', () => {
     const context = await integrations.authenticateApiKey(key.secret);
     if (!context) throw new Error('AI test tenant context did not authenticate');
     const assignment = await teaching.createAssignment(fixtureIds.teacher, fixtureIds.student, fixtureIds.version);
-    const started = await attempts.start(fixtureIds.student, fixtureIds.version, assignment.id);
+    const started = await attempts.start(fixtureIds.student, fixtureIds.version, assignment.id, context);
     const submitted = await attempts.submit(fixtureIds.student, started.attempt.id, 'ai-test', { optionId: 'b' }, context);
     return { context, attemptId: started.attempt.id, resultId: submitted.result.id };
   }

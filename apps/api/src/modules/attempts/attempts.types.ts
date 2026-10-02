@@ -38,3 +38,15 @@ export type AttemptResult = {
   result: ResultView;
   manualReviewStatus: 'pending' | null;
 };
+
+export type LearnerAttemptSummary = {
+  started: number;
+  submitted: number;
+  evaluated: number;
+  correct: number;
+  incorrect: number;
+  invalid: number;
+  mappedResults: number;
+  firstStartedAt: Date | null;
+  lastActivityAt: Date | null;
+};

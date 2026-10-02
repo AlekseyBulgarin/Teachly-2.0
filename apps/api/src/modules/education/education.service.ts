@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { DatabaseService } from '../../infrastructure/database/database';
 import { courses, skills, subjects, taskVersions, tasks, topics } from '../../infrastructure/database/schema';
 import type { TenantContext } from '../core/core.types';
-import type { PublishedTaskContext, PublishedTaskVersion, PublicTaskVersion } from './education.types';
+import type { CurriculumDescriptor, PublishedTaskContext, PublishedTaskVersion, PublicTaskVersion } from './education.types';
 
 @Injectable()
 export class EducationService {
@@ -48,6 +48,22 @@ export class EducationService {
         context ? eq(taskVersions.workspaceId, context.workspaceId) : undefined,
       ));
     return rows.map((row) => this.toPublishedTaskContext(row));
+  }
+
+  async describeSkills(workspaceId: string, skillIds: string[]): Promise<Map<string, CurriculumDescriptor>> {
+    if (!skillIds.length) return new Map();
+    const rows = await this.database.db.select({ skill: skills, topic: topics, course: courses, subject: subjects })
+      .from(skills)
+      .innerJoin(topics, eq(topics.id, skills.topicId))
+      .innerJoin(courses, eq(courses.id, topics.courseId))
+      .innerJoin(subjects, eq(subjects.id, courses.subjectId))
+      .where(and(eq(courses.workspaceId, workspaceId), inArray(skills.id, [...new Set(skillIds)])));
+    return new Map(rows.map((row) => [row.skill.id, {
+      subject: { code: row.subject.code, name: row.subject.name },
+      course: { id: row.course.id, name: row.course.name },
+      topic: { id: row.topic.id, name: row.topic.name },
+      skill: { id: row.skill.id, name: row.skill.name },
+    }]));
   }
 
   toPublicTaskVersion(taskVersion: PublishedTaskVersion): PublicTaskVersion {

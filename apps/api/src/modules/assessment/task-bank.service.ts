@@ -317,6 +317,7 @@ export class TaskBankService {
       if (learningHandoff === 'recorded' && input.outcome && task.courseId && task.skillId) {
         await this.learning.recordExternalResultFacts({
           workspaceId: tenant.workspaceId,
+          integrationId: tenant.integrationId,
           learnerId: learner.learnerId,
           taskVersionId: version.id,
           courseId: task.courseId,

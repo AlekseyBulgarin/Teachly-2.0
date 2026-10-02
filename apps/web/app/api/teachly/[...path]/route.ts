@@ -14,6 +14,8 @@ const allowedGetRoutes = [
   /^v1\/theory\/materials$/,
   /^v1\/trainer\/sessions\/[0-9a-f-]+$/i,
   /^v1\/trainer\/sessions\/[0-9a-f-]+\/current$/i,
+  /^v1\/learner-intelligence\/profile$/,
+  /^v1\/learner-intelligence\/progress$/,
 ];
 
 const allowedPostRoutes = [
@@ -92,12 +94,39 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   if (!isAllowed(request.method, joinedPath)) {
     return NextResponse.json({ code: 'DEMO_ROUTE_NOT_ALLOWED', message: 'This API route is not available through the Showcase proxy' }, { status: 403 });
   }
-  const target = `${process.env.TEACHLY_API_URL ?? 'http://127.0.0.1:3001'}/${joinedPath}${request.nextUrl.search}`;
+  // The learner identity is server-owned: the browser can never choose which
+  // external learner to read. Any client-supplied value is discarded.
+  const isLearnerIntelligence = joinedPath === 'v1/learner-intelligence/profile' || joinedPath === 'v1/learner-intelligence/progress';
+  let target: string;
+  if (isLearnerIntelligence) {
+    const demoLearnerId = process.env.TEACHLY_DEMO_EXTERNAL_LEARNER_ID
+      ?? (process.env.NODE_ENV === 'production' ? null : 'demo-learner-01');
+    if (!demoLearnerId) {
+      return NextResponse.json(
+        { code: 'DEMO_NOT_CONFIGURED', message: 'The live Teachly demo is not configured' },
+        { status: 503 },
+      );
+    }
+    const searchParams = new URLSearchParams(request.nextUrl.search);
+    searchParams.delete('externalUserId');
+    searchParams.set('externalUserId', demoLearnerId);
+    target = `${process.env.TEACHLY_API_URL ?? 'http://127.0.0.1:3001'}/${joinedPath}?${searchParams.toString()}`;
+  } else {
+    target = `${process.env.TEACHLY_API_URL ?? 'http://127.0.0.1:3001'}/${joinedPath}${request.nextUrl.search}`;
+  }
   const headers = new Headers();
   headers.set('accept', 'application/json');
   if (request.method !== 'GET') headers.set('content-type', request.headers.get('content-type') ?? 'application/json');
   if (joinedPath.startsWith('v1/')) {
-    headers.set('authorization', `Bearer ${process.env.TEACHLY_DEMO_API_KEY ?? 'tlk_00000000000000dd.teachly-demo-key'}`);
+    const demoApiKey = process.env.TEACHLY_DEMO_API_KEY
+      ?? (process.env.NODE_ENV === 'production' ? null : 'tlk_00000000000000dd.teachly-demo-key');
+    if (!demoApiKey) {
+      return NextResponse.json(
+        { code: 'DEMO_NOT_CONFIGURED', message: 'The live Teachly demo is not configured' },
+        { status: 503 },
+      );
+    }
+    headers.set('authorization', `Bearer ${demoApiKey}`);
   } else if (joinedPath !== 'health') {
     // Legacy read-only Showcase endpoints. The allowlist above prevents authoring access.
     headers.set('x-dev-user', 'teacher');

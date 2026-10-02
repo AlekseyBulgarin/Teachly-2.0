@@ -470,6 +470,7 @@ export const assignments = pgTable('assignments', {
 export const attempts = pgTable('attempts', {
   id: uuid('id').defaultRandom().primaryKey(),
   workspaceId: uuid('workspace_id').notNull(),
+  integrationId: uuid('integration_id').references(() => integrations.id, { onDelete: 'restrict' }),
   studentId: uuid('student_id').notNull().references(() => users.id, { onDelete: 'restrict' }),
   taskVersionId: uuid('task_version_id').notNull().references(() => taskVersions.id, { onDelete: 'restrict' }),
   assignmentId: uuid('assignment_id').references(() => assignments.id, { onDelete: 'restrict' }),
@@ -494,6 +495,8 @@ export const attempts = pgTable('attempts', {
     foreignColumns: [taskVersions.id, taskVersions.workspaceId],
   }).onDelete('restrict'),
   attemptWorkspaceUnique: uniqueIndex('attempts_id_workspace_unique').on(table.id, table.workspaceId),
+  learnerIntelligenceIndex: index('attempts_learner_intelligence_idx')
+    .on(table.workspaceId, table.integrationId, table.studentId, table.startedAt.desc(), table.id.desc()),
 }));
 
 export const submissions = pgTable(
@@ -580,6 +583,8 @@ export const trainerSessions = pgTable('trainer_sessions', {
   }).onDelete('restrict'),
   sessionWorkspaceUnique: uniqueIndex('trainer_sessions_id_workspace_unique').on(table.id, table.workspaceId),
   idempotencyUnique: uniqueIndex('trainer_sessions_idempotency_unique').on(table.workspaceId, table.integrationId, table.externalUserId, table.idempotencyKey),
+  learnerIntelligenceIndex: index('trainer_sessions_learner_intelligence_idx')
+    .on(table.workspaceId, table.integrationId, table.externalUserId, table.startedAt.desc(), table.id.desc()),
   statusCheck: check('trainer_sessions_status_check', sql`${table.status} IN ('active', 'completed')`),
   completionState: check('trainer_sessions_completion_state_check', sql`
     (${table.status} = 'active' AND ${table.completedAt} IS NULL)
@@ -740,6 +745,7 @@ export const variantItems = pgTable('variant_items', {
 export const learningEvents = pgTable('learning_events', {
   id: uuid('id').defaultRandom().primaryKey(),
   workspaceId: uuid('workspace_id').notNull(),
+  integrationId: uuid('integration_id').references(() => integrations.id, { onDelete: 'restrict' }),
   eventType: learningEventTypeEnum('event_type').notNull(),
   learnerId: uuid('learner_id').notNull().references(() => users.id, { onDelete: 'restrict' }),
   source: text('source').notNull(),
@@ -772,6 +778,8 @@ export const learningEvents = pgTable('learning_events', {
   learningEventWorkspaceUnique: uniqueIndex('learning_events_id_workspace_unique').on(table.id, table.workspaceId),
   learningEventSourceUnique: uniqueIndex('learning_events_source_unique')
     .on(table.workspaceId, table.eventType, table.sourceType, table.sourceId),
+  learnerIntelligenceIndex: index('learning_events_learner_intelligence_idx')
+    .on(table.workspaceId, table.integrationId, table.learnerId, table.occurredAt.desc(), table.id.desc()),
 }));
 
 export const skillEvidence = pgTable('skill_evidence', {
@@ -806,6 +814,8 @@ export const skillEvidence = pgTable('skill_evidence', {
     .on(table.workspaceId, table.learningEventId, table.rule),
   skillEvidenceLearnerSkillIndex: index('skill_evidence_learner_skill_idx')
     .on(table.workspaceId, table.learnerId, table.skillId, table.occurredAt),
+  skillEvidenceLearnerTimelineIndex: index('skill_evidence_learner_timeline_idx')
+    .on(table.workspaceId, table.learnerId, table.occurredAt.desc(), table.id.desc()),
 }));
 
 export const auditEvents = pgTable('audit_events', {

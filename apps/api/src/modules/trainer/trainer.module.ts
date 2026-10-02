@@ -13,6 +13,6 @@ import { TrainerService } from './trainer.service';
   imports: [AuditModule, AttemptsModule, EducationModule, ExternalUsersModule, IntegrationsModule, LearningModule, TheoryModule],
   controllers: [TrainerController],
   providers: [TrainerService],
+  exports: [TrainerService],
 })
 export class TrainerModule {}
-

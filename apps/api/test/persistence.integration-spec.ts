@@ -1,8 +1,8 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import { DatabaseService } from '../src/infrastructure/database/database';
 import { fixtureIds, seedDevelopmentFixtures } from '../src/infrastructure/database/seed';
 import { applyMigrations } from '../src/infrastructure/database/migrate';
-import { apiKeys, assignments, attempts, auditEvents, externalIdentities, results, submissions, taskVersions, tasks, teacherStudentRelationships, theoryMaterials, theoryMaterialTasks, theoryVersions, users } from '../src/infrastructure/database/schema';
+import { apiKeys, assignments, attempts, auditEvents, externalIdentities, learningEvents, results, skillEvidence, submissions, taskVersions, tasks, teacherStudentRelationships, theoryMaterials, theoryMaterialTasks, theoryVersions, trainerSessionItems, trainerSessions, users } from '../src/infrastructure/database/schema';
 import { AttemptsService } from '../src/modules/attempts/attempts.service';
 import { AuditService } from '../src/modules/audit/audit.service';
 import { EducationService } from '../src/modules/education/education.service';
@@ -62,7 +62,25 @@ describe('Phase 2 PostgreSQL invariants', () => {
     const [demoKey] = await database.db.select().from(apiKeys).where(eq(apiKeys.id, fixtureIds.apiKey));
     expect(demoKey?.scopes).toEqual([
       'external_users:read', 'remediation:write', 'assessment:read', 'theory:read', 'trainer:read', 'trainer:write',
+      'learner_intelligence:read',
     ]);
+    expect(await database.db.select().from(attempts)).toHaveLength(14);
+    expect(await database.db.select().from(submissions)).toHaveLength(14);
+    expect(await database.db.select().from(results)).toHaveLength(14);
+    expect(await database.db.select().from(learningEvents)).toHaveLength(15);
+    expect(await database.db.select().from(skillEvidence)).toHaveLength(14);
+    expect(await database.db.select().from(trainerSessions)).toHaveLength(1);
+    expect(await database.db.select().from(trainerSessionItems)).toHaveLength(1);
+    const skillAEvidence = await database.db.select().from(skillEvidence)
+      .where(and(eq(skillEvidence.learnerId, fixtureIds.student), eq(skillEvidence.skillId, fixtureIds.skill)))
+      .orderBy(desc(skillEvidence.occurredAt));
+    expect(skillAEvidence).toHaveLength(7);
+    expect(skillAEvidence.slice(0, 3).map((row) => row.outcome)).toEqual(['incorrect', 'incorrect', 'incorrect']);
+    const skillBEvidence = await database.db.select().from(skillEvidence)
+      .where(and(eq(skillEvidence.learnerId, fixtureIds.student), eq(skillEvidence.skillId, fixtureIds.secondSkill)))
+      .orderBy(desc(skillEvidence.occurredAt));
+    expect(skillBEvidence).toHaveLength(7);
+    expect(skillBEvidence.slice(0, 3).map((row) => row.outcome)).toEqual(['correct', 'correct', 'correct']);
     const version = await database.db.select().from(taskVersions).where(eq(taskVersions.id, fixtureIds.version));
     expect(version[0]?.provenance.licenseStatus).toBe('development_only');
   });

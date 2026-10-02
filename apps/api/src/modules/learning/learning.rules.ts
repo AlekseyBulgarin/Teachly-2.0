@@ -1,6 +1,7 @@
 import type {
   LearningEventView,
   LearningState,
+  LearningTrend,
   ResultOutcome,
 } from './learning.types';
 
@@ -8,6 +9,8 @@ export const SKILL_EVIDENCE_RULE = 'outcome_by_skill.v1';
 export const LEARNING_STATE_RULE = 'learning_state.v1';
 export const LEARNING_STATE_RECENT_WINDOW = 3;
 export const LEARNING_STATE_PROGRESS_THRESHOLD = 2;
+export const LEARNING_TREND_RULE = 'learning_trend.v1' as const;
+export const LEARNING_TREND_WINDOW = 3;
 
 export type SkillEvidenceFacts = {
   learnerId: string;
@@ -67,6 +70,25 @@ export function deriveLearningState(input: {
       reason: status.reason,
       evidenceReferences: recent.map((entry) => entry.id),
     },
+  };
+}
+
+export function deriveLearningTrend(evidence: EvidenceFacts[]): LearningTrend {
+  const sorted = [...evidence].sort((left, right) => {
+    const delta = right.occurredAt.getTime() - left.occurredAt.getTime();
+    return delta !== 0 ? delta : right.id.localeCompare(left.id);
+  });
+  if (sorted.length < LEARNING_TREND_WINDOW * 2) {
+    return { rule: LEARNING_TREND_RULE, status: 'insufficient_history', currentCorrect: 0, previousCorrect: 0 };
+  }
+  const currentCorrect = sorted.slice(0, LEARNING_TREND_WINDOW).filter((entry) => entry.outcome === 'correct').length;
+  const previousCorrect = sorted.slice(LEARNING_TREND_WINDOW, LEARNING_TREND_WINDOW * 2)
+    .filter((entry) => entry.outcome === 'correct').length;
+  return {
+    rule: LEARNING_TREND_RULE,
+    status: currentCorrect > previousCorrect ? 'improving' : currentCorrect < previousCorrect ? 'regressing' : 'stable',
+    currentCorrect,
+    previousCorrect,
   };
 }
 

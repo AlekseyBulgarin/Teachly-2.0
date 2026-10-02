@@ -17,6 +17,7 @@ import { TaskBankModule } from './modules/assessment/task-bank.module';
 import { TheoryModule } from './modules/theory/theory.module';
 import { TrainerModule } from './modules/trainer/trainer.module';
 import { WhiteboardModule } from './modules/whiteboard/whiteboard.module';
+import { LearnerIntelligenceModule } from './modules/learner-intelligence/learner-intelligence.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { WhiteboardModule } from './modules/whiteboard/whiteboard.module';
     TheoryModule,
     TrainerModule,
     WhiteboardModule,
+    LearnerIntelligenceModule,
     IdentityModule,
     UsersModule,
     EducationModule,
