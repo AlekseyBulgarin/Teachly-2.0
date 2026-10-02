@@ -19,7 +19,7 @@ import { QuickSectionNav } from "@/components/showcase/quick-section-nav";
 export function AiPage() {
   const { t, locale } = useEcosystem();
   return (
-    <div className="flex flex-col gap-12 lg:gap-16">
+    <div className="flex flex-col gap-12 lg:gap-16 xl:pr-[176px]">
       <div id="overview" className="scroll-mt-28">
         <PageHeader
           eyebrow={t("ai.eyebrow")}

@@ -111,6 +111,10 @@ function normalizeBoardData(value: unknown): BoardData | null {
   };
 }
 
+function serializeBoardData(data: BoardData): string {
+  return JSON.stringify({ elements: data.elements, appState: data.appState, files: data.files });
+}
+
 type LoadBoard = (boardId: string) => Promise<BoardData | null>;
 type SaveBoard = (boardId: string, data: BoardData) => Promise<void>;
 
@@ -165,6 +169,10 @@ export function TeachlyWhiteboard({
   const idleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingDataRef = useRef<BoardData | null>(null);
   const isMountedRef = useRef(true);
+  const hydratedRef = useRef(false);
+  const hasContentRef = useRef(false);
+  const lastSavedDataRef = useRef<string | null>(null);
+  const hydrationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveStatusRef = useRef<SaveStatus>('idle');
 
   useEffect(() => {
@@ -173,6 +181,7 @@ export function TeachlyWhiteboard({
       isMountedRef.current = false;
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
       if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
+      if (hydrationTimerRef.current) clearTimeout(hydrationTimerRef.current);
     };
   }, []);
 
@@ -201,8 +210,18 @@ export function TeachlyWhiteboard({
   }, [normalizedInitialData, excalidrawAPI]);
 
   const loadInitialData = useCallback(async () => {
+    hydratedRef.current = false;
+    if (hydrationTimerRef.current) clearTimeout(hydrationTimerRef.current);
+    const releaseHydration = () => {
+      hydrationTimerRef.current = setTimeout(() => {
+        if (isMountedRef.current) hydratedRef.current = true;
+      }, 0);
+    };
     if (normalizedInitialData) {
+      hasContentRef.current = normalizedInitialData.elements.length > 0;
+      lastSavedDataRef.current = serializeBoardData(normalizedInitialData);
       setIsLoading(false);
+      releaseHydration();
       return;
     }
 
@@ -212,6 +231,8 @@ export function TeachlyWhiteboard({
       const data = normalizeBoardData(await loadBoard(boardId));
       if (!isMountedRef.current) return;
       setLoadedData(data);
+      hasContentRef.current = Boolean(data?.elements.length);
+      lastSavedDataRef.current = data ? serializeBoardData(data) : null;
       const api = excalidrawAPIRef.current;
       if (data && api) {
         api.addFiles(Object.values(data.files));
@@ -227,6 +248,7 @@ export function TeachlyWhiteboard({
     } finally {
       if (isMountedRef.current) {
         setIsLoading(false);
+        releaseHydration();
       }
     }
   }, [boardId, loadBoard, normalizedInitialData, labels.loadError]);
@@ -237,7 +259,12 @@ export function TeachlyWhiteboard({
 
   const handleChange = useCallback(
     (elements: readonly OrderedExcalidrawElement[], appState: AppState, files: BinaryFiles) => {
+      if (!hydratedRef.current) return;
+      if (elements.length === 0 && !hasContentRef.current) return;
+      if (elements.length > 0) hasContentRef.current = true;
       const data: BoardData = { elements, appState: pickPersistedAppState(appState), files };
+      const serialized = serializeBoardData(data);
+      if (serialized === lastSavedDataRef.current) return;
       pendingDataRef.current = data;
 
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
@@ -249,7 +276,9 @@ export function TeachlyWhiteboard({
         if (!isMountedRef.current || !pendingDataRef.current) return;
 
         try {
-          await saveBoard(boardId, pendingDataRef.current);
+          const dataToSave = pendingDataRef.current;
+          await saveBoard(boardId, dataToSave);
+          lastSavedDataRef.current = serializeBoardData(dataToSave);
           if (!isMountedRef.current) return;
           applySaveStatus('saved');
           idleTimeoutRef.current = setTimeout(() => {
@@ -292,7 +321,9 @@ export function TeachlyWhiteboard({
     if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
     applySaveStatus('saving');
     try {
-      await saveBoard(boardId, pendingDataRef.current);
+      const dataToSave = pendingDataRef.current;
+      await saveBoard(boardId, dataToSave);
+      lastSavedDataRef.current = serializeBoardData(dataToSave);
       if (!isMountedRef.current) return;
       applySaveStatus('saved');
       setError(null);

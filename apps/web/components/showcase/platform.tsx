@@ -20,7 +20,7 @@ import { QuickSectionNav } from "@/components/showcase/quick-section-nav";
 export function PlatformPage() {
   const { t, locale } = useEcosystem();
   return (
-    <div className="flex flex-col gap-12 lg:gap-16">
+    <div className="flex flex-col gap-12 lg:gap-16 xl:pr-[176px]">
       <div id="overview" className="scroll-mt-28">
         <PageHeader
           eyebrow={t("platform.eyebrow")}
@@ -119,21 +119,26 @@ function Flow({
 }) {
   return (
     <div
-      className={`rounded-2xl border p-5 ${active ? "border-emerald-300/25 bg-emerald-300/[.08]" : "border-white/[.07] bg-white/[.035]"}`}
+      tabIndex={0}
+      className={`group rounded-2xl border p-5 transition duration-200 hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60 ${active ? "border-emerald-300/25 bg-emerald-300/[.08] ring-1 ring-inset ring-emerald-300/25 shadow-[0_28px_64px_-40px_rgba(69,230,168,.55)] hover:border-emerald-300/45 hover:shadow-[0_32px_72px_-36px_rgba(69,230,168,.65)]" : "border-white/[.07] bg-white/[.035] hover:border-emerald-300/30 hover:bg-white/[.055]"}`}
     >
       <span className="flex size-10 items-center justify-center rounded-xl bg-white/[.07] text-emerald-200">
         <Icon aria-hidden="true" size={18} />
       </span>
       <p className="mt-4 text-base font-semibold text-slate-100">{title}</p>
-      <p className="mt-2 text-xs leading-5 text-slate-500">{detail}</p>
+      <p className="mt-2 text-xs leading-5 text-slate-500 transition-colors group-hover:text-slate-400">
+        {detail}
+      </p>
     </div>
   );
 }
 function Arrow() {
   return (
-    <div className="hidden items-center justify-center lg:flex">
-      <span className="h-px w-10 bg-emerald-300/35" />
-      <span className="-ml-1 size-2 rotate-45 border-r border-t border-emerald-300/60" />
+    <div className="hidden items-center justify-center lg:flex" aria-hidden="true">
+      <span className="relative h-px w-10 overflow-hidden bg-emerald-300/35">
+        <span className="flow-sweep absolute inset-0" />
+      </span>
+      <span className="flow-tip -ml-1 size-2 rotate-45 border-r border-t border-emerald-300/60" />
     </div>
   );
 }

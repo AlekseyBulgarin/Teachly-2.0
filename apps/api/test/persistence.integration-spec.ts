@@ -62,6 +62,7 @@ describe('Phase 2 PostgreSQL invariants', () => {
     const [demoKey] = await database.db.select().from(apiKeys).where(eq(apiKeys.id, fixtureIds.apiKey));
     expect(demoKey?.scopes).toEqual([
       'assessment:read', 'theory:read', 'trainer:read', 'trainer:write', 'learner_intelligence:read',
+      'whiteboard:read', 'whiteboard:write',
     ]);
     expect(await database.db.select().from(attempts)).toHaveLength(14);
     expect(await database.db.select().from(submissions)).toHaveLength(14);

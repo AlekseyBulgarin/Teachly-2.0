@@ -38,6 +38,7 @@ type CapabilityCopy = {
   description: string;
   audience: string;
   outcomes: [string, string, string];
+  hints: [string, string, string];
   flowTitle: string;
   flow: [string, string, string];
   ecosystem: string;
@@ -59,6 +60,11 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "Единая основа для практики",
         "Понятный путь от задания к прогрессу",
         "Контекст для следующих модулей",
+      ],
+      hints: [
+        "Задания связаны с темами, поэтому практика не распадается на отдельные списки.",
+        "Каждая попытка сохраняется рядом с темой и становится сигналом прогресса.",
+        "Тот же набор заданий понадобится теории, тренажёру и аналитике.",
       ],
       flowTitle: "Как модуль работает в экосистеме",
       flow: [
@@ -84,6 +90,11 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "Общий подход для разных групп",
         "Основа для персонализации",
       ],
+      hints: [
+        "Разным группам — разные наборы практики при общей логике продукта.",
+        "Варианты опираются на одну базу заданий и общие правила.",
+        "Путь каждого ученика собирается из подходящих вариантов.",
+      ],
       flowTitle: "Как модуль работает в экосистеме",
       flow: [
         "Команда задаёт учебный сценарий",
@@ -107,6 +118,11 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "Понятная поддержка в процессе обучения",
         "Единый источник учебного контекста",
         "Основа для аккуратной AI-помощи",
+      ],
+      hints: [
+        "Объяснение открывается рядом с темой и заданием, а не отдельно.",
+        "Материал связан с темами, поэтому его видят и ученик, и AI.",
+        "AI опирается на проверенный материал, а не на догадки.",
       ],
       flowTitle: "Как модуль работает в экосистеме",
       flow: [
@@ -132,6 +148,11 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "Поддержка после попытки",
         "Сигналы для следующего действия",
       ],
+      hints: [
+        "Ученик решает шаг за шагом, в собственном темпе.",
+        "Подсказка приходит после попытки, а не вместо неё.",
+        "Результат связан с темой, поэтому видно, что делать дальше.",
+      ],
       flowTitle: "Как модуль работает в экосистеме",
       flow: [
         "Ученик решает задачу",
@@ -155,6 +176,11 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "Наглядная работа с материалом",
         "Единый учебный сценарий",
         "Контекст для следующего шага",
+      ],
+      hints: [
+        "Рисунки, фигуры и текст живут рядом с учебной задачей.",
+        "Доска — часть учебного сценария, а не отдельный инструмент.",
+        "Черновик сохраняется на сервере и переживает перезагрузку страницы.",
       ],
       flowTitle: "Как модуль работает в экосистеме",
       flow: [
@@ -180,6 +206,11 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "Меньше ручного поиска контекста",
         "Основа для персональной поддержки",
       ],
+      hints: [
+        "Задания, попытки и материалы собраны в один профиль.",
+        "Не нужно собирать историю ученика по разным экранам.",
+        "Видно, где нужна поддержка и что предложить дальше.",
+      ],
       flowTitle: "Как модуль работает в экосистеме",
       flow: [
         "Задания и материалы создают контекст",
@@ -203,6 +234,11 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "Понятная картина сильных сторон и пробелов",
         "Точки поддержки для преподавателя",
         "Контекст для AI и аналитики",
+      ],
+      hints: [
+        "Видно, какие темы получаются, а где нужна практика.",
+        "Сигналы подсказывают, когда вмешаться, а не только оценить.",
+        "Те же данные питают AI-помощь и будущую аналитику.",
       ],
       flowTitle: "Как модуль работает в экосистеме",
       flow: [
@@ -230,6 +266,11 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "A clear path from task to progress",
         "Context for connected modules",
       ],
+      hints: [
+        "Tasks are linked to topics, so practice does not break into separate lists.",
+        "Every attempt is kept with its topic context and becomes a progress signal.",
+        "The same tasks support theory, the trainer and analytics.",
+      ],
       flowTitle: "How it works in the ecosystem",
       flow: [
         "The team creates a learning task",
@@ -253,6 +294,11 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "More flexible learning scenarios",
         "One approach across groups",
         "A foundation for personalization",
+      ],
+      hints: [
+        "Different groups get different practice sets within one product logic.",
+        "Variants build on one task bank and shared rules.",
+        "Each learner path is assembled from fitting variants.",
       ],
       flowTitle: "How it works in the ecosystem",
       flow: [
@@ -278,6 +324,11 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "One source of learning context",
         "A foundation for careful AI assistance",
       ],
+      hints: [
+        "The explanation opens next to the topic and task, not on its own.",
+        "Material is linked to topics, so learners and AI use the same source.",
+        "AI works from approved material instead of guessing.",
+      ],
       flowTitle: "How it works in the ecosystem",
       flow: [
         "The team prepares material",
@@ -301,6 +352,11 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "More clear independent practice",
         "Support after an attempt",
         "Signals for the next action",
+      ],
+      hints: [
+        "Learners solve step by step, at their own pace.",
+        "A hint arrives after the attempt instead of replacing it.",
+        "The result is tied to the topic, so the next move is clear.",
       ],
       flowTitle: "How it works in the ecosystem",
       flow: [
@@ -326,6 +382,11 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "One learning scenario",
         "Context for the next step",
       ],
+      hints: [
+        "Drawings, shapes and text live next to the learning task.",
+        "The board is part of the learning scenario, not a separate tool.",
+        "The draft is saved on the server and survives a page reload.",
+      ],
       flowTitle: "How it works in the ecosystem",
       flow: [
         "A teacher opens a learning task",
@@ -350,6 +411,11 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "Less manual context gathering",
         "A foundation for personal support",
       ],
+      hints: [
+        "Tasks, attempts and material come together in one profile.",
+        "No need to piece the learner history across separate screens.",
+        "You can see where support helps and what to offer next.",
+      ],
       flowTitle: "How it works in the ecosystem",
       flow: [
         "Tasks and material create context",
@@ -373,6 +439,11 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "A clear view of strengths and gaps",
         "Support moments for teachers",
         "Context for AI and analytics",
+      ],
+      hints: [
+        "You can see which topics are solid and where practice is needed.",
+        "Signals show when to step in, not only how to grade.",
+        "The same data feeds AI assistance and future analytics.",
       ],
       flowTitle: "How it works in the ecosystem",
       flow: [
@@ -422,7 +493,7 @@ export function CapabilityPage({ capability, demo }: { capability: CapabilityKey
     locale === "ru" ? { id: "next", label: "Дальше" } : { id: "next", label: "Next" },
   ];
   return (
-    <div className="flex flex-col gap-14 lg:gap-20">
+    <div className="flex flex-col gap-14 lg:gap-20 xl:pr-[176px]">
       <div id="overview">
         <PageHeader
           eyebrow={item.eyebrow}
@@ -454,6 +525,7 @@ export function CapabilityPage({ capability, demo }: { capability: CapabilityKey
               icon={[BrainCircuit, UserRound, Activity][index]}
               title={outcome}
               detail=""
+              hint={item.hints[index]}
             />
           ))}
         </div>
@@ -480,6 +552,7 @@ export function CapabilityPage({ capability, demo }: { capability: CapabilityKey
                 }
                 icon={[ListChecks, Activity, BrainCircuit][index]}
                 last={index === 2}
+                reveal
               />
             ))}
           </div>

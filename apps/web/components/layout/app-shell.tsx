@@ -89,11 +89,7 @@ function ShellFrame({ children }: { children: ReactNode }) {
           })}</div></div>)}
         </nav>
         <div className="mt-auto pt-8">
-          <div className="rounded-2xl border border-white/[.08] bg-white/[.035] p-4">
-            <p className="flex items-center gap-2 text-xs font-semibold text-slate-200"><span className="size-2 rounded-full bg-emerald-300" />{t('shell.reference')}</p>
-            <p className="mt-2 text-[11px] leading-5 text-slate-500">{t('shell.reference.detail')}</p>
-          </div>
-          <div className="mt-5 flex items-center justify-between px-1 text-[10px] uppercase tracking-[.14em] text-slate-600"><span>Teachly</span><span>Showcase</span></div>
+          <div className="flex items-center justify-between px-1 text-[10px] uppercase tracking-[.14em] text-slate-600"><span>Teachly</span><span>Showcase</span></div>
         </div>
       </aside>
 

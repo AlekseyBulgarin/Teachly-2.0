@@ -156,17 +156,35 @@ export class ApiError extends Error {
   constructor(public readonly status: number, public readonly code: string, message: string) { super(message); }
 }
 
+const REQUEST_TIMEOUT_MS = 15_000;
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`/api/teachly/${path.replace(/^\//, '')}`, {
-    ...options,
-    headers: { 'content-type': 'application/json', ...(options?.headers ?? {}) },
-    cache: 'no-store',
-  });
-  const body = await response.json().catch(() => null);
-  if (!response.ok) {
-    throw new ApiError(response.status, body?.code ?? 'REQUEST_FAILED', body?.message ?? 'Teachly API request failed');
+  const timeoutController = new AbortController();
+  const abortFromCaller = () => timeoutController.abort();
+  if (options?.signal?.aborted) timeoutController.abort();
+  else options?.signal?.addEventListener('abort', abortFromCaller, { once: true });
+  const timeout = window.setTimeout(() => timeoutController.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const response = await fetch(`/api/teachly/${path.replace(/^\//, '')}`, {
+      ...options,
+      signal: timeoutController.signal,
+      headers: { 'content-type': 'application/json', ...(options?.headers ?? {}) },
+      cache: 'no-store',
+    });
+    const body = await response.json().catch(() => null);
+    if (!response.ok) {
+      throw new ApiError(response.status, body?.code ?? 'REQUEST_FAILED', body?.message ?? 'Teachly API request failed');
+    }
+    return body as T;
+  } catch (error) {
+    if (timeoutController.signal.aborted && !options?.signal?.aborted) {
+      throw new ApiError(504, 'REQUEST_TIMEOUT', 'Teachly API request timed out');
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeout);
+    options?.signal?.removeEventListener('abort', abortFromCaller);
   }
-  return body as T;
 }
 
 type StudentRelationshipRow = { student: Student; relationship: { id: string; status: string; createdAt: string } };

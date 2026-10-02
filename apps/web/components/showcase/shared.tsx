@@ -60,22 +60,35 @@ export function PipelineStep({
   title,
   detail,
   icon: Icon,
+  reveal = false,
 }: {
   index: string;
   title: string;
   detail: string;
   icon: LucideIcon;
   last?: boolean;
+  reveal?: boolean;
 }) {
   return (
-    <div className="relative rounded-2xl bg-[var(--surface-raised)] p-5">
+    <div
+      tabIndex={reveal ? 0 : undefined}
+      className={`group relative rounded-2xl bg-[var(--surface-raised)] p-5 ${reveal ? "focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60" : ""}`}
+    >
       <div className="flex items-center justify-between">
         <span className="flex size-10 items-center justify-center rounded-xl bg-emerald-300/10 text-emerald-200">
           <Icon aria-hidden="true" size={17} />
         </span>
       </div>
       <p className="mt-5 text-sm font-semibold text-slate-200">{title}</p>
-      <p className="mt-2 text-xs leading-5 text-slate-500">{detail}</p>
+      <p
+        className={`mt-2 text-xs leading-5 transition-opacity duration-200 ${
+          reveal
+            ? "text-slate-500 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus:opacity-100 md:group-focus-within:opacity-100"
+            : "text-slate-500"
+        }`}
+      >
+        {detail}
+      </p>
     </div>
   );
 }
