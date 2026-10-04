@@ -15,7 +15,9 @@
     "db:generate": "drizzle-kit generate --config drizzle.config.ts",
     "db:migrate": "tsx src/infrastructure/database/migrate.ts",
     "db:seed": "tsx src/infrastructure/database/seed.ts",
-    "db:seed:demo": "tsx src/infrastructure/database/seed-production-demo.ts"
+    "db:seed:demo": "tsx src/infrastructure/database/seed-production-demo.ts",
+    "openapi:generate": "ts-node scripts/generate-openapi.ts",
+    "openapi:check": "ts-node scripts/generate-openapi.ts --check"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",

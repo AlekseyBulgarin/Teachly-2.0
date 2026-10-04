@@ -11,5 +11,7 @@ coverage/
 .next/
 *.tsbuildinfo
 .playwright-mcp/
+test-results/
+playwright-report/
 /qa-*.png
 /before-*.png

@@ -13,7 +13,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useEcosystem } from "@/lib/ecosystem-context";
-import { PageHeader, SectionCard } from "@/components/ui";
+import { capabilityRegistry } from "@/lib/capabilities";
+import { PageHeader, SectionCard, StatusBadge } from "@/components/ui";
 import { PipelineStep } from "@/components/showcase/shared";
 import { QuickSectionNav } from "@/components/showcase/quick-section-nav";
 
@@ -33,13 +34,16 @@ export function IntegrationsPage() {
           title={t("integrations.title")}
           description={t("integrations.description")}
           action={
-            <a
-              href="#contact"
-              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-300 px-5 py-3.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200"
-            >
-              {t("integrations.primaryCta")}
-              <ArrowRight aria-hidden="true" size={16} />
-            </a>
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              <StatusBadge status={capabilityRegistry.integrations.demoStatus} locale={locale} />
+              <a
+                href="#contact"
+                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-300 px-5 py-3.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200"
+              >
+                {t("integrations.primaryCta")}
+                <ArrowRight aria-hidden="true" size={16} />
+              </a>
+            </div>
           }
         />
       </div>

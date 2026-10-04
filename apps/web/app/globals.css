@@ -31,6 +31,37 @@ a:focus-visible, button:focus-visible, [role='button']:focus-visible { outline: 
 .section-reveal[data-delay='2'] { animation-delay: 130ms; }
 @keyframes showcase-enter { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes section-enter { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+.motion-ready .section-reveal { animation: none; opacity: 0; filter: blur(5px); transform: translateY(28px) scale(.988); transition: opacity 680ms cubic-bezier(.2,.8,.2,1), transform 680ms cubic-bezier(.2,.8,.2,1), filter 680ms ease; transition-delay: var(--reveal-delay, 0ms); }
+.motion-ready .section-reveal.is-visible { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
+.marketing-ambient { overflow: hidden; opacity: .85; }
+.ambient-orb { position: absolute; width: 34rem; height: 34rem; border-radius: 999px; filter: blur(110px); opacity: .12; will-change: transform; }
+.ambient-orb-a { left: -15rem; top: 14rem; background: #19c98b; animation: ambient-float-a 18s ease-in-out infinite alternate; }
+.ambient-orb-b { right: -18rem; top: 48rem; background: #4b9dff; animation: ambient-float-b 22s ease-in-out infinite alternate; }
+.header-glass { box-shadow: 0 10px 40px -34px rgba(25, 201, 139, .7); }
+.hero-grid-motion { inset: -48px; animation: grid-drift 18s linear infinite; will-change: transform; }
+.card-lift { position: relative; isolation: isolate; transition: transform 280ms cubic-bezier(.2,.8,.2,1), border-color 280ms ease, background-color 280ms ease, box-shadow 280ms ease; }
+.card-lift::after { position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: radial-gradient(360px circle at 18% 0%, rgba(69, 230, 168, .09), transparent 58%); content: ''; opacity: 0; transition: opacity 280ms ease; pointer-events: none; }
+.card-lift:hover { transform: translateY(-5px); box-shadow: 0 28px 70px -45px rgba(25, 201, 139, .42); }
+.card-lift:hover::after { opacity: 1; }
+.motion-icon { transition: transform 320ms cubic-bezier(.2,.8,.2,1), background-color 280ms ease, color 280ms ease; }
+.group:hover .motion-icon { transform: translateY(-2px) rotate(-4deg) scale(1.06); }
+.shine-surface::before { position: absolute; inset: -40% auto -40% -45%; width: 36%; transform: skewX(-16deg); background: linear-gradient(90deg, transparent, rgba(255,255,255,.055), transparent); content: ''; animation: surface-shine 8s ease-in-out infinite; pointer-events: none; }
+.proof-step { animation: proof-breathe 6s ease-in-out infinite; }
+.status-blink { animation: status-blink 2.8s ease-in-out infinite; }
+.cta-glow { animation: cta-glow 3.6s ease-in-out infinite; }
+.content-swap { animation: content-swap 340ms cubic-bezier(.2,.8,.2,1) both; }
+.brand-tile { transition: transform 320ms cubic-bezier(.2,.8,.2,1); }
+.group:hover .brand-tile-a { transform: translate(-2px,-2px) rotate(-5deg); }
+.group:hover .brand-tile-b { transform: translate(2px,-2px) rotate(5deg); }
+.group:hover .brand-tile-c { transform: translateY(2px) rotate(4deg); }
+@keyframes ambient-float-a { from { transform: translate3d(0,0,0) scale(.9); } to { transform: translate3d(9rem,7rem,0) scale(1.16); } }
+@keyframes ambient-float-b { from { transform: translate3d(0,0,0) scale(1); } to { transform: translate3d(-8rem,10rem,0) scale(.86); } }
+@keyframes grid-drift { from { transform: translate3d(0,0,0); } to { transform: translate3d(48px,48px,0); } }
+@keyframes surface-shine { 0%, 42% { transform: translateX(0) skewX(-16deg); opacity: 0; } 52% { opacity: 1; } 68%, 100% { transform: translateX(560%) skewX(-16deg); opacity: 0; } }
+@keyframes proof-breathe { 0%, 100% { border-color: rgba(255,255,255,.07); } 50% { border-color: rgba(69,230,168,.18); background-color: rgba(69,230,168,.035); } }
+@keyframes status-blink { 0%, 100% { opacity: .55; transform: scale(.82); } 50% { opacity: 1; transform: scale(1); } }
+@keyframes cta-glow { 0%, 100% { box-shadow: 0 18px 50px -22px rgba(25,201,139,.65); } 50% { box-shadow: 0 20px 60px -18px rgba(25,201,139,.95); } }
+@keyframes content-swap { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .flow-sweep { background: linear-gradient(90deg, transparent, rgba(69, 230, 168, .95), transparent); animation: flow-sweep 1.8s linear infinite; }
 .flow-tip { animation: flow-tip 1.8s ease-in-out infinite; }
 @keyframes flow-sweep { from { transform: translateX(-100%); } to { transform: translateX(100%); } }

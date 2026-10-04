@@ -17,7 +17,7 @@ export type Integration = { id: string; name: string; organizationId: string; wo
 export type KnowledgeStatus = { sourceId: string; sourceName: string; sourceType: string; sourceStatus: string; sourceLicenseStatus: string; documentId: string; documentTitle: string; documentStatus: string; versionId: string; version: number; versionStatus: string; licenseStatus: string; externalAiPermission: string; approvedAt: string | null };
 export type AiTrace = { requestId: string; capability: string; status: string; provider: string | null; model: string | null; latencyMs: number | null; knowledgeReferences: string[]; outcome: string | null; createdAt: string; completedAt: string | null };
 export type RemediationResponse = { requestId: string; remediation: { summary: string; explanation: string; hint: string; likelyGap: string | null; confidence: number; abstained: boolean }; evidenceRefs: string[]; knowledgeRefs: string[] };
-export type HealthStatus = { status: string; database: string };
+export type HealthStatus = components['schemas']['HealthStatusDto'];
 
 export type LearnerCurriculum = {
   subject: { code: string; name: string };
@@ -220,3 +220,4 @@ export const api = {
       body: JSON.stringify({ expectedRevision, data }),
     }),
 };
+import type { components } from '@teachly/contracts';

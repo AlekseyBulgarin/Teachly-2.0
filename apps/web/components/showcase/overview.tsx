@@ -9,6 +9,7 @@ import {
   BookOpen,
   BrainCircuit,
   Building2,
+  CheckCircle2,
   GraduationCap,
   Layers3,
   Link2,
@@ -25,24 +26,23 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useEcosystem } from "@/lib/ecosystem-context";
+import { capabilityRegistry, type CapabilityKey } from "@/lib/capabilities";
 import { StatusBadge } from "@/components/ui";
 
 type ModuleGroup = "learning" | "intelligence" | "connection";
 type ProductModule = {
-  path: string;
+  key: CapabilityKey;
   icon: LucideIcon;
   group: ModuleGroup;
-  status: "LIVE" | "COMING NEXT" | "PLANNED";
   ru: [string, string, string];
   en: [string, string, string];
 };
 
 const modules: ProductModule[] = [
   {
-    path: "/tasks",
+    key: "tasks",
     group: "learning",
     icon: ListChecks,
-    status: "LIVE",
     ru: [
       "База заданий",
       "Практика, связанная с учебным контекстом.",
@@ -55,10 +55,9 @@ const modules: ProductModule[] = [
     ],
   },
   {
-    path: "/variants",
+    key: "variants",
     group: "learning",
     icon: PanelsTopLeft,
-    status: "PLANNED",
     ru: [
       "Варианты",
       "Гибкие сценарии для разных групп и целей.",
@@ -71,10 +70,9 @@ const modules: ProductModule[] = [
     ],
   },
   {
-    path: "/theory",
+    key: "theory",
     group: "learning",
     icon: BookOpen,
-    status: "LIVE",
     ru: [
       "Теория",
       "Проверенный материал рядом с практикой.",
@@ -87,10 +85,9 @@ const modules: ProductModule[] = [
     ],
   },
   {
-    path: "/trainer",
+    key: "trainer",
     group: "learning",
     icon: GraduationCap,
-    status: "LIVE",
     ru: [
       "Тренажёр",
       "Самостоятельная практика с понятным следующим шагом.",
@@ -103,10 +100,9 @@ const modules: ProductModule[] = [
     ],
   },
   {
-    path: "/whiteboard",
+    key: "whiteboard",
     group: "learning",
     icon: PanelsTopLeft,
-    status: "LIVE",
     ru: [
       "Онлайн-доска",
       "Наглядная работа вокруг учебной задачи.",
@@ -119,10 +115,9 @@ const modules: ProductModule[] = [
     ],
   },
   {
-    path: "/ai",
+    key: "ai",
     group: "intelligence",
     icon: BrainCircuit,
-    status: "LIVE",
     ru: [
       "AI",
       "Помощь, которая понимает учебную ситуацию.",
@@ -135,10 +130,9 @@ const modules: ProductModule[] = [
     ],
   },
   {
-    path: "/student-profile",
+    key: "student-profile",
     group: "intelligence",
     icon: UserRound,
-    status: "LIVE",
     ru: [
       "Профиль ученика",
       "Одна картина вместо разрозненных событий.",
@@ -151,10 +145,9 @@ const modules: ProductModule[] = [
     ],
   },
   {
-    path: "/progress",
+    key: "progress",
     group: "intelligence",
     icon: Activity,
-    status: "LIVE",
     ru: [
       "Прогресс",
       "Движение ученика, а не только последний балл.",
@@ -167,10 +160,9 @@ const modules: ProductModule[] = [
     ],
   },
   {
-    path: "/analytics",
+    key: "analytics",
     group: "intelligence",
     icon: BarChart3,
-    status: "PLANNED",
     ru: [
       "Аналитика",
       "Понятные сигналы для команды и руководителя.",
@@ -183,10 +175,9 @@ const modules: ProductModule[] = [
     ],
   },
   {
-    path: "/integrations",
+    key: "integrations",
     group: "connection",
     icon: Network,
-    status: "LIVE",
     ru: [
       "Интеграции",
       "Teachly внутри продукта, который уже работает.",
@@ -202,18 +193,28 @@ const modules: ProductModule[] = [
 
 const copy = {
   ru: {
-    eyebrow: "Teachly для образовательного бизнеса",
-    title: "Teachly усиливает вашу образовательную платформу.",
+    eyebrow: "Teachly — образовательный слой для вашего продукта",
+    title: "Задания, AI и аналитика — внутри вашей платформы.",
     description:
-      "Ваши пользователи, курсы и продукт остаются вашими. Teachly добавляет связанные учебные модули и понятный интеллект поверх привычного опыта.",
-    primary: "Обсудить интеграцию",
-    secondary: "Посмотреть возможности",
-    audience: "Онлайн-школы · LMS · EdTech-продукты",
-    promise: [
-      "Единое ядро",
-      "Связанные образовательные модули",
-      "Одна интеграция",
+      "Teachly подключается к онлайн-школе, LMS или EdTech-продукту без перестройки: связывает задания, прогресс, AI и работу преподавателя.",
+    primary: "Обсудить пилот",
+    secondary: "Открыть живое демо",
+    audience: "Для владельцев онлайн-школ, LMS и EdTech-продуктов",
+    pilotNote: "Начинаем с одного полезного сценария и проверяем его вместе с вашей командой.",
+    trust: [
+      "Ваш продукт остаётся главным",
+      "Одна API-интеграция",
+      "Модули подключаются поэтапно",
+      "Данные и правила остаются на сервере",
     ],
+    proofEyebrow: "Связанный учебный контекст",
+    proofTitle: "Ошибка превращается в понятный следующий шаг",
+    proofItems: [
+      ["Задание и результат", "Teachly видит конкретную учебную ситуацию."],
+      ["Прогресс и пробел", "Один ответ становится частью общей истории."],
+      ["Сигнал преподавателю", "Команда понимает, где нужна поддержка."],
+    ],
+    proofCaption: "Практика → прогресс → поддержка",
     howEyebrow: "Как работает Teachly",
     howTitle: "От подключения к полезному учебному сценарию",
     howDetail:
@@ -282,21 +283,40 @@ const copy = {
     contactEyebrow: "Контакт",
     contactTitle: "Обсудим, с какого модуля начать",
     contactDetail:
-      "Можно обсудить пилот, формат интеграции и первый модуль, который соответствует вашей задаче.",
-    contactAction: "Обсудить интеграцию",
+      "Расскажите о продукте и ближайшей образовательной задаче. Вместе выберем первый модуль и понятный сценарий пилота.",
+    contactAction: "Пилот без лишней перестройки",
+    contactPoints: [
+      "Выбираем одну задачу с понятной ценностью",
+      "Согласуем точки подключения и границы пилота",
+      "Проверяем сценарий на вашем продукте",
+    ],
     telegram: "Telegram",
     phone: "Телефон",
     email: "Корпоративная почта",
   },
   en: {
-    eyebrow: "Teachly for education businesses",
-    title: "Make your education platform stronger.",
+    eyebrow: "Teachly — the education layer for your product",
+    title: "Tasks, AI and analytics — inside your platform.",
     description:
-      "Your users, courses and product remain yours. Teachly adds connected learning modules and useful intelligence to the experience people already know.",
-    primary: "Discuss integration",
-    secondary: "Explore capabilities",
-    audience: "Online schools · LMS · EdTech products",
-    promise: ["One core", "Connected education modules", "One integration"],
+      "Teachly connects to an online school, LMS or EdTech product without a rebuild: it links tasks, progress, AI and teacher workflows.",
+    primary: "Discuss a pilot",
+    secondary: "Open the live demo",
+    audience: "For owners of online schools, LMS and EdTech products",
+    pilotNote: "Start with one useful scenario and validate it together with your team.",
+    trust: [
+      "Your product stays primary",
+      "One API integration",
+      "Enable modules step by step",
+      "Data and rules stay server-side",
+    ],
+    proofEyebrow: "Connected learning context",
+    proofTitle: "A mistake becomes a clear next step",
+    proofItems: [
+      ["Task and result", "Teachly sees the exact learning situation."],
+      ["Progress and gap", "One answer becomes part of the learning history."],
+      ["Teacher signal", "The team sees where support is needed."],
+    ],
+    proofCaption: "Practice → progress → support",
     howEyebrow: "How Teachly works",
     howTitle: "From connection to a useful learning scenario",
     howDetail:
@@ -365,8 +385,13 @@ const copy = {
     contactEyebrow: "Contact",
     contactTitle: "Let’s discuss the right first module",
     contactDetail:
-      "Discuss a pilot, the integration approach and the first module that fits your current need.",
-    contactAction: "Discuss integration",
+      "Tell us about your product and the next educational problem to solve. Together we will choose the first module and a clear pilot scenario.",
+    contactAction: "A pilot without a platform rebuild",
+    contactPoints: [
+      "Choose one problem with clear value",
+      "Agree on connection points and pilot boundaries",
+      "Validate the scenario inside your product",
+    ],
     telegram: "Telegram",
     phone: "Phone",
     email: "Corporate email",
@@ -378,72 +403,75 @@ export function OverviewPage() {
   const c = copy[locale];
   const [moduleGroup, setModuleGroup] = useState<ModuleGroup>("learning");
   return (
-    <div className="flex flex-col gap-24 pb-4 lg:gap-32">
-      <section className="grid min-h-[650px] items-center gap-12 py-4 lg:grid-cols-[1.15fr_.85fr] lg:py-10">
-        <div className="max-w-4xl">
+    <div className="flex flex-col gap-20 pb-4 lg:gap-28">
+      <section className="shine-surface relative grid min-h-[600px] items-center gap-10 overflow-hidden rounded-[36px] border border-white/[.08] bg-[radial-gradient(circle_at_15%_15%,rgba(25,201,139,.13),transparent_32%),radial-gradient(circle_at_88%_70%,rgba(77,170,255,.09),transparent_34%),#090f19] p-6 shadow-[0_44px_140px_-70px_rgba(25,201,139,.5)] sm:p-10 lg:grid-cols-[.96fr_1.04fr] lg:p-12">
+        <div className="hero-grid-motion pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.018)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.018)_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:linear-gradient(to_bottom,black,transparent_88%)]" />
+        <div className="relative max-w-3xl">
           <p className="text-[11px] font-bold uppercase tracking-[.23em] text-emerald-300">
             {c.eyebrow}
           </p>
-          <h1 className="mt-6 text-[clamp(2.65rem,5vw,5.15rem)] font-semibold leading-[1.02] tracking-[-.055em] text-slate-50">
+          <h1 className="mt-5 text-[clamp(2.5rem,4.7vw,4.15rem)] font-semibold leading-[1.02] tracking-[-.055em] text-slate-50">
             {c.title}
           </h1>
-          <p className="mt-7 max-w-3xl text-lg leading-8 text-slate-300 sm:text-xl">
+          <p className="mt-6 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg sm:leading-8">
             {c.description}
           </p>
-          <p className="mt-5 text-sm font-medium text-slate-500">
+          <p className="mt-5 inline-flex rounded-full border border-white/[.09] bg-white/[.04] px-4 py-2 text-sm font-medium text-slate-300">
             {c.audience}
           </p>
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <a
               href="#contact"
-              className="interactive inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--green)] px-6 py-4 text-sm font-semibold text-slate-950 shadow-[0_18px_50px_-22px_rgba(25,201,139,.8)] hover:-translate-y-0.5 hover:bg-[var(--green-accent)]"
+              className="cta-glow interactive inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--green)] px-6 py-4 text-sm font-semibold text-slate-950 shadow-[0_18px_50px_-22px_rgba(25,201,139,.8)] hover:-translate-y-0.5 hover:bg-[var(--green-accent)]"
             >
               {c.primary}
               <MessageCircle aria-hidden="true" size={17} />
             </a>
-            <a
-              href="#modules"
+            <Link
+              href="/trainer"
               className="interactive inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--border-strong)] bg-white/[.035] px-6 py-4 text-sm font-semibold text-slate-100 hover:-translate-y-0.5 hover:bg-white/[.075]"
             >
               {c.secondary}
               <ArrowRight aria-hidden="true" size={17} />
-            </a>
+            </Link>
           </div>
-          <ContactActions locale={locale} compact />
-        </div>
-        <div className="section-reveal relative overflow-hidden rounded-[32px] border border-emerald-300/15 bg-[linear-gradient(145deg,rgba(25,201,139,.12),transparent_55%),var(--surface)] p-7 shadow-[0_36px_120px_-55px_rgba(25,201,139,.45)] sm:p-9">
-          <div className="absolute -right-16 -top-20 size-56 rounded-full bg-emerald-300/[.08] blur-3xl" />
-          <span className="relative flex size-12 items-center justify-center rounded-2xl bg-emerald-300/10 text-emerald-200">
-            <Layers3 aria-hidden="true" size={23} />
-          </span>
-          <div className="relative mt-8 space-y-5">
-            {c.promise.map((item) => (
-              <div key={item} className="flex items-center gap-4">
-                <p className="text-xl font-semibold tracking-[-.02em] text-slate-100 sm:text-2xl">
-                  {item}
-                </p>
-              </div>
-            ))}
-          </div>
-          <p className="relative mt-8 text-sm leading-7 text-slate-400">
-            {c.howDetail}
+          <p className="mt-5 flex max-w-xl items-start gap-2 text-sm leading-6 text-slate-400">
+            <CheckCircle2 aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-300" size={17} />
+            {c.pilotNote}
           </p>
         </div>
+        <ProductProof
+          locale={locale}
+          eyebrow={c.proofEyebrow}
+          title={c.proofTitle}
+          items={c.proofItems}
+          caption={c.proofCaption}
+        />
       </section>
-      <section className="section-reveal">
+
+      <section aria-label={locale === "ru" ? "Принципы подключения" : "Connection principles"} className="grid overflow-hidden rounded-[28px] border border-[var(--border)] bg-white/[.025] sm:grid-cols-2 xl:grid-cols-4">
+        {c.trust.map((item) => (
+          <div key={item} className="group card-lift flex min-h-24 items-center gap-3 border-b border-[var(--border)] px-5 py-5 last:border-b-0 sm:[&:nth-child(odd)]:border-r sm:[&:nth-last-child(-n+2)]:border-b-0 xl:border-b-0 xl:border-r xl:last:border-r-0">
+            <CheckCircle2 aria-hidden="true" className="motion-icon shrink-0 text-emerald-300" size={19} />
+            <p className="text-sm font-semibold leading-6 text-slate-200">{item}</p>
+          </div>
+        ))}
+      </section>
+
+      <section id="how" className="section-reveal scroll-mt-28">
         <SectionHeading
           eyebrow={c.howEyebrow}
           title={c.howTitle}
           detail={c.howDetail}
         />
         <div className="mt-10 grid gap-4 lg:grid-cols-3">
-          {c.steps.map(([, title, detail], index) => (
+          {c.steps.map(([step, title, detail], index) => (
             <div
               key={title}
-              className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-7"
+              className="card-lift group relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[linear-gradient(150deg,rgba(255,255,255,.035),transparent_55%),var(--surface)] p-7 transition hover:border-emerald-300/20"
             >
               <div className="flex items-center justify-between">
-                <span className="flex size-11 items-center justify-center rounded-2xl bg-white/[.05] text-emerald-200">
+                <span className="motion-icon flex size-11 items-center justify-center rounded-2xl bg-white/[.05] text-emerald-200">
                   {index === 0 ? (
                     <Network aria-hidden="true" size={20} />
                   ) : index === 1 ? (
@@ -452,6 +480,7 @@ export function OverviewPage() {
                     <UsersRound aria-hidden="true" size={20} />
                   )}
                 </span>
+                <span className="text-3xl font-semibold tracking-[-.06em] text-white/[.09] transition group-hover:text-emerald-200/20">{step}</span>
               </div>
               <h3 className="mt-8 text-xl font-semibold text-slate-100">
                 {title}
@@ -495,9 +524,9 @@ export function OverviewPage() {
             {c.aiCards.map(([title, detail], index) => (
               <div
                 key={title}
-                className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-7"
+                className="card-lift group rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-7"
               >
-                <span className="flex size-11 items-center justify-center rounded-2xl bg-white/[.05] text-emerald-200">
+                <span className="motion-icon flex size-11 items-center justify-center rounded-2xl bg-white/[.05] text-emerald-200">
                   {index === 0 ? (
                     <UserRound aria-hidden="true" size={20} />
                   ) : index === 1 ? (
@@ -545,9 +574,9 @@ export function OverviewPage() {
           {c.integrationFlow.map((item, index) => (
             <div
               key={item}
-              className="flex items-center gap-4 rounded-2xl border border-white/[.07] bg-black/15 p-5"
+              className="card-lift group flex items-center gap-4 rounded-2xl border border-white/[.07] bg-black/15 p-5"
             >
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/[.05] text-emerald-200">
+              <span className="motion-icon flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/[.05] text-emerald-200">
                 {index === 0 ? (
                   <AppWindow aria-hidden="true" size={18} />
                 ) : index === 1 ? (
@@ -567,7 +596,7 @@ export function OverviewPage() {
         id="contact"
         className="section-reveal scroll-mt-28 overflow-hidden rounded-[36px] border border-emerald-300/20 bg-[linear-gradient(125deg,rgba(25,201,139,.16),rgba(14,23,37,.92)_58%)] p-7 sm:p-10 lg:p-12"
       >
-        <div className="grid gap-10 lg:grid-cols-[.85fr_1.15fr] lg:items-end">
+        <div className="grid gap-10 lg:grid-cols-[.85fr_1.15fr] lg:items-center">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[.22em] text-emerald-200">
               {c.contactEyebrow}
@@ -583,9 +612,82 @@ export function OverviewPage() {
               {c.contactAction}
             </p>
           </div>
-          <ContactActions locale={locale} />
+          <div className="shine-surface relative overflow-hidden rounded-[28px] border border-white/[.09] bg-black/15 p-5 sm:p-7">
+            <div className="space-y-4">
+              {c.contactPoints.map((point) => (
+                <div key={point} className="flex items-start gap-3">
+                  <CheckCircle2 aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-300" size={18} />
+                  <p className="text-sm font-medium leading-6 text-slate-200">{point}</p>
+                </div>
+              ))}
+            </div>
+            <ContactActions locale={locale} />
+          </div>
         </div>
       </section>
+    </div>
+  );
+}
+
+function ProductProof({
+  locale,
+  eyebrow,
+  title,
+  items,
+  caption,
+}: {
+  locale: "ru" | "en";
+  eyebrow: string;
+  title: string;
+  items: readonly (readonly [string, string])[];
+  caption: string;
+}) {
+  const icons = [ListChecks, Activity, GraduationCap] as const;
+  const capabilities = [
+    capabilityRegistry.tasks,
+    capabilityRegistry.progress,
+    capabilityRegistry.teacher,
+  ] as const;
+  return (
+    <div id="demo" className="shine-surface section-reveal relative overflow-hidden rounded-[30px] border border-white/[.1] bg-[#0b1420]/95 p-4 shadow-[0_34px_90px_-48px_rgba(77,170,255,.55)] sm:p-6">
+      <div className="flex items-center justify-between border-b border-white/[.07] pb-4">
+        <div className="flex items-center gap-2" aria-hidden="true">
+          <span className="size-2.5 rounded-full bg-rose-300/70" />
+          <span className="size-2.5 rounded-full bg-amber-300/70" />
+          <span className="status-blink size-2.5 rounded-full bg-emerald-300/70" />
+        </div>
+        <span className="text-[10px] font-bold uppercase tracking-[.16em] text-slate-500">
+          Teachly / learning flow
+        </span>
+      </div>
+      <div className="pt-6">
+        <p className="text-[10px] font-bold uppercase tracking-[.2em] text-emerald-300">{eyebrow}</p>
+        <h2 className="mt-3 max-w-md text-2xl font-semibold leading-tight tracking-[-.035em] text-slate-50 sm:text-3xl">{title}</h2>
+        <div className="mt-7 space-y-3">
+          {items.map(([itemTitle, detail], index) => {
+            const Icon = icons[index];
+            const capability = capabilities[index];
+            return (
+              <div key={itemTitle} className="proof-step group flex gap-4 rounded-2xl border border-white/[.07] bg-white/[.025] p-4" style={{ animationDelay: `${index * 800}ms` }}>
+                <span className="motion-icon flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-300/[.08] text-emerald-200">
+                  <Icon aria-hidden="true" size={18} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="font-semibold text-slate-100">{itemTitle}</h3>
+                    <StatusBadge status={capability.demoStatus} locale={locale} />
+                  </div>
+                  <p className="mt-1.5 text-sm leading-6 text-slate-400">{detail}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="mt-5 flex items-center gap-3 rounded-xl border border-emerald-300/15 bg-emerald-300/[.055] px-4 py-3 text-sm font-semibold text-emerald-100">
+          <Sparkles aria-hidden="true" size={16} />
+          {caption}
+        </div>
+      </div>
     </div>
   );
 }
@@ -622,16 +724,17 @@ function ProductCard({
 }) {
   const [title, statement, benefit] = module[locale];
   const Icon = module.icon;
+  const capability = capabilityRegistry[module.key];
   return (
     <Link
-      href={module.path}
-      className="interactive group flex min-h-[280px] flex-col rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-7 hover:-translate-y-1 hover:border-emerald-300/25 hover:bg-[var(--surface-raised)]"
+      href={capability.path}
+      className="card-lift interactive group flex min-h-[280px] flex-col rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-7 hover:border-emerald-300/25 hover:bg-[var(--surface-raised)]"
     >
       <div className="flex items-start justify-between gap-4">
-        <span className="flex size-12 items-center justify-center rounded-2xl bg-white/[.055] text-emerald-200">
+        <span className="motion-icon flex size-12 items-center justify-center rounded-2xl bg-white/[.055] text-emerald-200">
           <Icon aria-hidden="true" size={22} />
         </span>
-        <StatusBadge status={module.status} locale={locale} />
+        <StatusBadge status={capability.demoStatus} locale={locale} />
       </div>
       <h3 className="mt-7 text-xl font-semibold text-slate-100">{title}</h3>
       <p className="mt-3 text-base leading-7 text-slate-300">{statement}</p>
@@ -693,10 +796,10 @@ function ModuleShowcase({
           ))}
         </div>
       </div>
-      <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+      <div key={active} className="content-swap mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {visible.map((module) => (
           <ProductCard
-            key={module.path}
+            key={module.key}
             module={module}
             locale={locale}
             explore={explore}
@@ -760,9 +863,10 @@ function InteractiveEcosystemFlow({
         ))}
       </div>
       <div
+        key={active}
         id="ecosystem-flow-detail"
         role="tabpanel"
-        className="mt-4 min-h-[104px] rounded-2xl border border-emerald-300/15 bg-emerald-300/[.045] p-5 sm:flex sm:items-center sm:justify-between sm:gap-8"
+        className="content-swap mt-4 min-h-[104px] rounded-2xl border border-emerald-300/15 bg-emerald-300/[.045] p-5 sm:flex sm:items-center sm:justify-between sm:gap-8"
       >
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[.18em] text-emerald-200">
@@ -780,13 +884,7 @@ function InteractiveEcosystemFlow({
   );
 }
 
-function ContactActions({
-  locale,
-  compact = false,
-}: {
-  locale: "ru" | "en";
-  compact?: boolean;
-}) {
+function ContactActions({ locale }: { locale: "ru" | "en" }) {
   const [copied, setCopied] = useState(false);
   const copyEmail = async () => {
     try {
@@ -810,20 +908,20 @@ function ContactActions({
   };
   const emailLabel = locale === "ru" ? "Почта" : "Email";
   return (
-    <div className={`relative ${compact ? "mt-5" : ""}`}>
-      <div className={`flex flex-wrap gap-2 ${compact ? "" : ""}`}>
+    <div className="relative mt-7">
+      <div className="flex flex-wrap gap-2">
         <a
           href="https://t.me/teachlyecosystem"
           target="_blank"
           rel="noreferrer"
-          className="interactive inline-flex items-center gap-2 rounded-xl border border-white/[.1] bg-white/[.035] px-3.5 py-2.5 text-sm font-medium text-slate-200 hover:bg-white/[.075]"
+          className="interactive inline-flex items-center gap-2 rounded-xl bg-emerald-300 px-4 py-3 text-sm font-semibold text-slate-950 shadow-[0_14px_36px_-22px_rgba(69,230,168,.8)] hover:-translate-y-0.5 hover:bg-emerald-200"
         >
           <MessageCircle aria-hidden="true" size={16} />
           Telegram
         </a>
         <a
           href="tel:+79923135778"
-          className="interactive inline-flex items-center gap-2 rounded-xl border border-white/[.1] bg-white/[.035] px-3.5 py-2.5 text-sm font-medium text-slate-200 hover:bg-white/[.075]"
+          className="interactive inline-flex items-center gap-2 rounded-xl border border-white/[.1] bg-white/[.035] px-4 py-3 text-sm font-medium text-slate-200 hover:bg-white/[.075]"
         >
           <Phone aria-hidden="true" size={16} />
           +7 992 313-57-78
@@ -831,7 +929,7 @@ function ContactActions({
         <button
           type="button"
           onClick={() => void copyEmail()}
-          className="interactive inline-flex items-center gap-2 rounded-xl border border-white/[.1] bg-white/[.035] px-3.5 py-2.5 text-sm font-medium text-slate-200 hover:bg-white/[.075]"
+          className="interactive inline-flex items-center gap-2 rounded-xl border border-white/[.1] bg-white/[.035] px-4 py-3 text-sm font-medium text-slate-200 hover:bg-white/[.075]"
         >
           <Mail aria-hidden="true" size={16} />
           {emailLabel}

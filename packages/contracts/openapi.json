@@ -1,0 +1,6832 @@
+{
+  "components": {
+    "schemas": {
+      "AiTraceResponseDto": {
+        "properties": {
+          "capability": {
+            "example": "grounded_remediation",
+            "type": "string"
+          },
+          "completedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "knowledgeReferences": {
+            "description": "Approved knowledge version ids the model was allowed to cite.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "latencyMs": {
+            "example": 842,
+            "nullable": true,
+            "type": "object"
+          },
+          "model": {
+            "example": "gpt-4o-mini",
+            "nullable": true,
+            "type": "object"
+          },
+          "outcome": {
+            "description": "Null when the request did not produce a structured output.",
+            "enum": [
+              "completed",
+              "abstained"
+            ],
+            "nullable": true,
+            "type": "string"
+          },
+          "provider": {
+            "example": "openai",
+            "nullable": true,
+            "type": "object"
+          },
+          "requestId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "started",
+              "succeeded",
+              "failed"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "requestId",
+          "capability",
+          "status",
+          "provider",
+          "model",
+          "latencyMs",
+          "knowledgeReferences",
+          "outcome",
+          "createdAt",
+          "completedAt"
+        ],
+        "type": "object"
+      },
+      "ApiErrorDto": {
+        "properties": {
+          "code": {
+            "example": "BAD_REQUEST",
+            "type": "string"
+          },
+          "details": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "message": {
+            "example": "Validation failed",
+            "type": "string"
+          },
+          "requestId": {
+            "example": "phase-2-contract-test",
+            "type": "string"
+          },
+          "statusCode": {
+            "example": 400,
+            "type": "number"
+          }
+        },
+        "required": [
+          "statusCode",
+          "code",
+          "message",
+          "requestId"
+        ],
+        "type": "object"
+      },
+      "ApiKeyMetadataDto": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "keyPrefix": {
+            "type": "string"
+          },
+          "lastUsedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "object"
+          },
+          "name": {
+            "type": "string"
+          },
+          "revokedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "object"
+          },
+          "scopes": {
+            "items": {
+              "enum": [
+                "integrations:read",
+                "integrations:write",
+                "external_users:read",
+                "external_users:write",
+                "remediation:write",
+                "assessment:read",
+                "assessment:answer:read",
+                "assessment:write",
+                "assessment:manage",
+                "theory:read",
+                "theory:write",
+                "theory:manage",
+                "trainer:read",
+                "trainer:write",
+                "learner_intelligence:read",
+                "whiteboard:read",
+                "whiteboard:write"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "revoked"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "keyPrefix",
+          "scopes",
+          "status",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "ApiKeySecretResponseDto": {
+        "properties": {
+          "key": {
+            "$ref": "#/components/schemas/ApiKeyMetadataDto"
+          },
+          "secret": {
+            "description": "Raw API key secret. Returned only once.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "secret"
+        ],
+        "type": "object"
+      },
+      "AssignmentDto": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "studentId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "taskVersionId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "studentId",
+          "taskVersionId",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "AttachWhiteboardResourceDto": {
+        "properties": {
+          "resourceId": {
+            "description": "Published task version or published theory version id",
+            "format": "uuid",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "task",
+              "theory"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "resourceId"
+        ],
+        "type": "object"
+      },
+      "AttemptDto": {
+        "properties": {
+          "assignmentId": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "object"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "startedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "started",
+              "submitted"
+            ],
+            "type": "string"
+          },
+          "submittedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "taskVersionId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "taskVersionId",
+          "assignmentId",
+          "status",
+          "startedAt",
+          "submittedAt"
+        ],
+        "type": "object"
+      },
+      "AttemptResultResponseDto": {
+        "properties": {
+          "attempt": {
+            "$ref": "#/components/schemas/AttemptDto"
+          },
+          "manualReviewStatus": {
+            "enum": [
+              "pending"
+            ],
+            "nullable": true,
+            "type": "string"
+          },
+          "result": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ResultDto"
+              }
+            ],
+            "nullable": true,
+            "type": "object"
+          }
+        },
+        "required": [
+          "attempt",
+          "result",
+          "manualReviewStatus"
+        ],
+        "type": "object"
+      },
+      "CourseDto": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "subjectId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "subjectId",
+          "name"
+        ],
+        "type": "object"
+      },
+      "CreateApiKeyDto": {
+        "properties": {
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "type": "string"
+          },
+          "scopes": {
+            "items": {
+              "enum": [
+                "integrations:read",
+                "integrations:write",
+                "external_users:read",
+                "external_users:write",
+                "remediation:write",
+                "assessment:read",
+                "assessment:answer:read",
+                "assessment:write",
+                "assessment:manage",
+                "theory:read",
+                "theory:write",
+                "theory:manage",
+                "trainer:read",
+                "trainer:write",
+                "learner_intelligence:read",
+                "whiteboard:read",
+                "whiteboard:write"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "scopes"
+        ],
+        "type": "object"
+      },
+      "CreateAssignmentDto": {
+        "properties": {
+          "studentId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "taskVersionId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "studentId",
+          "taskVersionId"
+        ],
+        "type": "object"
+      },
+      "CreateCurriculumMappingDto": {
+        "properties": {
+          "courseId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "externalValue": {
+            "type": "string"
+          },
+          "mappingType": {
+            "enum": [
+              "subject",
+              "course",
+              "topic",
+              "skill",
+              "category",
+              "section"
+            ],
+            "type": "string"
+          },
+          "skillId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "subjectId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "taskSourceId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "topicId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "workspaceId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspaceId",
+          "taskSourceId",
+          "mappingType",
+          "externalValue"
+        ],
+        "type": "object"
+      },
+      "CreateDraftDto": {
+        "properties": {
+          "answerSchema": {
+            "type": "object"
+          },
+          "content": {
+            "type": "object"
+          },
+          "taskType": {
+            "type": "string"
+          },
+          "workspaceId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspaceId",
+          "taskType",
+          "content",
+          "answerSchema"
+        ],
+        "type": "object"
+      },
+      "CreatedVariantVersionResponseDto": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "description": {
+            "nullable": true,
+            "type": "object"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "idempotentReplay": {
+            "description": "True when the same idempotencyKey was replayed instead of creating again.",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/VariantItemResponseDto"
+            },
+            "type": "array"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "provenance": {
+            "additionalProperties": true,
+            "description": "Origin of the version (source, snapshot, edit history).",
+            "type": "object"
+          },
+          "publishedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published",
+              "archived"
+            ],
+            "type": "string"
+          },
+          "title": {
+            "nullable": true,
+            "type": "object"
+          },
+          "variantId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "version": {
+            "example": 2,
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "variantId",
+          "version",
+          "status",
+          "title",
+          "description",
+          "metadata",
+          "provenance",
+          "publishedAt",
+          "createdAt",
+          "items",
+          "idempotentReplay"
+        ],
+        "type": "object"
+      },
+      "CreateStudentDto": {
+        "properties": {
+          "displayName": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "displayName"
+        ],
+        "type": "object"
+      },
+      "CreateTaskSourceDto": {
+        "properties": {
+          "integrationId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "mode": {
+            "enum": [
+              "imported_snapshot",
+              "external_reference"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "organizationId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "sourceType": {
+            "type": "string"
+          },
+          "workspaceId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "sourceType",
+          "mode"
+        ],
+        "type": "object"
+      },
+      "CreateTheoryMaterialDto": {
+        "properties": {
+          "category": {
+            "type": "string"
+          },
+          "content": {
+            "type": "object"
+          },
+          "courseId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "organizationId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "skillId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "subjectId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "taskIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "title": {
+            "type": "string"
+          },
+          "topicId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "workspaceId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "content"
+        ],
+        "type": "object"
+      },
+      "CreateTrainerSessionDto": {
+        "properties": {
+          "courseId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "externalLearnerId": {
+            "type": "string"
+          },
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "skillId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "subjectId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "taskIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "topicId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "externalLearnerId",
+          "idempotencyKey"
+        ],
+        "type": "object"
+      },
+      "CreateVariantDraftDto": {
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "externalVariantId": {
+            "type": "string"
+          },
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/VariantItemDto"
+            },
+            "type": "array"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "rawPayload": {
+            "type": "object"
+          },
+          "taskSourceId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "workspaceId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "CreateWhiteboardDto": {
+        "properties": {
+          "externalReference": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "type": "object"
+      },
+      "CurriculumMappingResponseDto": {
+        "properties": {
+          "courseId": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "object"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "externalValue": {
+            "example": "algebra",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "mappingType": {
+            "enum": [
+              "subject",
+              "course",
+              "topic",
+              "skill",
+              "category",
+              "section"
+            ],
+            "type": "string"
+          },
+          "organizationId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "skillId": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "object"
+          },
+          "status": {
+            "description": "mapped once at least one curriculum target resolved.",
+            "enum": [
+              "mapped",
+              "unmapped"
+            ],
+            "type": "string"
+          },
+          "subjectId": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "object"
+          },
+          "taskSourceId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "topicId": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "object"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "workspaceId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "organizationId",
+          "workspaceId",
+          "taskSourceId",
+          "mappingType",
+          "externalValue",
+          "subjectId",
+          "courseId",
+          "topicId",
+          "skillId",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "ExternalResultObservationDto": {
+        "properties": {
+          "externalLearnerId": {
+            "type": "string"
+          },
+          "externalTaskId": {
+            "type": "string"
+          },
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "observedAt": {
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "correct",
+              "incorrect",
+              "invalid"
+            ],
+            "type": "string"
+          },
+          "score": {
+            "type": "number"
+          },
+          "sourceMetadata": {
+            "type": "object"
+          },
+          "taskSourceId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "externalLearnerId",
+          "taskSourceId",
+          "externalTaskId",
+          "idempotencyKey",
+          "observedAt"
+        ],
+        "type": "object"
+      },
+      "ExternalResultObservationResponseDto": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "externalLearnerId": {
+            "example": "learner-42",
+            "type": "string"
+          },
+          "externalTaskId": {
+            "example": "kompege-1001",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "idempotentReplay": {
+            "description": "True when the same idempotencyKey was replayed.",
+            "type": "boolean"
+          },
+          "learningHandoff": {
+            "enum": [
+              "recorded",
+              "skipped_skill_unmapped"
+            ],
+            "type": "string"
+          },
+          "observedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "correct",
+              "incorrect",
+              "invalid"
+            ],
+            "nullable": true,
+            "type": "string"
+          },
+          "score": {
+            "nullable": true,
+            "type": "object"
+          },
+          "sourceMetadata": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "taskSourceId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "taskVersionId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "externalLearnerId",
+          "taskSourceId",
+          "externalTaskId",
+          "taskVersionId",
+          "outcome",
+          "score",
+          "observedAt",
+          "sourceMetadata",
+          "learningHandoff",
+          "createdAt",
+          "idempotentReplay"
+        ],
+        "type": "object"
+      },
+      "ExternalUserResponseDto": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "externalUserId": {
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "integrationId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "organizationId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "inactive"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "workspaceId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "organizationId",
+          "workspaceId",
+          "integrationId",
+          "externalUserId",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "HealthStatusDto": {
+        "properties": {
+          "database": {
+            "enum": [
+              "ok"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ok"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "database"
+        ],
+        "type": "object"
+      },
+      "HealthUnavailableDto": {
+        "properties": {
+          "database": {
+            "enum": [
+              "unavailable"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "degraded"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "database"
+        ],
+        "type": "object"
+      },
+      "ImportedTaskVersionResponseDto": {
+        "properties": {
+          "answerSchema": {
+            "$ref": "#/components/schemas/PublicAnswerSchemaDto"
+          },
+          "content": {
+            "additionalProperties": true,
+            "description": "Sanitized task content. Answer keys such as correctOptionId are never included.",
+            "type": "object"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "evaluationRule": {
+            "example": "single-choice.v1",
+            "type": "string"
+          },
+          "evaluatorCapability": {
+            "example": "automatic",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "idempotentReplay": {
+            "description": "True when the same idempotencyKey was replayed instead of importing again.",
+            "type": "boolean"
+          },
+          "provenance": {
+            "additionalProperties": true,
+            "description": "Origin of the version (source, snapshot, edit history).",
+            "type": "object"
+          },
+          "publishedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "rawSnapshotId": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published",
+              "archived"
+            ],
+            "type": "string"
+          },
+          "taskId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "taskType": {
+            "example": "single-choice",
+            "type": "string"
+          },
+          "version": {
+            "example": 3,
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "taskId",
+          "version",
+          "taskType",
+          "status",
+          "content",
+          "answerSchema",
+          "evaluatorCapability",
+          "evaluationRule",
+          "provenance",
+          "rawSnapshotId",
+          "publishedAt",
+          "createdAt",
+          "idempotentReplay"
+        ],
+        "type": "object"
+      },
+      "ImportTaskDto": {
+        "properties": {
+          "externalTaskId": {
+            "type": "string"
+          },
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "rawPayload": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "externalTaskId",
+          "idempotencyKey",
+          "rawPayload"
+        ],
+        "type": "object"
+      },
+      "KnowledgeStatusResponseDto": {
+        "properties": {
+          "approvedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "documentId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "documentStatus": {
+            "enum": [
+              "active",
+              "disabled"
+            ],
+            "type": "string"
+          },
+          "documentTitle": {
+            "example": "Algebra handbook",
+            "type": "string"
+          },
+          "externalAiPermission": {
+            "description": "Whether this version may be sent to external AI providers.",
+            "enum": [
+              "not_reviewed",
+              "allowed",
+              "prohibited"
+            ],
+            "type": "string"
+          },
+          "licenseStatus": {
+            "enum": [
+              "unknown",
+              "allowed",
+              "restricted"
+            ],
+            "type": "string"
+          },
+          "sourceId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "sourceLicenseStatus": {
+            "enum": [
+              "unknown",
+              "allowed",
+              "restricted"
+            ],
+            "type": "string"
+          },
+          "sourceName": {
+            "example": "Textbook corpus",
+            "type": "string"
+          },
+          "sourceStatus": {
+            "enum": [
+              "active",
+              "disabled"
+            ],
+            "type": "string"
+          },
+          "sourceType": {
+            "example": "uploaded",
+            "type": "string"
+          },
+          "version": {
+            "example": 4,
+            "type": "number"
+          },
+          "versionId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "versionStatus": {
+            "enum": [
+              "draft",
+              "approved",
+              "rejected",
+              "disabled",
+              "superseded"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "sourceId",
+          "sourceName",
+          "sourceType",
+          "sourceStatus",
+          "sourceLicenseStatus",
+          "documentId",
+          "documentTitle",
+          "documentStatus",
+          "versionId",
+          "version",
+          "versionStatus",
+          "licenseStatus",
+          "externalAiPermission",
+          "approvedAt"
+        ],
+        "type": "object"
+      },
+      "PartnerRemediationContentDto": {
+        "properties": {
+          "abstained": {
+            "type": "boolean"
+          },
+          "confidence": {
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "explanation": {
+            "type": "string"
+          },
+          "hint": {
+            "type": "string"
+          },
+          "likelyGap": {
+            "nullable": true,
+            "type": "object"
+          },
+          "summary": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "summary",
+          "explanation",
+          "hint",
+          "likelyGap",
+          "confidence",
+          "abstained"
+        ],
+        "type": "object"
+      },
+      "PartnerRemediationRequestDto": {
+        "properties": {
+          "attemptId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "externalUserId": {
+            "example": "learner-42",
+            "maxLength": 255,
+            "minLength": 1,
+            "type": "string"
+          },
+          "idempotencyKey": {
+            "maxLength": 255,
+            "minLength": 1,
+            "type": "string"
+          },
+          "learnerQuestion": {
+            "maxLength": 1000,
+            "type": "string"
+          }
+        },
+        "required": [
+          "externalUserId",
+          "attemptId",
+          "idempotencyKey"
+        ],
+        "type": "object"
+      },
+      "PartnerRemediationResponseDto": {
+        "properties": {
+          "evidenceRefs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "knowledgeRefs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "remediation": {
+            "$ref": "#/components/schemas/PartnerRemediationContentDto"
+          },
+          "requestId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "requestId",
+          "remediation",
+          "evidenceRefs",
+          "knowledgeRefs"
+        ],
+        "type": "object"
+      },
+      "PublicAnswerSchemaDto": {
+        "properties": {
+          "evaluatorCapability": {
+            "example": "automatic",
+            "type": "string"
+          },
+          "required": {
+            "example": true,
+            "type": "boolean"
+          },
+          "type": {
+            "example": "single-choice",
+            "type": "string"
+          }
+        },
+        "required": [
+          "evaluatorCapability"
+        ],
+        "type": "object"
+      },
+      "PublicTaskVersionDto": {
+        "properties": {
+          "content": {
+            "$ref": "#/components/schemas/TaskContentDto"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "evaluationRule": {
+            "example": "single-choice.v1",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "publishedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "published"
+            ],
+            "type": "string"
+          },
+          "taskId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "taskType": {
+            "example": "single-choice",
+            "type": "string"
+          },
+          "version": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "taskId",
+          "version",
+          "taskType",
+          "status",
+          "content",
+          "evaluationRule",
+          "publishedAt",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "PublishedTaskResponseDto": {
+        "properties": {
+          "course": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CourseDto"
+              }
+            ],
+            "nullable": true,
+            "type": "object"
+          },
+          "skill": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SkillDto"
+              }
+            ],
+            "nullable": true,
+            "type": "object"
+          },
+          "subject": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SubjectDto"
+              }
+            ],
+            "nullable": true,
+            "type": "object"
+          },
+          "task": {
+            "$ref": "#/components/schemas/TaskReferenceDto"
+          },
+          "taskVersion": {
+            "$ref": "#/components/schemas/PublicTaskVersionDto"
+          },
+          "topic": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TopicDto"
+              }
+            ],
+            "nullable": true,
+            "type": "object"
+          }
+        },
+        "required": [
+          "taskVersion",
+          "task",
+          "subject",
+          "course",
+          "topic",
+          "skill"
+        ],
+        "type": "object"
+      },
+      "ResultDto": {
+        "properties": {
+          "attemptId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "evaluatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "evaluationRule": {
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "isCorrect": {
+            "type": "boolean"
+          },
+          "learningHandoff": {
+            "enum": [
+              "recorded",
+              "skipped_skill_unmapped"
+            ],
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "correct",
+              "incorrect",
+              "invalid"
+            ],
+            "type": "string"
+          },
+          "score": {
+            "type": "number"
+          },
+          "submissionId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "attemptId",
+          "submissionId",
+          "evaluationRule",
+          "outcome",
+          "isCorrect",
+          "score",
+          "evaluatedAt"
+        ],
+        "type": "object"
+      },
+      "SaveWhiteboardStateDto": {
+        "properties": {
+          "data": {
+            "type": "object"
+          },
+          "expectedRevision": {
+            "minimum": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "expectedRevision",
+          "data"
+        ],
+        "type": "object"
+      },
+      "SkillDto": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "topicId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "topicId",
+          "name"
+        ],
+        "type": "object"
+      },
+      "StartAttemptDto": {
+        "properties": {
+          "assignmentId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "taskVersionId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "taskVersionId",
+          "assignmentId"
+        ],
+        "type": "object"
+      },
+      "StartAttemptResponseDto": {
+        "properties": {
+          "attempt": {
+            "$ref": "#/components/schemas/AttemptDto"
+          },
+          "task": {
+            "$ref": "#/components/schemas/PublicTaskVersionDto"
+          }
+        },
+        "required": [
+          "attempt",
+          "task"
+        ],
+        "type": "object"
+      },
+      "StudentAssignmentResponseDto": {
+        "properties": {
+          "assignment": {
+            "$ref": "#/components/schemas/AssignmentDto"
+          },
+          "taskVersion": {
+            "$ref": "#/components/schemas/PublicTaskVersionDto"
+          }
+        },
+        "required": [
+          "assignment",
+          "taskVersion"
+        ],
+        "type": "object"
+      },
+      "StudentDto": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "student"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "displayName",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "StudentRelationshipDto": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "revoked"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "StudentRelationshipResponseDto": {
+        "properties": {
+          "relationship": {
+            "$ref": "#/components/schemas/StudentRelationshipDto"
+          },
+          "student": {
+            "$ref": "#/components/schemas/StudentDto"
+          }
+        },
+        "required": [
+          "student",
+          "relationship"
+        ],
+        "type": "object"
+      },
+      "SubjectDto": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name"
+        ],
+        "type": "object"
+      },
+      "SubmitAnswerDto": {
+        "properties": {
+          "answer": {
+            "type": "object"
+          },
+          "idempotencyKey": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotencyKey",
+          "answer"
+        ],
+        "type": "object"
+      },
+      "SubmitAnswerResponseDto": {
+        "properties": {
+          "attempt": {
+            "$ref": "#/components/schemas/AttemptDto"
+          },
+          "idempotentReplay": {
+            "type": "boolean"
+          },
+          "manualReviewStatus": {
+            "enum": [
+              "pending"
+            ],
+            "nullable": true,
+            "type": "string"
+          },
+          "result": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ResultDto"
+              }
+            ],
+            "nullable": true,
+            "type": "object"
+          }
+        },
+        "required": [
+          "attempt",
+          "result",
+          "manualReviewStatus",
+          "idempotentReplay"
+        ],
+        "type": "object"
+      },
+      "SubmitTrainerAnswerDto": {
+        "properties": {
+          "answer": {
+            "type": "object"
+          },
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "itemId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "itemId",
+          "idempotencyKey",
+          "answer"
+        ],
+        "type": "object"
+      },
+      "TaskAnswerResponseDto": {
+        "properties": {
+          "answer": {
+            "additionalProperties": true,
+            "description": "Answer key for the version, for example { \"optionId\": \"a\" }. Null when the task is not auto-graded.",
+            "nullable": true,
+            "type": "object"
+          },
+          "answerSchema": {
+            "$ref": "#/components/schemas/PublicAnswerSchemaDto"
+          },
+          "taskVersionId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "taskVersionId",
+          "answerSchema",
+          "answer"
+        ],
+        "type": "object"
+      },
+      "TaskContentDto": {
+        "properties": {
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/TaskOptionDto"
+            },
+            "type": "array"
+          },
+          "statement": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "statement"
+        ],
+        "type": "object"
+      },
+      "TaskOptionDto": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label"
+        ],
+        "type": "object"
+      },
+      "TaskReferenceDto": {
+        "properties": {
+          "courseId": {
+            "format": "uuid",
+            "type": "object"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "skillId": {
+            "format": "uuid",
+            "type": "object"
+          },
+          "subjectId": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "object"
+          },
+          "topicId": {
+            "format": "uuid",
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "subjectId",
+          "courseId",
+          "topicId",
+          "skillId"
+        ],
+        "type": "object"
+      },
+      "TaskSourceResponseDto": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "integrationId": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "object"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "mode": {
+            "enum": [
+              "imported_snapshot",
+              "external_reference"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "example": "Kompege bank",
+            "type": "string"
+          },
+          "organizationId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "sourceType": {
+            "example": "kompege",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "disabled"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "workspaceId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "organizationId",
+          "workspaceId",
+          "integrationId",
+          "name",
+          "sourceType",
+          "mode",
+          "status",
+          "metadata",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "TaskVersionResponseDto": {
+        "properties": {
+          "answerSchema": {
+            "$ref": "#/components/schemas/PublicAnswerSchemaDto"
+          },
+          "content": {
+            "additionalProperties": true,
+            "description": "Sanitized task content. Answer keys such as correctOptionId are never included.",
+            "type": "object"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "evaluationRule": {
+            "example": "single-choice.v1",
+            "type": "string"
+          },
+          "evaluatorCapability": {
+            "example": "automatic",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "provenance": {
+            "additionalProperties": true,
+            "description": "Origin of the version (source, snapshot, edit history).",
+            "type": "object"
+          },
+          "publishedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "rawSnapshotId": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published",
+              "archived"
+            ],
+            "type": "string"
+          },
+          "taskId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "taskType": {
+            "example": "single-choice",
+            "type": "string"
+          },
+          "version": {
+            "example": 3,
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "taskId",
+          "version",
+          "taskType",
+          "status",
+          "content",
+          "answerSchema",
+          "evaluatorCapability",
+          "evaluationRule",
+          "provenance",
+          "rawSnapshotId",
+          "publishedAt",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "TheoryMaterialResponseDto": {
+        "properties": {
+          "category": {
+            "type": "object"
+          },
+          "curriculum": {
+            "type": "object"
+          },
+          "description": {
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published"
+            ],
+            "type": "string"
+          },
+          "taskIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "title": {
+            "type": "string"
+          },
+          "version": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "status",
+          "curriculum",
+          "taskIds",
+          "version"
+        ],
+        "type": "object"
+      },
+      "TopicDto": {
+        "properties": {
+          "courseId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "courseId",
+          "name"
+        ],
+        "type": "object"
+      },
+      "TrainerSessionResponseDto": {
+        "properties": {
+          "canComplete": {
+            "type": "boolean"
+          },
+          "current": {
+            "nullable": true,
+            "type": "object"
+          },
+          "filters": {
+            "type": "object"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "idempotentReplay": {
+            "type": "boolean"
+          },
+          "latestResult": {
+            "nullable": true,
+            "type": "object"
+          },
+          "progress": {
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "completed"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "filters",
+          "progress",
+          "canComplete",
+          "idempotentReplay"
+        ],
+        "type": "object"
+      },
+      "UpdateDraftDto": {
+        "properties": {
+          "answerSchema": {
+            "type": "object"
+          },
+          "content": {
+            "type": "object"
+          },
+          "taskType": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UpdateTheoryDraftDto": {
+        "properties": {
+          "category": {
+            "type": "string"
+          },
+          "content": {
+            "type": "object"
+          },
+          "courseId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "skillId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "subjectId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "taskIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "title": {
+            "type": "string"
+          },
+          "topicId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UpdateVariantDraftDto": {
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/VariantItemDto"
+            },
+            "type": "array"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UpdateWhiteboardDto": {
+        "properties": {
+          "externalReference": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "archived"
+            ],
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UpsertExternalUserDto": {
+        "properties": {
+          "externalUserId": {
+            "example": "learner-42",
+            "maxLength": 255,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "externalUserId"
+        ],
+        "type": "object"
+      },
+      "UserResponseDto": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "teacher",
+              "student"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "displayName",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "VariantItemDto": {
+        "properties": {
+          "externalTaskId": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "position": {
+            "type": "number"
+          },
+          "required": {
+            "default": true,
+            "type": "boolean"
+          },
+          "section": {
+            "type": "string"
+          },
+          "taskVersionId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "VariantItemResponseDto": {
+        "properties": {
+          "externalTaskId": {
+            "nullable": true,
+            "type": "object"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "position": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "required": {
+            "default": true,
+            "type": "boolean"
+          },
+          "resolutionStatus": {
+            "description": "Resolved only once a published task version is linked.",
+            "enum": [
+              "resolved",
+              "unresolved"
+            ],
+            "type": "string"
+          },
+          "section": {
+            "nullable": true,
+            "type": "object"
+          },
+          "taskVersionId": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "position",
+          "taskVersionId",
+          "externalTaskId",
+          "required",
+          "resolutionStatus",
+          "section",
+          "metadata"
+        ],
+        "type": "object"
+      },
+      "VariantVersionResponseDto": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "description": {
+            "nullable": true,
+            "type": "object"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/VariantItemResponseDto"
+            },
+            "type": "array"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "provenance": {
+            "additionalProperties": true,
+            "description": "Origin of the version (source, snapshot, edit history).",
+            "type": "object"
+          },
+          "publishedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published",
+              "archived"
+            ],
+            "type": "string"
+          },
+          "title": {
+            "nullable": true,
+            "type": "object"
+          },
+          "variantId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "version": {
+            "example": 2,
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "variantId",
+          "version",
+          "status",
+          "title",
+          "description",
+          "metadata",
+          "provenance",
+          "publishedAt",
+          "createdAt",
+          "items"
+        ],
+        "type": "object"
+      },
+      "WhiteboardResourceResponseDto": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "resourceId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "task",
+              "theory"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "resourceId"
+        ],
+        "type": "object"
+      },
+      "WhiteboardResponseDto": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "currentRevision": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "externalReference": {
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "archived"
+            ],
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "status",
+          "currentRevision",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "WhiteboardSaveStateResponseDto": {
+        "properties": {
+          "revision": {
+            "minimum": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "revision"
+        ],
+        "type": "object"
+      },
+      "WhiteboardStateResponseDto": {
+        "properties": {
+          "data": {
+            "nullable": true,
+            "type": "object"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "revision": {
+            "minimum": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "revision"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "workspace-api-key": {
+        "in": "header",
+        "name": "Authorization",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "contact": {},
+    "description": "Teacher-first learning vertical slice",
+    "title": "Teachly API",
+    "version": "0.1.0"
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/assignments": {
+      "get": {
+        "operationId": "TeachingController_listAssignments",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StudentAssignmentResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "teaching"
+        ]
+      },
+      "post": {
+        "operationId": "TeachingController_createAssignment",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssignmentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssignmentDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "teaching"
+        ]
+      }
+    },
+    "/attempts": {
+      "post": {
+        "operationId": "AttemptsController_start",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartAttemptDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartAttemptResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "attempts"
+        ]
+      }
+    },
+    "/attempts/{attemptId}/result": {
+      "get": {
+        "operationId": "AttemptsController_result",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attemptId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttemptResultResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "attempts"
+        ]
+      }
+    },
+    "/attempts/{attemptId}/submissions": {
+      "post": {
+        "operationId": "AttemptsController_submit",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attemptId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitAnswerDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmitAnswerResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "attempts"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "HealthController_health",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthStatusDto"
+                }
+              }
+            },
+            "description": "API process and database are available."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthUnavailableDto"
+                }
+              }
+            },
+            "description": "The database availability check failed."
+          }
+        },
+        "tags": [
+          "operations"
+        ]
+      }
+    },
+    "/students": {
+      "get": {
+        "operationId": "TeachingController_listStudents",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StudentRelationshipResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "teaching"
+        ]
+      },
+      "post": {
+        "operationId": "TeachingController_createStudent",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStudentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudentDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "teaching"
+        ]
+      }
+    },
+    "/students/{studentId}/learning-state": {
+      "get": {
+        "operationId": "LearningController_state",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studentId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "skillId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Teacher-authorized deterministic learning state"
+          }
+        },
+        "tags": [
+          "learning"
+        ]
+      }
+    },
+    "/students/{studentId}/results": {
+      "get": {
+        "operationId": "TeacherResultsController_listResults",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studentId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AttemptResultResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "teaching"
+        ]
+      }
+    },
+    "/tasks/published": {
+      "get": {
+        "operationId": "EducationController_listPublished",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PublishedTaskResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/published/{taskVersionId}": {
+      "get": {
+        "operationId": "EducationController_getPublished",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "taskVersionId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishedTaskResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/users/me": {
+      "get": {
+        "operationId": "UsersController_currentUser",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/v1/ai-requests": {
+      "get": {
+        "description": "Auth: workspace API key (Authorization: Bearer) with scope external_users:read. Returns the 20 most recent AI requests visible to this integration, with provider, model, latency, knowledge references, and outcome. Prompts, outputs, and answers are never exposed.",
+        "operationId": "AiTraceController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AiTraceResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Recent AI request diagnostics, newest first."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing, invalid, or revoked workspace API key."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "API key lacks the required integration scope."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "List recent AI request diagnostics",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/v1/assessment/curriculum-mappings": {
+      "get": {
+        "description": "Auth: workspace API key with scope assessment:read, or an authenticated user session. Optionally filtered by taskSourceId.",
+        "operationId": "TaskBankController_listCurriculumMappings",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "workspaceId",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "taskSourceId",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CurriculumMappingResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Curriculum mappings of the resolved workspace."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Malformed request, validation failure, or invalid UUID/path parameter."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing, invalid, or revoked workspace API key, or no authenticated user."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing role, wrong workspace, or missing required assessment scope."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Requested workspace or task source does not exist."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "List curriculum mappings",
+        "tags": [
+          "assessment-task-bank"
+        ]
+      },
+      "post": {
+        "description": "Auth: workspace API key with scope assessment:manage, or a user session with a manage-capable role. Upserted per (workspace, taskSource, mappingType, externalValue) and applied to already imported tasks.",
+        "operationId": "TaskBankController_upsertCurriculumMapping",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCurriculumMappingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurriculumMappingResponseDto"
+                }
+              }
+            },
+            "description": "Upserted curriculum mapping."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Malformed request, validation failure, or invalid UUID/path parameter."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing, invalid, or revoked workspace API key, or no authenticated user."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing role, wrong workspace, or missing required assessment scope."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Task source or referenced curriculum target not found."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Create or update a curriculum mapping",
+        "tags": [
+          "assessment-task-bank"
+        ]
+      }
+    },
+    "/v1/assessment/results/external": {
+      "post": {
+        "description": "Auth: workspace API key with scope assessment:write (integration authentication is required). Records an immutable observation and hands off to Learning; replaying the same idempotencyKey returns idempotentReplay=true.",
+        "operationId": "TaskBankController_observeExternalResult",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExternalResultObservationDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalResultObservationResponseDto"
+                }
+              }
+            },
+            "description": "Recorded external result observation."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Malformed request, validation failure, or invalid UUID/path parameter."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing, invalid, or revoked workspace API key, or no authenticated user."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing role, wrong workspace, or missing required assessment scope."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "External learner, imported task, or published task version not found."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Record an external assessment result",
+        "tags": [
+          "assessment-task-bank"
+        ]
+      }
+    },
+    "/v1/assessment/task-drafts/{draftId}": {
+      "patch": {
+        "description": "Auth: workspace API key with scope assessment:write, or a user session with a write-capable role. Patching a published version creates a new draft version instead of modifying it.",
+        "operationId": "TaskBankController_updateDraft",
+        "parameters": [
+          {
+            "description": "Task version id (draft or published).",
+            "in": "path",
+            "name": "draftId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDraftDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskVersionResponseDto"
+                }
+              }
+            },
+            "description": "Updated or newly created draft task version."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Malformed request, validation failure, or invalid UUID/path parameter."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing, invalid, or revoked workspace API key, or no authenticated user."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing role, wrong workspace, or missing required assessment scope."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Task draft not found."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Update a draft task version",
+        "tags": [
+          "assessment-task-bank"
+        ]
+      }
+    },
+    "/v1/assessment/task-drafts/{draftId}/publish": {
+      "post": {
+        "description": "Auth: workspace API key with scope assessment:manage, or a user session with a manage-capable role. Only draft versions can be published; published versions become immutable.",
+        "operationId": "TaskBankController_publish",
+        "parameters": [
+          {
+            "description": "Draft task version id.",
+            "in": "path",
+            "name": "draftId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskVersionResponseDto"
+                }
+              }
+            },
+            "description": "Published task version."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Malformed request, validation failure, or invalid UUID/path parameter."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing, invalid, or revoked workspace API key, or no authenticated user."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing role, wrong workspace, or missing required assessment scope."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Task draft not found."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Publish a draft task version",
+        "tags": [
+          "assessment-task-bank"
+        ]
+      }
+    },
+    "/v1/assessment/task-sources": {
+      "get": {
+        "description": "Auth: workspace API key with scope assessment:read, or an authenticated user session.",
+        "operationId": "TaskBankController_listSources",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "workspaceId",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TaskSourceResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Task sources of the resolved workspace."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Malformed request, validation failure, or invalid UUID/path parameter."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing, invalid, or revoked workspace API key, or no authenticated user."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing role, wrong workspace, or missing required assessment scope."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Requested workspace does not exist."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "List task sources",
+        "tags": [
+          "assessment-task-bank"
+        ]
+      },
+      "post": {
+        "description": "Auth: workspace API key with scope assessment:manage, or a user session with organization_admin, workspace_admin, or content_editor role.",
+        "operationId": "TaskBankController_createSource",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaskSourceDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskSourceResponseDto"
+                }
+              }
+            },
+            "description": "Created task source."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Malformed request, validation failure, or invalid UUID/path parameter."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing, invalid, or revoked workspace API key, or no authenticated user."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing role, wrong workspace, or missing required assessment scope."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Create a task source",
+        "tags": [
+          "assessment-task-bank"
+        ]
+      }
+    },
+    "/v1/assessment/task-sources/{id}": {
+      "get": {
+        "description": "Auth: workspace API key with scope assessment:read, or an authenticated user session.",
+        "operationId": "TaskBankController_getSource",
+        "parameters": [
+          {
+            "description": "Task source id.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskSourceResponseDto"
+                }
+              }
+            },
+            "description": "Task source."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Malformed request, validation failure, or invalid UUID/path parameter."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing, invalid, or revoked workspace API key, or no authenticated user."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing role, wrong workspace, or missing required assessment scope."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Task source not found in this tenant."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Get a task source",
+        "tags": [
+          "assessment-task-bank"
+        ]
+      }
+    },
+    "/v1/assessment/task-sources/{id}/import": {
+      "post": {
+        "description": "Auth: workspace API key with scope assessment:write, or a user session with a write-capable role. Replaying the same idempotencyKey returns the previously imported version with idempotentReplay=true.",
+        "operationId": "TaskBankController_import",
+        "parameters": [
+          {
+            "description": "Task source id, must be active.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportTaskDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportedTaskVersionResponseDto"
+                }
+              }
+            },
+            "description": "Imported (or replayed) task version."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Malformed request, validation failure, or invalid UUID/path parameter."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing, invalid, or revoked workspace API key, or no authenticated user."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing role, wrong workspace, or missing required assessment scope."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Task source not found in this tenant."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Import a task snapshot into a task source",
+        "tags": [
+          "assessment-task-bank"
+        ]
+      }
+    },
+    "/v1/assessment/tasks": {
+      "get": {
+        "description": "Auth: workspace API key (Authorization: Bearer) with scope assessment:read, or an authenticated user session. Returns only published versions of the resolved workspace, newest first.",
+        "operationId": "TaskBankController_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "workspaceId",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TaskVersionResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Published task versions with answer keys removed."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Malformed request, validation failure, or invalid UUID/path parameter."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing, invalid, or revoked workspace API key, or no authenticated user."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing role, wrong workspace, or missing required assessment scope."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Requested workspace does not exist."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "List published task versions",
+        "tags": [
+          "assessment-task-bank"
+        ]
+      }
+    },
+    "/v1/assessment/tasks/{taskId}/drafts": {
+      "post": {
+        "description": "Auth: workspace API key with scope assessment:write, or a user session with a write-capable role. Creates a new draft version; published versions stay immutable.",
+        "operationId": "TaskBankController_createDraft",
+        "parameters": [
+          {
+            "description": "Task id.",
+            "in": "path",
+            "name": "taskId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDraftDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskVersionResponseDto"
+                }
+              }
+            },
+            "description": "Created draft task version."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Malformed request, validation failure, or invalid UUID/path parameter."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing, invalid, or revoked workspace API key, or no authenticated user."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing role, wrong workspace, or missing required assessment scope."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Task not found in this workspace."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Create a draft version of a task",
+        "tags": [
+          "assessment-task-bank"
+        ]
+      }
+    },
+    "/v1/assessment/tasks/{taskVersionId}": {
+      "get": {
+        "description": "Auth: workspace API key with scope assessment:read, or an authenticated user session.",
+        "operationId": "TaskBankController_get",
+        "parameters": [
+          {
+            "description": "Published task version id.",
+            "in": "path",
+            "name": "taskVersionId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskVersionResponseDto"
+                }
+              }
+            },
+            "description": "Published task version with answer keys removed."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Malformed request, validation failure, or invalid UUID/path parameter."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing, invalid, or revoked workspace API key, or no authenticated user."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing role, wrong workspace, or missing required assessment scope."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "No published task version with this id."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Get one published task version",
+        "tags": [
+          "assessment-task-bank"
+        ]
+      }
+    },
+    "/v1/assessment/tasks/{taskVersionId}/answer": {
+      "get": {
+        "description": "Auth: workspace API key with scope assessment:answer:read, or a user session with answer access. Every read is audited as task_answer_revealed.",
+        "operationId": "TaskBankController_answer",
+        "parameters": [
+          {
+            "description": "Published task version id.",
+            "in": "path",
+            "name": "taskVersionId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAnswerResponseDto"
+                }
+              }
+            },
+            "description": "Answer key and public answer schema."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Malformed request, validation failure, or invalid UUID/path parameter."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing, invalid, or revoked workspace API key, or no authenticated user."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing role, wrong workspace, or missing required assessment scope."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "No published task version with this id."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Reveal the answer key of a published task version",
+        "tags": [
+          "assessment-task-bank"
+        ]
+      }
+    },
+    "/v1/assessment/variants": {
+      "get": {
+        "description": "Auth: workspace API key with scope assessment:read, or an authenticated user session. Returns at most one (the latest) published version per variant.",
+        "operationId": "VariantController_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "workspaceId",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/VariantVersionResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Published variant versions with their ordered items."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Malformed request, validation failure, invalid UUID, or unresolved/invalid variant items."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing, invalid, or revoked workspace API key, or no authenticated user."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing role, wrong workspace, or missing required assessment scope."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Requested workspace does not exist."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "List published variant versions",
+        "tags": [
+          "assessment-variants"
+        ]
+      },
+      "post": {
+        "description": "Auth: workspace API key with scope assessment:write, or a user session with a write-capable role. Items reference tasks by taskVersionId or externalTaskId; duplicates of idempotencyKey are replayed.",
+        "operationId": "VariantController_create",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVariantDraftDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedVariantVersionResponseDto"
+                }
+              }
+            },
+            "description": "Created draft variant version."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Malformed request, validation failure, invalid UUID, or unresolved/invalid variant items."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing, invalid, or revoked workspace API key, or no authenticated user."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing role, wrong workspace, or missing required assessment scope."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Workspace or referenced task source not found."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Create a draft variant",
+        "tags": [
+          "assessment-variants"
+        ]
+      }
+    },
+    "/v1/assessment/variants/{variantVersionId}": {
+      "get": {
+        "description": "Auth: workspace API key with scope assessment:read, or an authenticated user session.",
+        "operationId": "VariantController_get",
+        "parameters": [
+          {
+            "description": "Published variant version id.",
+            "in": "path",
+            "name": "variantVersionId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VariantVersionResponseDto"
+                }
+              }
+            },
+            "description": "Published variant version with its ordered items."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Malformed request, validation failure, invalid UUID, or unresolved/invalid variant items."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing, invalid, or revoked workspace API key, or no authenticated user."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing role, wrong workspace, or missing required assessment scope."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "No published variant version with this id."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Get one published variant version",
+        "tags": [
+          "assessment-variants"
+        ]
+      },
+      "patch": {
+        "description": "Auth: workspace API key with scope assessment:write, or a user session with a write-capable role. Patching a published version creates a new draft version instead of modifying it.",
+        "operationId": "VariantController_update",
+        "parameters": [
+          {
+            "description": "Variant version id (draft or published).",
+            "in": "path",
+            "name": "variantVersionId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVariantDraftDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VariantVersionResponseDto"
+                }
+              }
+            },
+            "description": "Updated or newly created draft variant version."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Malformed request, validation failure, invalid UUID, or unresolved/invalid variant items."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing, invalid, or revoked workspace API key, or no authenticated user."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing role, wrong workspace, or missing required assessment scope."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Variant version not found."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Update a draft variant version",
+        "tags": [
+          "assessment-variants"
+        ]
+      }
+    },
+    "/v1/assessment/variants/{variantVersionId}/publish": {
+      "post": {
+        "description": "Auth: workspace API key with scope assessment:manage, or a user session with a manage-capable role. All items must resolve to published task versions, otherwise 400 VARIANT_UNRESOLVED with per-item details is returned.",
+        "operationId": "VariantController_publish",
+        "parameters": [
+          {
+            "description": "Draft variant version id.",
+            "in": "path",
+            "name": "variantVersionId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VariantVersionResponseDto"
+                }
+              }
+            },
+            "description": "Published variant version with resolved items."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Malformed request, validation failure, invalid UUID, or unresolved/invalid variant items."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing, invalid, or revoked workspace API key, or no authenticated user."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing role, wrong workspace, or missing required assessment scope."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Variant version not found."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Publish a draft variant version",
+        "tags": [
+          "assessment-variants"
+        ]
+      }
+    },
+    "/v1/external-users": {
+      "get": {
+        "operationId": "ExternalUsersController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ExternalUserResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "tags": [
+          "external-users"
+        ]
+      },
+      "post": {
+        "operationId": "ExternalUsersController_upsert",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertExternalUserDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalUserResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "tags": [
+          "external-users"
+        ]
+      }
+    },
+    "/v1/external-users/{id}": {
+      "get": {
+        "operationId": "ExternalUsersController_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalUserResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "tags": [
+          "external-users"
+        ]
+      }
+    },
+    "/v1/integration": {
+      "get": {
+        "operationId": "IntegrationsController_current",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Current integration metadata"
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "tags": [
+          "integrations"
+        ]
+      }
+    },
+    "/v1/integrations/api-keys": {
+      "get": {
+        "description": "Requires the integrations:read scope. Only safe key metadata is returned.",
+        "operationId": "ApiKeyLifecycleController_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ApiKeyMetadataDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": ""
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "List API keys for the current integration",
+        "tags": [
+          "integrations"
+        ]
+      },
+      "post": {
+        "description": "Requires the integrations:write scope. The raw secret is returned exactly once.",
+        "operationId": "ApiKeyLifecycleController_create",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateApiKeyDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeySecretResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": ""
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Create an API key",
+        "tags": [
+          "integrations"
+        ]
+      }
+    },
+    "/v1/integrations/api-keys/{id}/revoke": {
+      "post": {
+        "description": "Requires the integrations:write scope. The key stops authenticating immediately.",
+        "operationId": "ApiKeyLifecycleController_revoke",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyMetadataDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": ""
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Active API key not found"
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Revoke an API key",
+        "tags": [
+          "integrations"
+        ]
+      }
+    },
+    "/v1/integrations/api-keys/{id}/rotate": {
+      "post": {
+        "description": "Requires the integrations:write scope. The old key is revoked atomically and the new raw secret is returned exactly once.",
+        "operationId": "ApiKeyLifecycleController_rotate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeySecretResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": ""
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Active API key not found"
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Rotate an API key",
+        "tags": [
+          "integrations"
+        ]
+      }
+    },
+    "/v1/knowledge/status": {
+      "get": {
+        "description": "Auth: workspace API key (Authorization: Bearer) with scope external_users:read. One row per knowledge document version in the API key workspace, including license and external-AI permission.",
+        "operationId": "KnowledgeController_status",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/KnowledgeStatusResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Knowledge status rows for the workspace, newest version first."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing, invalid, or revoked workspace API key."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "API key lacks the required integration scope."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Integration is not active in this workspace."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "List knowledge source, document, and version status",
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/v1/learner-intelligence/activity": {
+      "get": {
+        "operationId": "LearnerIntelligenceController_activity",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Workspace API key required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "API key lacks learner_intelligence:read."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "List integration-scoped learner result activity",
+        "tags": [
+          "learner-intelligence"
+        ]
+      }
+    },
+    "/v1/learner-intelligence/profile": {
+      "get": {
+        "operationId": "LearnerIntelligenceController_profile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Workspace API key required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "API key lacks learner_intelligence:read."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Read an integration-scoped external learner profile",
+        "tags": [
+          "learner-intelligence"
+        ]
+      }
+    },
+    "/v1/learner-intelligence/progress": {
+      "get": {
+        "operationId": "LearnerIntelligenceController_progress",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Workspace API key required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "API key lacks learner_intelligence:read."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Read deterministic learner progress over a bounded time window",
+        "tags": [
+          "learner-intelligence"
+        ]
+      }
+    },
+    "/v1/learner-intelligence/skills": {
+      "get": {
+        "operationId": "LearnerIntelligenceController_skills",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Workspace API key required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "API key lacks learner_intelligence:read."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "List observed deterministic learner skill states",
+        "tags": [
+          "learner-intelligence"
+        ]
+      }
+    },
+    "/v1/remediations": {
+      "post": {
+        "description": "Auth: workspace API key (Authorization: Bearer) with scopes external_users:read and remediation:write. Runs the AiRuntime against the authoritative attempt and approved knowledge; scoring, attempts, and learning state are never modified. Replaying the same idempotencyKey returns the stored result. The model may abstain (abstained=true) when context is insufficient.",
+        "operationId": "PartnerRemediationController_create",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PartnerRemediationRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerRemediationResponseDto"
+                }
+              }
+            },
+            "description": "Generated (or replayed) remediation."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failure or malformed request body."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing, invalid, or revoked workspace API key."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "API key lacks external_users:read or remediation:write, or the context is not permitted for AI."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Generate a grounded remediation for an attempt",
+        "tags": [
+          "remediations"
+        ]
+      }
+    },
+    "/v1/theory/editor/materials": {
+      "get": {
+        "operationId": "TheoryController_listEditor",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "workspaceId",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subjectId",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "courseId",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "topicId",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "skillId",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TheoryMaterialResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Malformed content or invalid curriculum/task linkage."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Authentication required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing role or required Theory scope."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "List workspace Theory materials, including drafts",
+        "tags": [
+          "theory"
+        ]
+      },
+      "post": {
+        "operationId": "TheoryController_create",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTheoryMaterialDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TheoryMaterialResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Malformed content or invalid curriculum/task linkage."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Authentication required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing role or required Theory scope."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Create a Theory material with its first draft version",
+        "tags": [
+          "theory"
+        ]
+      }
+    },
+    "/v1/theory/editor/materials/{materialId}": {
+      "get": {
+        "operationId": "TheoryController_getEditor",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "materialId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TheoryMaterialResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Malformed content or invalid curriculum/task linkage."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Authentication required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing role or required Theory scope."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Theory material not found in this workspace."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Read a Theory material and its version history",
+        "tags": [
+          "theory"
+        ]
+      }
+    },
+    "/v1/theory/editor/materials/{materialId}/draft": {
+      "patch": {
+        "operationId": "TheoryController_updateDraft",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "materialId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTheoryDraftDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TheoryMaterialResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Malformed content or invalid curriculum/task linkage."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Authentication required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing role or required Theory scope."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Update the active draft, or create the next draft after publication",
+        "tags": [
+          "theory"
+        ]
+      }
+    },
+    "/v1/theory/editor/materials/{materialId}/publish": {
+      "post": {
+        "operationId": "TheoryController_publish",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "materialId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TheoryMaterialResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Malformed content or invalid curriculum/task linkage."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Authentication required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing role or required Theory scope."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Publish the active Theory draft",
+        "tags": [
+          "theory"
+        ]
+      }
+    },
+    "/v1/theory/materials": {
+      "get": {
+        "description": "Returns only published versions in the authenticated workspace.",
+        "operationId": "TheoryController_listPublished",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "workspaceId",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subjectId",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "courseId",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "topicId",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "skillId",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TheoryMaterialResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Malformed content or invalid curriculum/task linkage."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Authentication required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing role or required Theory scope."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "List published Theory materials",
+        "tags": [
+          "theory"
+        ]
+      }
+    },
+    "/v1/theory/materials/{materialId}": {
+      "get": {
+        "operationId": "TheoryController_getPublished",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "materialId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TheoryMaterialResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Malformed content or invalid curriculum/task linkage."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Authentication required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing role or required Theory scope."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Published Theory material not found in this workspace."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Read one published Theory material",
+        "tags": [
+          "theory"
+        ]
+      }
+    },
+    "/v1/trainer/sessions": {
+      "post": {
+        "operationId": "TrainerController_create",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainerSessionDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainerSessionResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Workspace API key required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing Trainer scope or cross-workspace access."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Create an idempotent trainer session for an integration-bound external learner",
+        "tags": [
+          "trainer"
+        ]
+      }
+    },
+    "/v1/trainer/sessions/{sessionId}": {
+      "get": {
+        "operationId": "TrainerController_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sessionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainerSessionResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Workspace API key required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing Trainer scope or cross-workspace access."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Read trainer session progress and current published task",
+        "tags": [
+          "trainer"
+        ]
+      }
+    },
+    "/v1/trainer/sessions/{sessionId}/complete": {
+      "post": {
+        "operationId": "TrainerController_complete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sessionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainerSessionResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Workspace API key required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing Trainer scope or cross-workspace access."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Complete a trainer session after every session task has been submitted",
+        "tags": [
+          "trainer"
+        ]
+      }
+    },
+    "/v1/trainer/sessions/{sessionId}/current": {
+      "get": {
+        "operationId": "TrainerController_current",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sessionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainerSessionResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Workspace API key required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing Trainer scope or cross-workspace access."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Start, if needed, and return the current published trainer task",
+        "tags": [
+          "trainer"
+        ]
+      }
+    },
+    "/v1/trainer/sessions/{sessionId}/next": {
+      "post": {
+        "operationId": "TrainerController_next",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sessionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainerSessionResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Workspace API key required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing Trainer scope or cross-workspace access."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Advance to the next trainer task after the current task is submitted",
+        "tags": [
+          "trainer"
+        ]
+      }
+    },
+    "/v1/trainer/sessions/{sessionId}/submissions": {
+      "post": {
+        "operationId": "TrainerController_submit",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sessionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitTrainerAnswerDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Workspace API key required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing Trainer scope or cross-workspace access."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Submit an answer for a trainer item using the existing deterministic Assessment evaluator",
+        "tags": [
+          "trainer"
+        ]
+      }
+    },
+    "/v1/whiteboards": {
+      "get": {
+        "operationId": "WhiteboardController_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "active",
+                "archived"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WhiteboardResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Workspace API key required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing Whiteboard scope or cross-workspace access."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "List whiteboards scoped to the integration tenant",
+        "tags": [
+          "whiteboard"
+        ]
+      },
+      "post": {
+        "operationId": "WhiteboardController_create",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWhiteboardDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhiteboardResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Workspace API key required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing Whiteboard scope or cross-workspace access."
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Create a whiteboard at revision 0 for the integration tenant",
+        "tags": [
+          "whiteboard"
+        ]
+      }
+    },
+    "/v1/whiteboards/{boardId}": {
+      "get": {
+        "operationId": "WhiteboardController_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "boardId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhiteboardResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Workspace API key required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing Whiteboard scope or cross-workspace access."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Read whiteboard metadata",
+        "tags": [
+          "whiteboard"
+        ]
+      },
+      "patch": {
+        "operationId": "WhiteboardController_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "boardId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWhiteboardDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhiteboardResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Workspace API key required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing Whiteboard scope or cross-workspace access."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Update whiteboard title, external reference, or archive status",
+        "tags": [
+          "whiteboard"
+        ]
+      }
+    },
+    "/v1/whiteboards/{boardId}/resources": {
+      "get": {
+        "operationId": "WhiteboardController_listResources",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "boardId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WhiteboardResourceResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Workspace API key required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing Whiteboard scope or cross-workspace access."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "List optional published resource links attached to a whiteboard",
+        "tags": [
+          "whiteboard"
+        ]
+      },
+      "post": {
+        "operationId": "WhiteboardController_attachResource",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "boardId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttachWhiteboardResourceDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhiteboardResourceResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Workspace API key required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing Whiteboard scope or cross-workspace access."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Attach a published task or theory version to a whiteboard (idempotent per board and resource)",
+        "tags": [
+          "whiteboard"
+        ]
+      }
+    },
+    "/v1/whiteboards/{boardId}/resources/{resourceLinkId}": {
+      "delete": {
+        "operationId": "WhiteboardController_detachResource",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "boardId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "resourceLinkId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Workspace API key required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing Whiteboard scope or cross-workspace access."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Detach a resource link from a whiteboard",
+        "tags": [
+          "whiteboard"
+        ]
+      }
+    },
+    "/v1/whiteboards/{boardId}/state": {
+      "get": {
+        "operationId": "WhiteboardController_getState",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "boardId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhiteboardStateResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Workspace API key required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing Whiteboard scope or cross-workspace access."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Load the latest whiteboard state snapshot",
+        "tags": [
+          "whiteboard"
+        ]
+      },
+      "put": {
+        "operationId": "WhiteboardController_saveState",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "boardId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveWhiteboardStateDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhiteboardSaveStateResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Workspace API key required."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing Whiteboard scope or cross-workspace access."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Persist whiteboard state at the next revision after optimistic revision check",
+        "tags": [
+          "whiteboard"
+        ]
+      }
+    }
+  },
+  "servers": [],
+  "tags": []
+}
