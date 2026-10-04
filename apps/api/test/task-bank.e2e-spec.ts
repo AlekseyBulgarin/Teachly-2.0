@@ -8,6 +8,7 @@ import { DatabaseService } from '../src/infrastructure/database/database';
 import { and, eq } from 'drizzle-orm';
 import { attempts, externalResultObservations, learningEvents, results, skillEvidence, taskVersions } from '../src/infrastructure/database/schema';
 import { fixtureIds } from '../src/infrastructure/database/seed';
+import { expectDatabaseError } from './database-error';
 import {
   assessmentTaskBankScopes,
   buildGenericRawTask,
@@ -92,7 +93,10 @@ describe('Assessment Task Bank V1 (PostgreSQL)', () => {
     expect(edited.body.id).not.toBe(published.body.id);
     expect(edited.body.status).toBe('draft');
     await request(app.getHttpServer()).post(`/v1/assessment/task-drafts/${edited.body.id}/publish`).set(fixture.auth).expect(201);
-    await expect(database.db.update(taskVersions).set({ taskType: 'mutated' }).where(eq(taskVersions.id, published.body.id))).rejects.toThrow(/immutable/i);
+    await expectDatabaseError(
+      database.db.update(taskVersions).set({ taskType: 'mutated' }).where(eq(taskVersions.id, published.body.id)),
+      /immutable/i,
+    );
   });
 
   it('exposes unsupported task types without claiming automatic evaluation', async () => {

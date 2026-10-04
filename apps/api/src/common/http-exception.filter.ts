@@ -30,11 +30,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
       message = exception.message;
     } else if (exception instanceof HttpException) {
       status = exception.getStatus();
+      code = HttpStatus[status] ?? code;
       const payload = exception.getResponse();
       if (typeof payload === 'string') message = payload;
       else if (typeof payload === 'object' && payload !== null) {
         const body = payload as { message?: string | string[]; error?: string; details?: unknown };
-        code = body.error?.toUpperCase().replaceAll(' ', '_') ?? code;
+        code = body.error?.toUpperCase().replaceAll(' ', '_') ?? HttpStatus[status] ?? code;
         if (status === HttpStatus.BAD_REQUEST && code === 'BAD_REQUEST') {
           message = 'Validation failed';
           details = typeof body.message === 'string' ? [body.message] : body.message;

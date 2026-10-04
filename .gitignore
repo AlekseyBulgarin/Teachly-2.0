@@ -7,6 +7,7 @@ coverage/
 *.log
 .DS_Store
 .neon
+.vercel/
 .next/
 *.tsbuildinfo
 .playwright-mcp/

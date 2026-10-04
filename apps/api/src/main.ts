@@ -1,18 +1,13 @@
-import { ValidationPipe } from '@nestjs/common';
 import { NestApplication, NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { requiredEnvironment } from './common/config';
-import { HttpExceptionFilter } from './common/http-exception.filter';
-import { requestIdMiddleware } from './common/request-id.middleware';
+import { configureHttpApp } from './common/configure-http-app';
 
 async function bootstrap(): Promise<void> {
   requiredEnvironment();
   const app = await NestFactory.create<NestApplication>(AppModule);
-  app.useBodyParser('json', { limit: '2mb' });
-  app.use(requestIdMiddleware);
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
-  app.useGlobalFilters(new HttpExceptionFilter());
+  configureHttpApp(app);
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Teachly API')
     .setDescription('Teacher-first learning vertical slice')

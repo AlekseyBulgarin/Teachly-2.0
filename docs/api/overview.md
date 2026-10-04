@@ -30,3 +30,9 @@ Use explicit organization context, relationship authorization, DTO validation, b
 ## Internal versus External
 
 Internal clients may use application-specific read models. Future external consumers require versioned contracts, credentials/scopes, quotas, webhook signatures, external identity mappings, and compatibility policy. Public access must never bypass the same authoritative task evaluation, tenant isolation, or audit rules.
+
+## Integration API-key administration
+
+`integrations:read` allows safe API-key metadata to be listed for the current organization, workspace, and integration. `integrations:write` is an administrative integration scope: it can create keys with any currently allowlisted integration scope, rotate an active key, or revoke it. Raw secrets are returned only when a key is created or rotated and are never returned by list operations or written to audit metadata.
+
+Key expiration is intentionally deferred until it is introduced through a reviewed PostgreSQL migration and a compatible API contract. Revocation remains immediate and rotation atomically revokes the replaced key.

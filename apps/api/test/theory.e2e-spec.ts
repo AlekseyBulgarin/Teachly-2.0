@@ -13,6 +13,7 @@ import { IntegrationsService } from '../src/modules/integrations/integrations.se
 import type { IntegrationScope } from '../src/modules/integrations/integrations.types';
 import { TenancyService } from '../src/modules/tenancy/tenancy.service';
 import { resetTestDatabase, startTestApp, testDatabase } from './postgres-test';
+import { expectDatabaseError } from './database-error';
 
 jest.setTimeout(120_000);
 
@@ -102,8 +103,11 @@ describe('Theory V1 (PostgreSQL)', () => {
     expect(listed.body).toHaveLength(1);
     expect(listed.body[0].version.content.blocks[1].text).toBe('Проверенное редактором объяснение.');
 
-    await expect(database.db.update(theoryVersions).set({ content: content('Недопустимое изменение') })
-      .where(eq(theoryVersions.id, published.body.version.id))).rejects.toThrow(/immutable/i);
+    await expectDatabaseError(
+      database.db.update(theoryVersions).set({ content: content('Недопустимое изменение') })
+        .where(eq(theoryVersions.id, published.body.version.id)),
+      /immutable/i,
+    );
 
     const nextDraft = await request(app.getHttpServer()).patch(`/v1/theory/editor/materials/${created.body.id}/draft`).set(auth)
       .send({ title: 'Новое черновое название', taskIds: [], content: content('Еще не опубликованное объяснение.') }).expect(200);

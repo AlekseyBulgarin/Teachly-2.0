@@ -44,6 +44,8 @@ describe('Phase 2 PostgreSQL invariants', () => {
   it('runs clean migrations and converges when seeded twice', async () => {
     await applyMigrations(database);
     await seedDevelopmentFixtures(database);
+    await database.db.update(apiKeys).set({ status: 'revoked', revokedAt: new Date() })
+      .where(eq(apiKeys.id, fixtureIds.apiKey));
     await seedDevelopmentFixtures(database);
     expect((await database.db.select({ count: sql<number>`count(*)::int` }).from(users))[0]?.count).toBe(2);
     expect((await database.db.select({ count: sql<number>`count(*)::int` }).from(tasks))[0]?.count).toBe(2);
@@ -60,6 +62,8 @@ describe('Phase 2 PostgreSQL invariants', () => {
       [fixtureIds.task],
     ].sort());
     const [demoKey] = await database.db.select().from(apiKeys).where(eq(apiKeys.id, fixtureIds.apiKey));
+    expect(demoKey?.status).toBe('active');
+    expect(demoKey?.revokedAt).toBeNull();
     expect(demoKey?.scopes).toEqual([
       'assessment:read', 'theory:read', 'trainer:read', 'trainer:write', 'learner_intelligence:read',
       'whiteboard:read', 'whiteboard:write',

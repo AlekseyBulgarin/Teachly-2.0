@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Patch, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { ApiCreatedResponse, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiSecurity, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { ApiErrorDto } from '../../common/api.dto';
 import { MachineAuthenticated } from '../../common/machine-auth.decorator';
 import { OptionalTenantContext } from '../../common/request-context';
@@ -30,6 +31,7 @@ export class WhiteboardController {
   constructor(private readonly whiteboard: WhiteboardService) {}
 
   @Post()
+  @Throttle({ default: { limit: 60, ttl: 60_000 } })
   @RequireIntegrationScopes('whiteboard:write')
   @ApiOperation({ summary: 'Create a whiteboard at revision 0 for the integration tenant' })
   @ApiCreatedResponse({ type: WhiteboardResponseDto })

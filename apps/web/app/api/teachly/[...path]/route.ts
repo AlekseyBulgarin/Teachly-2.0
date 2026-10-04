@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createDemoBoardBinding, verifyDemoBoardBinding } from '@/lib/demo-board-session';
 
 // Whiteboard V1 is proxied exactly: create one board, then read and write that
 // single board's state. Listing boards, board metadata, patch/archive, delete,
-// and resource attachment are deliberately not proxied, so a visitor can never
-// enumerate or reach another visitor's board. The UUID requirement keeps the
-// state routes from matching any other whiteboard path.
+// and resource attachment are deliberately not proxied. State access also
+// requires an integrity-protected HttpOnly binding created with that board, so
+// learning another visitor's UUID is insufficient to read or write it.
 const whiteboardCreateRoute = /^v1\/whiteboards$/;
 const whiteboardStateRoute =
-  /^v1\/whiteboards\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/state$/i;
+  /^v1\/whiteboards\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\/state$/i;
+const demoBoardCookie = 'teachly-demo-board';
+const upstreamTimeoutMs = 15_000;
 
 const allowedGetRoutes = [
   /^health$/,
@@ -197,8 +200,9 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   const headers = new Headers();
   headers.set('accept', 'application/json');
   if (request.method !== 'GET') headers.set('content-type', request.headers.get('content-type') ?? 'application/json');
+  let demoApiKey: string | null = null;
   if (joinedPath.startsWith('v1/')) {
-    const demoApiKey = process.env.TEACHLY_DEMO_API_KEY
+    demoApiKey = process.env.TEACHLY_DEMO_API_KEY
       ?? (process.env.NODE_ENV === 'production' ? null : 'tlk_00000000000000dd.teachly-demo-key');
     if (!demoApiKey) {
       return NextResponse.json(
@@ -207,6 +211,17 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
       );
     }
     headers.set('authorization', `Bearer ${demoApiKey}`);
+  }
+  const whiteboardStateMatch = whiteboardStateRoute.exec(joinedPath);
+  if (whiteboardStateMatch) {
+    const boardId = whiteboardStateMatch[1];
+    const sessionSecret = process.env.TEACHLY_DEMO_SESSION_SECRET ?? demoApiKey;
+    if (!boardId || !sessionSecret || !verifyDemoBoardBinding(request.cookies.get(demoBoardCookie)?.value, boardId, sessionSecret)) {
+      return NextResponse.json(
+        { code: 'WHITEBOARD_NOT_FOUND', message: 'Whiteboard not found' },
+        { status: 404 },
+      );
+    }
   }
   const requestId = request.headers.get('x-request-id');
   if (requestId) headers.set('x-request-id', requestId);
@@ -253,6 +268,7 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
       headers,
       body,
       cache: 'no-store',
+      signal: AbortSignal.timeout(upstreamTimeoutMs),
     });
     if (!response.ok) {
       return NextResponse.json(
@@ -260,14 +276,32 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
         { status: response.status },
       );
     }
-    if (whiteboardCreateRoute.test(joinedPath) || joinedPath === 'v1/theory/materials' || joinedPath.startsWith('v1/trainer/sessions')) {
+    if (whiteboardCreateRoute.test(joinedPath)) {
+      const sanitized = publicWhiteboardCreate(await response.json());
+      if (typeof sanitized.id !== 'string' || !demoApiKey) {
+        return NextResponse.json({ code: 'INVALID_BACKEND_RESPONSE', message: 'Teachly API returned an invalid response' }, { status: 502 });
+      }
+      const result = NextResponse.json(sanitized, { status: response.status });
+      result.cookies.set(demoBoardCookie, createDemoBoardBinding(sanitized.id, process.env.TEACHLY_DEMO_SESSION_SECRET ?? demoApiKey), {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        path: '/api/teachly/v1/whiteboards',
+        maxAge: 60 * 60 * 24 * 7,
+      });
+      return result;
+    }
+    if (joinedPath === 'v1/theory/materials' || joinedPath.startsWith('v1/trainer/sessions')) {
       return NextResponse.json(sanitizeResponse(joinedPath, await response.json()), { status: response.status });
     }
     return new NextResponse(response.body, {
       status: response.status,
       headers: { 'content-type': response.headers.get('content-type') ?? 'application/json' },
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'TimeoutError') {
+      return NextResponse.json({ code: 'BACKEND_TIMEOUT', message: 'Teachly API did not respond in time' }, { status: 504 });
+    }
     return NextResponse.json({ code: 'BACKEND_UNAVAILABLE', message: 'Teachly API is unavailable' }, { status: 503 });
   }
 }
