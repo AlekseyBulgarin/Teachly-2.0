@@ -56,8 +56,11 @@ export function EcosystemProvider({ children }: { children: ReactNode }) {
     setApiStatus('checking');
     setRefreshing(true);
     try {
-      const health = await api.health();
-      setApiStatus(health?.status === 'ok' && health.database === 'ok' ? 'healthy' : 'unavailable');
+      // Health alone only proves that the API process and database are alive.
+      // A protected read also verifies that the server-only demo credential and
+      // tenant fixture are usable before the shell claims that data is connected.
+      const [health] = await Promise.all([api.health(), api.publishedTasks()]);
+      setApiStatus(health.status === 'ok' && health.database === 'ok' ? 'healthy' : 'unavailable');
     } catch {
       setApiStatus('unavailable');
       setError(translate(locale, 'softError'));

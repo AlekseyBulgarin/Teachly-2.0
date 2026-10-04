@@ -16,6 +16,7 @@ import {
 import { kompegeRichTask, kompegeTextTask } from './fixtures/kompege-like.tasks';
 import { kompegeLikeVariant, kompegeUnresolvedVariant, kompegeUnresolvedVariantId } from './fixtures/kompege-like.variant';
 import { resetTestDatabase, startTestApp, testDatabase } from './postgres-test';
+import { expectDatabaseError } from './database-error';
 
 jest.setTimeout(120_000);
 
@@ -100,8 +101,14 @@ describe('Assessment Variants V1 (PostgreSQL)', () => {
       items: [{ taskVersionId: (await importAndPublishTask(app, foreign.auth, (await createTaskSource(app, foreign.auth, 'Foreign source')).body.id, kompegeTextTask, 'foreign-task')).body.id }],
     }).expect(404);
 
-    await expect(database.db.update(variantVersions).set({ title: 'Mutated' }).where(eq(variantVersions.id, published.body.id))).rejects.toThrow(/immutable/i);
-    await expect(database.db.update(variantItems).set({ section: 'Mutated' }).where(eq(variantItems.variantVersionId, published.body.id))).rejects.toThrow(/immutable/i);
+    await expectDatabaseError(
+      database.db.update(variantVersions).set({ title: 'Mutated' }).where(eq(variantVersions.id, published.body.id)),
+      /immutable/i,
+    );
+    await expectDatabaseError(
+      database.db.update(variantItems).set({ section: 'Mutated' }).where(eq(variantItems.variantVersionId, published.body.id)),
+      /immutable/i,
+    );
     await request(app.getHttpServer()).post(`/v1/assessment/variants/${published.body.id}/publish`).set(primary.auth).expect(403);
 
     const edited = await request(app.getHttpServer()).patch(`/v1/assessment/variants/${published.body.id}`).set(primary.auth)

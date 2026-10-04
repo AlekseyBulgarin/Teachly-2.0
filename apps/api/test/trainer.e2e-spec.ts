@@ -12,6 +12,7 @@ import { IntegrationsService } from '../src/modules/integrations/integrations.se
 import type { IntegrationScope } from '../src/modules/integrations/integrations.types';
 import { TenancyService } from '../src/modules/tenancy/tenancy.service';
 import { resetTestDatabase, startTestApp, testDatabase } from './postgres-test';
+import { expectDatabaseError } from './database-error';
 
 jest.setTimeout(120_000);
 
@@ -135,8 +136,11 @@ describe('Trainer V1 (PostgreSQL)', () => {
     await request(app.getHttpServer()).post(`/v1/trainer/sessions/${created.body.id}/next`).set(auth).expect(409);
     await request(app.getHttpServer()).post(`/v1/trainer/sessions/${created.body.id}/submissions`).set(auth)
       .send({ itemId, idempotencyKey: 'after-complete', answer: { optionId: 'a' } }).expect(409);
-    await expect(database.db.update(theoryVersions).set({ content: { blocks: [{ type: 'paragraph', text: 'mutated' }] } })
-      .where(eq(theoryVersions.id, publishedTheory.version.id))).rejects.toThrow(/immutable/i);
+    await expectDatabaseError(
+      database.db.update(theoryVersions).set({ content: { blocks: [{ type: 'paragraph', text: 'mutated' }] } })
+        .where(eq(theoryVersions.id, publishedTheory.version.id)),
+      /immutable/i,
+    );
   });
 
   it('keeps trainer sessions and integration-bound external learners isolated by workspace', async () => {

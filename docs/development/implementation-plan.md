@@ -398,6 +398,28 @@ Do not queue answer evaluation, permission checks, simple progress updates, or o
 
 ## 14. Observability
 
+### Confirmed Product Direction
+
+Teachly will provide a unified metrics and analytics capability inspired by the core workflows of Prometheus and Grafana, while keeping the first delivery intentionally smaller and aligned with the modular monolith. This is a confirmed roadmap requirement, not a Stage 0 implementation task.
+
+The capability has two explicitly separated planes:
+
+1. **Operational observability:** request rate, errors, latency distributions, availability, database and dependency health, background-job health when jobs exist, rate-limit activity, AI provider latency/errors/token usage/cost, and release/deployment markers.
+2. **Product and learning analytics:** tenant-safe product adoption, activation and workflow funnels, assignments, attempts, completion and outcome trends, skill evidence, teacher engagement, AI usefulness, and other privacy-reviewed educational indicators.
+
+The target experience should reuse the most valuable Grafana/Prometheus interaction patterns without attempting to clone either product: time-range selection, filters and grouping, metric cards, time-series and distribution views, saved dashboards, drill-down from summary to evidence, threshold rules, and alerts. A curated default dashboard library is required so users do not need monitoring expertise to obtain value.
+
+Implementation must remain incremental:
+
+- define a versioned metric and event catalog, ownership, dimensions, units, retention, and access rules before collecting broad telemetry;
+- add bounded counters, gauges, and histograms at the API/module boundaries, with correlation IDs linking metrics, traces, logs, and audit records;
+- keep low-volume authoritative analytics facts and tenant-scoped derived read models in PostgreSQL first;
+- expose operational metrics through a Prometheus-compatible boundary when the first dashboards require it, then use Grafana or an equivalent compatible visualization/alerting layer if deployment and operating cost are justified;
+- build Teachly-native analytics screens over authorized API read models; the browser never queries infrastructure telemetry or cross-tenant data directly;
+- introduce dedicated time-series storage, long-term retention, workers, or streaming only after measured volume or reliability requirements prove that PostgreSQL and the initial collector are insufficient.
+
+Operational telemetry is never authoritative learning state. Analytics or monitoring failure must not fail an attempt, grading transaction, progress update, or other authoritative domain operation. Metric labels must avoid unbounded cardinality: raw user IDs, request IDs, free text, answers, prompts, and model responses are not metric dimensions.
+
 ### Initial Baseline
 
 - Structured application logs with level, timestamp, service/module, request/job ID, actor/tenant-safe identifiers, and outcome.
@@ -407,7 +429,7 @@ Do not queue answer evaluation, permission checks, simple progress updates, or o
 - Audit logs for membership, authorization-sensitive reads/actions, publication, moderation, assessment state, deletion, and AI data access.
 - Job status, duration, retry count, failure reason, and queue latency when workers exist.
 
-Do not log passwords, tokens, full sensitive answers, raw AI context, or unnecessary minor PII. Metrics should begin with request failures/latency, database health, job health, evaluation failures, import failures, and key product-loop events rather than a full observability platform.
+Do not log passwords, tokens, full sensitive answers, raw AI context, or unnecessary minor PII. Delivery starts with request failures/latency, database health, job health, evaluation failures, import failures, AI usage, and key product-loop events, then expands through the reviewed metric catalog rather than collecting every possible signal by default.
 
 ## 15. Testing Architecture
 

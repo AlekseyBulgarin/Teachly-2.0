@@ -12,6 +12,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { ApiErrorDto } from '../../common/api.dto';
+import { Throttle } from '@nestjs/throttler';
 import { MachineAuthenticated } from '../../common/machine-auth.decorator';
 import { CurrentRequestId, CurrentTenantContext } from '../../common/request-context';
 import { ApiKeyGuard } from '../integrations/api-key.guard';
@@ -32,6 +33,7 @@ export class PartnerRemediationController {
   constructor(private readonly remediations: PartnerRemediationService) {}
 
   @Post()
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
   @RequireIntegrationScopes('external_users:read', 'remediation:write')
   @ApiOperation({
     summary: 'Generate a grounded remediation for an attempt',

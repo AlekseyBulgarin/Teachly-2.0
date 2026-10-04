@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { DatabaseService } from '../../infrastructure/database/database';
 import { apiKeys, integrations, organizations, workspaces } from '../../infrastructure/database/schema';
 import { AuditService } from '../audit/audit.service';
@@ -7,7 +7,7 @@ import { TenancyService } from '../tenancy/tenancy.service';
 import { requireTenantContext } from '../core/core.access';
 import type { TenantContext } from '../core/core.types';
 import { apiKeyHashMatches, apiKeyPrefix, generateApiKey } from './api-key.crypto';
-import type { CreatedApiKey, IntegrationScope, IntegrationView } from './integrations.types';
+import type { ApiKeyMetadata, CreatedApiKey, IntegrationScope, IntegrationView } from './integrations.types';
 import { integrationScopes } from './integrations.types';
 
 @Injectable()
@@ -51,8 +51,9 @@ export class IntegrationsService {
         organizationId: input.organizationId,
         workspaceId: input.workspaceId,
         integrationId: input.integrationId,
+        prefix: apiKey.keyPrefix,
         scopes: input.scopes,
-      });
+      }, input.workspaceId);
       return {
         id: apiKey.id,
         organizationId: apiKey.organizationId,
@@ -66,6 +67,44 @@ export class IntegrationsService {
         secret: generated.secret,
       };
     });
+  }
+
+  async listApiKeys(context: TenantContext, limit = 50): Promise<ApiKeyMetadata[]> {
+    await this.requireActiveTenantContext(context);
+    const rows = await this.database.db.select().from(apiKeys).where(and(
+      eq(apiKeys.organizationId, context.organizationId),
+      eq(apiKeys.workspaceId, context.workspaceId),
+      eq(apiKeys.integrationId, context.integrationId),
+    )).orderBy(desc(apiKeys.createdAt), desc(apiKeys.id)).limit(Math.min(Math.max(limit, 1), 100));
+    return rows.map((row) => this.toApiKeyMetadata(row));
+  }
+
+  toApiKeyMetadata(row: {
+    id: string;
+    organizationId: string;
+    workspaceId: string;
+    integrationId: string;
+    name: string;
+    keyPrefix: string;
+    scopes: string[];
+    status: 'active' | 'revoked';
+    createdAt: Date;
+    lastUsedAt: Date | null;
+    revokedAt: Date | null;
+  }): ApiKeyMetadata {
+    return {
+      id: row.id,
+      organizationId: row.organizationId,
+      workspaceId: row.workspaceId,
+      integrationId: row.integrationId,
+      name: row.name,
+      keyPrefix: row.keyPrefix,
+      scopes: row.scopes as IntegrationScope[],
+      status: row.status,
+      createdAt: row.createdAt,
+      lastUsedAt: row.lastUsedAt,
+      revokedAt: row.revokedAt,
+    };
   }
 
   async authenticateApiKey(secret: string): Promise<TenantContext | null> {
@@ -104,8 +143,9 @@ export class IntegrationsService {
     };
   }
 
-  async revokeApiKey(context: TenantContext, apiKeyId: string): Promise<void> {
-    await this.database.transaction(async () => {
+  async revokeApiKey(context: TenantContext, apiKeyId: string): Promise<ApiKeyMetadata> {
+    await this.requireActiveTenantContext(context);
+    return this.database.transaction(async () => {
       const [revoked] = await this.database.db.update(apiKeys).set({ status: 'revoked', revokedAt: new Date() })
         .where(and(
           eq(apiKeys.id, apiKeyId),
@@ -113,13 +153,66 @@ export class IntegrationsService {
           eq(apiKeys.workspaceId, context.workspaceId),
           eq(apiKeys.integrationId, context.integrationId),
           eq(apiKeys.status, 'active'),
-        )).returning({ id: apiKeys.id });
+        )).returning();
       if (!revoked) throw new NotFoundException('Active API key not found');
       await this.audit.record(null, 'api_key_revoked', 'api_key', apiKeyId, {
         organizationId: context.organizationId,
         workspaceId: context.workspaceId,
         integrationId: context.integrationId,
-      });
+      }, context.workspaceId);
+      return this.toApiKeyMetadata(revoked);
+    });
+  }
+
+  async rotateApiKey(context: TenantContext, apiKeyId: string): Promise<CreatedApiKey> {
+    await this.requireActiveTenantContext(context);
+    return this.database.transaction(async () => {
+      const [oldKey] = await this.database.db.select().from(apiKeys).where(and(
+        eq(apiKeys.id, apiKeyId),
+        eq(apiKeys.organizationId, context.organizationId),
+        eq(apiKeys.workspaceId, context.workspaceId),
+        eq(apiKeys.integrationId, context.integrationId),
+        eq(apiKeys.status, 'active'),
+      )).for('update', { of: apiKeys }).limit(1);
+      if (!oldKey || oldKey.revokedAt) throw new NotFoundException('Active API key not found');
+
+      const generated = generateApiKey();
+      const [newKey] = await this.database.db.insert(apiKeys).values({
+        organizationId: oldKey.organizationId,
+        workspaceId: oldKey.workspaceId,
+        integrationId: oldKey.integrationId,
+        name: oldKey.name,
+        keyPrefix: generated.prefix,
+        keyHash: generated.hash,
+        scopes: oldKey.scopes,
+      }).returning();
+      if (!newKey) throw new Error('API key rotation failed');
+
+      const [revoked] = await this.database.db.update(apiKeys).set({
+        status: 'revoked',
+        revokedAt: new Date(),
+      }).where(and(eq(apiKeys.id, oldKey.id), eq(apiKeys.status, 'active'))).returning({ id: apiKeys.id });
+      if (!revoked) throw new NotFoundException('Active API key not found');
+
+      await this.audit.record(null, 'api_key_rotated', 'api_key', oldKey.id, {
+        oldApiKeyId: oldKey.id,
+        newApiKeyId: newKey.id,
+        prefix: newKey.keyPrefix,
+        integrationId: context.integrationId,
+        scopes: newKey.scopes,
+      }, context.workspaceId);
+      return {
+        id: newKey.id,
+        organizationId: newKey.organizationId,
+        workspaceId: newKey.workspaceId,
+        integrationId: newKey.integrationId,
+        name: newKey.name,
+        keyPrefix: newKey.keyPrefix,
+        scopes: newKey.scopes as IntegrationScope[],
+        status: 'active',
+        createdAt: newKey.createdAt,
+        secret: generated.secret,
+      };
     });
   }
 

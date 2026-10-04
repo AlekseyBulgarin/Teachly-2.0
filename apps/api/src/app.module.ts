@@ -18,10 +18,12 @@ import { TheoryModule } from './modules/theory/theory.module';
 import { TrainerModule } from './modules/trainer/trainer.module';
 import { WhiteboardModule } from './modules/whiteboard/whiteboard.module';
 import { LearnerIntelligenceModule } from './modules/learner-intelligence/learner-intelligence.module';
+import { SecurityModule } from './infrastructure/security/security.module';
 
 @Module({
   imports: [
     DatabaseModule,
+    SecurityModule,
     CoreModule,
     TaskBankModule,
     TheoryModule,

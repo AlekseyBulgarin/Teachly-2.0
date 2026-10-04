@@ -143,6 +143,8 @@ export async function seedDevelopmentFixtures(
         keyPrefix: seededApiKey.slice(0, seededApiKey.indexOf('.')),
         keyHash: hashApiKey(seededApiKey),
         scopes: [...demoApiKeyScopes],
+        status: 'active',
+        revokedAt: null,
       },
     });
     await tx.insert(externalUsers).values({
