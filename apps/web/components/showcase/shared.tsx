@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { ArrowRight, Check } from "lucide-react";
 import { StatusBadge } from "@/components/ui";
+import { capabilityRegistry, type CapabilityKey } from "@/lib/capabilities";
 import type { Locale } from "@/lib/i18n";
 
 export function shortId(value: string) {
@@ -29,7 +30,7 @@ export function ModuleCard({
   return (
     <Link
       href={path}
-      className="group flex min-h-[236px] flex-col rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 transition hover:-translate-y-1 hover:border-emerald-300/30 hover:bg-[var(--surface-raised)]"
+      className="card-lift group flex min-h-[236px] flex-col rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 transition hover:border-emerald-300/30 hover:bg-[var(--surface-raised)]"
     >
       <div className="flex items-start justify-between gap-2">
         <span className="flex size-12 items-center justify-center rounded-2xl bg-white/[.055] text-emerald-200">
@@ -159,9 +160,9 @@ const nextStep = {
       "Открыть профиль ученика",
     ],
     teacher: [
-      "Посмотреть основу для сигналов",
-      "Будущие инструменты преподавателя опираются на данные об учебном прогрессе.",
-      "Открыть интеллект обучения",
+      "Посмотреть общую учебную аналитику",
+      "Сигналы преподавателя становятся частью общей картины обучения для команды и руководителя.",
+      "Открыть аналитику",
     ],
     knowledge: [
       "Посмотреть AI в экосистеме",
@@ -196,9 +197,9 @@ const nextStep = {
       "Open learner profile",
     ],
     teacher: [
-      "See the signal foundation",
-      "Future teacher tools build on learning-progress context.",
-      "Open learning intelligence",
+      "Explore the complete learning picture",
+      "Teacher signals become part of the learning view for education teams and leaders.",
+      "Open analytics",
     ],
     knowledge: [
       "See AI in the ecosystem",
@@ -221,13 +222,13 @@ const nextStep = {
 export function EcosystemNextStep({
   locale,
   module,
-  href,
 }: {
   locale: Locale;
-  module: keyof typeof nextStep.ru;
-  href: string;
+  module: keyof typeof nextStep.ru & CapabilityKey;
 }) {
   const [title, detail, action] = nextStep[locale][module];
+  const next = capabilityRegistry[module].next;
+  const href = next ? capabilityRegistry[next].path : capabilityRegistry.ecosystem.path;
   return (
     <section className="rounded-3xl border border-emerald-300/15 bg-emerald-300/[.055] p-6 sm:p-8 lg:flex lg:items-center lg:justify-between lg:gap-8">
       <div className="max-w-2xl">

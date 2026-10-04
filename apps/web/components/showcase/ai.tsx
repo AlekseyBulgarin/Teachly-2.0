@@ -12,6 +12,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useEcosystem } from "@/lib/ecosystem-context";
+import { capabilityRegistry } from "@/lib/capabilities";
 import { PageHeader, SectionCard, StatusBadge } from "@/components/ui";
 import { EcosystemNextStep, PipelineStep } from "@/components/showcase/shared";
 import { QuickSectionNav } from "@/components/showcase/quick-section-nav";
@@ -25,7 +26,7 @@ export function AiPage() {
           eyebrow={t("ai.eyebrow")}
           title={t("ai.title")}
           description={t("ai.description")}
-          action={<StatusBadge status="LIVE" locale={locale} />}
+          action={<StatusBadge status={capabilityRegistry.ai.demoStatus} locale={locale} />}
         />
       </div>
       <QuickSectionNav
@@ -149,7 +150,7 @@ export function AiPage() {
           />
         </div>
       </SectionCard>
-      <EcosystemNextStep locale={locale} module="ai" href="/student-profile" />
+      <EcosystemNextStep locale={locale} module="ai" />
     </div>
   );
 }

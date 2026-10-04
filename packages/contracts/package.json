@@ -1,5 +1,20 @@
 {
   "name": "@teachly/contracts",
   "version": "0.1.0",
-  "private": true
+  "private": true,
+  "types": "./src/generated.ts",
+  "exports": {
+    ".": {
+      "types": "./src/generated.ts"
+    }
+  },
+  "scripts": {
+    "generate": "node scripts/generate-types.mjs",
+    "check": "node scripts/generate-types.mjs --check",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "openapi-typescript": "7.13.0",
+    "typescript": "5.7.2"
+  }
 }

@@ -1,6 +1,5 @@
 import request from 'supertest';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
 import { HttpExceptionFilter } from '../src/common/http-exception.filter';
@@ -9,6 +8,7 @@ import { externalIdentities, taskVersions, users } from '../src/infrastructure/d
 import { fixtureIds } from '../src/infrastructure/database/seed';
 import { resetTestDatabase, startTestApp, testDatabase } from './postgres-test';
 import { requestIdMiddleware } from '../src/common/request-id.middleware';
+import { createOpenApiDocument } from '../src/openapi';
 
 jest.setTimeout(120_000);
 
@@ -41,9 +41,11 @@ describe('teacher to student vertical slice (PostgreSQL)', () => {
   }
 
   it('authenticates, assigns, evaluates, replays, and lets the managing teacher review', async () => {
-    const openApi = SwaggerModule.createDocument(app, new DocumentBuilder().setTitle('Teachly API').setVersion('0.1.0').build());
+    const openApi = createOpenApiDocument(app);
     const schemas = openApi.components?.schemas as Record<string, { properties?: Record<string, unknown> }>;
     expect(openApi.paths['/attempts/{attemptId}/submissions']?.post?.responses?.['201']).toBeDefined();
+    expect(openApi.paths['/health']?.get?.responses?.['200']).toBeDefined();
+    expect(schemas.HealthStatusDto?.properties).toMatchObject({ status: expect.any(Object), database: expect.any(Object) });
     expect(schemas.SubmitAnswerDto).toBeDefined();
     expect(schemas.SubmitAnswerResponseDto).toBeDefined();
     expect(schemas.TaskContentDto?.properties).not.toHaveProperty('correctOptionId');

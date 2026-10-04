@@ -14,6 +14,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useEcosystem } from "@/lib/ecosystem-context";
+import { capabilityRegistry, type CapabilityPageKey } from "@/lib/capabilities";
 import {
   IconCard,
   PageHeader,
@@ -24,14 +25,6 @@ import { PipelineStep } from "@/components/showcase/shared";
 import { QuickSectionNav } from "@/components/showcase/quick-section-nav";
 import { ModuleDemoSection } from "@/components/showcase/module-demo";
 
-type CapabilityKey =
-  | "tasks"
-  | "variants"
-  | "theory"
-  | "trainer"
-  | "whiteboard"
-  | "student-profile"
-  | "progress";
 type CapabilityCopy = {
   eyebrow: string;
   title: string;
@@ -44,11 +37,9 @@ type CapabilityCopy = {
   ecosystem: string;
   next: string;
   nextAction: string;
-  nextHref: string;
-  status: "LIVE" | "COMING NEXT" | "PLANNED";
 };
 
-const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
+const copy: Record<"ru" | "en", Record<CapabilityPageKey, CapabilityCopy>> = {
   ru: {
     tasks: {
       eyebrow: "База заданий",
@@ -76,8 +67,6 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "База заданий запускает связанную цепочку: попытка, прогресс, AI-помощь и сигнал преподавателю.",
       next: "Посмотрите, как один учебный материал становится понятной теорией.",
       nextAction: "Открыть теорию",
-      nextHref: "/theory",
-      status: "LIVE",
     },
     variants: {
       eyebrow: "Варианты",
@@ -105,8 +94,6 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "Варианты работают не отдельно: их результаты пополняют профиль ученика и картину прогресса.",
       next: "Посмотрите, как Teachly показывает прогресс после практики.",
       nextAction: "Открыть прогресс",
-      nextHref: "/progress",
-      status: "PLANNED",
     },
     theory: {
       eyebrow: "Теория",
@@ -134,8 +121,6 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "Теория делает помощь Teachly связанной с образовательной логикой, а не случайной подсказкой.",
       next: "Посмотрите, как образовательный AI использует этот контекст.",
       nextAction: "Открыть AI",
-      nextHref: "/ai",
-      status: "LIVE",
     },
     trainer: {
       eyebrow: "Тренажёр",
@@ -163,8 +148,6 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "Тренажёр использует общее ядро Teachly, поэтому опыт ученика связан с прогрессом и AI.",
       next: "Посмотрите, как Teachly помогает понять учебный результат.",
       nextAction: "Открыть прогресс",
-      nextHref: "/progress",
-      status: "LIVE",
     },
     whiteboard: {
       eyebrow: "Онлайн-доска",
@@ -192,8 +175,6 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "Онлайн-доска дополняет обучение, не становясь отдельным несвязанным инструментом.",
       next: "Посмотрите платформу, которая объединяет модули.",
       nextAction: "Открыть платформу",
-      nextHref: "/platform",
-      status: "LIVE",
     },
     "student-profile": {
       eyebrow: "Профиль ученика",
@@ -221,8 +202,6 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "Профиль соединяет практику, прогресс и AI, чтобы каждый модуль видел одну учебную историю.",
       next: "Посмотрите, как Teachly показывает движение в обучении.",
       nextAction: "Открыть прогресс",
-      nextHref: "/progress",
-      status: "LIVE",
     },
     progress: {
       eyebrow: "Прогресс",
@@ -250,8 +229,6 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "Прогресс — общий язык между практикой, профилем ученика, AI и аналитикой Teachly.",
       next: "Посмотрите, как AI использует учебный контекст.",
       nextAction: "Открыть AI",
-      nextHref: "/ai",
-      status: "LIVE",
     },
   },
   en: {
@@ -281,8 +258,6 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "The task bank starts a connected chain: attempt, progress, AI assistance and a teacher signal.",
       next: "See how learning material becomes clear theory.",
       nextAction: "Open theory",
-      nextHref: "/theory",
-      status: "LIVE",
     },
     variants: {
       eyebrow: "Variants",
@@ -310,8 +285,6 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "Variants are not isolated: their results feed the learner profile and the progress picture.",
       next: "See how Teachly presents progress after practice.",
       nextAction: "Open progress",
-      nextHref: "/progress",
-      status: "PLANNED",
     },
     theory: {
       eyebrow: "Theory",
@@ -339,8 +312,6 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "Theory makes Teachly help follow educational logic rather than become a random hint.",
       next: "See how Educational AI uses this context.",
       nextAction: "Open AI",
-      nextHref: "/ai",
-      status: "LIVE",
     },
     trainer: {
       eyebrow: "Trainer",
@@ -368,8 +339,6 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "The trainer uses the shared Teachly core, so learner experience connects to progress and AI.",
       next: "See how Teachly makes a learning outcome easier to understand.",
       nextAction: "Open progress",
-      nextHref: "/progress",
-      status: "LIVE",
     },
     whiteboard: {
       eyebrow: "Whiteboard",
@@ -397,8 +366,6 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "The whiteboard complements learning without becoming another disconnected tool.",
       next: "See the platform that connects the modules.",
       nextAction: "Open platform",
-      nextHref: "/platform",
-      status: "LIVE",
     },
     "student-profile": {
       eyebrow: "Learner profile",
@@ -426,8 +393,6 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "The profile connects practice, progress and AI so every module can see one learning story.",
       next: "See how Teachly presents learning movement.",
       nextAction: "Open progress",
-      nextHref: "/progress",
-      status: "LIVE",
     },
     progress: {
       eyebrow: "Progress",
@@ -455,13 +420,11 @@ const copy: Record<"ru" | "en", Record<CapabilityKey, CapabilityCopy>> = {
         "Progress is the shared language between practice, learner profile, AI and Teachly analytics.",
       next: "See how AI uses learning context.",
       nextAction: "Open AI",
-      nextHref: "/ai",
-      status: "LIVE",
     },
   },
 };
 
-const icons: Record<CapabilityKey, LucideIcon> = {
+const icons: Record<CapabilityPageKey, LucideIcon> = {
   tasks: ListChecks,
   variants: PanelsTopLeft,
   theory: BookOpen,
@@ -471,9 +434,11 @@ const icons: Record<CapabilityKey, LucideIcon> = {
   progress: Activity,
 };
 
-export function CapabilityPage({ capability, demo }: { capability: CapabilityKey; demo?: ReactNode }) {
+export function CapabilityPage({ capability, demo }: { capability: CapabilityPageKey; demo?: ReactNode }) {
   const { locale, t } = useEcosystem();
   const item = copy[locale][capability];
+  const definition = capabilityRegistry[capability];
+  const next = definition.next ? capabilityRegistry[definition.next] : capabilityRegistry.ecosystem;
   const Icon = icons[capability];
   const base =
     locale === "ru"
@@ -499,7 +464,7 @@ export function CapabilityPage({ capability, demo }: { capability: CapabilityKey
           eyebrow={item.eyebrow}
           title={item.title}
           description={item.description}
-          action={<StatusBadge status={item.status} locale={locale} />}
+          action={<StatusBadge status={definition.demoStatus} locale={locale} />}
         />
       </div>
       <QuickSectionNav items={nav} />
@@ -572,7 +537,7 @@ export function CapabilityPage({ capability, demo }: { capability: CapabilityKey
           </h2>
         </div>
         <Link
-          href={item.nextHref}
+          href={next.path}
           className="interactive mt-6 inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-100 px-5 py-3.5 text-sm font-semibold text-slate-950 hover:bg-white lg:mt-0"
         >
           {item.nextAction}

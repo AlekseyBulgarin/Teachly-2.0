@@ -8,6 +8,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import { useEcosystem } from "@/lib/ecosystem-context";
+import { capabilityRegistry } from "@/lib/capabilities";
 import {
   IconCard,
   PageHeader,
@@ -26,7 +27,7 @@ export function PlatformPage() {
           eyebrow={t("platform.eyebrow")}
           title={t("platform.title")}
           description={t("platform.description")}
-          action={<StatusBadge status="LIVE" locale={locale} />}
+          action={<StatusBadge status={capabilityRegistry.platform.demoStatus} locale={locale} />}
         />
       </div>
       <QuickSectionNav
@@ -92,7 +93,7 @@ export function PlatformPage() {
           title={t("platform.connection")}
           detail={t("platform.connectionDetail")}
           icon={Network}
-          action={<StatusBadge status="LIVE" locale={locale} />}
+          action={<StatusBadge status={capabilityRegistry.platform.demoStatus} locale={locale} />}
         >
           <div className="grid gap-4 p-5 sm:grid-cols-3 sm:p-7">
             <Stat label={t("platform.customer")} value={t("platform.customerDetail")} />
@@ -101,7 +102,7 @@ export function PlatformPage() {
           </div>
         </SectionCard>
       </div>
-      <EcosystemNextStep locale={locale} module="platform" href="/tasks" />
+      <EcosystemNextStep locale={locale} module="platform" />
     </div>
   );
 }

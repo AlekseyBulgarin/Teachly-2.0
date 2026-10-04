@@ -548,6 +548,8 @@ Run tenant/guardian/teacher authorization tests, task replay tests, import/prove
 
 ## 20. Phase 1 Coding Scope
 
+The active post-hardening delivery scope is maintained in `docs/development/stage-1-showcase-plan.md`. It reflects the capabilities already implemented in the repository and supersedes using the historical bootstrap sequence below as a literal current task list. The approved self-hostable monitoring work is specified separately in `docs/development/stage-2-observability-plan.md`.
+
 ### Must Build
 
 - repository/tooling foundation;

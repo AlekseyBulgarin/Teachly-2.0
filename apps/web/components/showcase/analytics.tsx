@@ -4,6 +4,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import { useEcosystem } from "@/lib/ecosystem-context";
+import { capabilityRegistry } from "@/lib/capabilities";
 import { PageHeader, StatusBadge } from "@/components/ui";
 import { EcosystemNextStep } from "@/components/showcase/shared";
 import { QuickSectionNav } from "@/components/showcase/quick-section-nav";
@@ -17,7 +18,7 @@ export function AnalyticsPage() {
           eyebrow={t("analytics.eyebrow")}
           title={t("analytics.title")}
           description={t("analytics.description")}
-          action={<StatusBadge status="PLANNED" locale={locale} />}
+          action={<StatusBadge status={capabilityRegistry.analytics.demoStatus} locale={locale} />}
         />
       </div>
       <QuickSectionNav
@@ -60,7 +61,7 @@ export function AnalyticsPage() {
           />
         </div>
       </section>
-      <EcosystemNextStep locale={locale} module="analytics" href="/ecosystem" />
+      <EcosystemNextStep locale={locale} module="analytics" />
     </div>
   );
 }
