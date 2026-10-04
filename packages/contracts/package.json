@@ -2,19 +2,26 @@
   "name": "@teachly/contracts",
   "version": "0.1.0",
   "private": true,
-  "types": "./src/generated.ts",
+  "types": "./src/index.ts",
   "exports": {
     ".": {
-      "types": "./src/generated.ts"
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
     }
   },
   "scripts": {
     "generate": "node scripts/generate-types.mjs",
     "check": "node scripts/generate-types.mjs --check",
+    "test": "tsx --test src/*.test.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
+    "@types/node": "22.10.2",
     "openapi-typescript": "7.13.0",
+    "tsx": "4.19.2",
     "typescript": "5.7.2"
+  },
+  "dependencies": {
+    "openapi-fetch": "0.17.0"
   }
 }

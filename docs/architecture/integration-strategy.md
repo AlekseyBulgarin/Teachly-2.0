@@ -8,13 +8,18 @@ Teachly should eventually operate as both a standalone application and a platfor
 
 - **Internal module interfaces:** application services used within the monolith; can evolve with the codebase.
 - **Application REST API:** supports Teachly's own web clients and may later expose selected stable operations.
-- **Public integration API:** future versioned contract with external credentials, scopes, quotas, and tenant mapping.
+- **Public integration API:** `/v1` pilot contract with workspace credentials, scopes, quotas, tenant mapping, generated types, and a typed example client.
 - **Webhooks:** future outbound notifications for durable domain facts, signed and replay-protected.
 - **Identity integration:** future SSO and external-user mapping; must not make an external ID the only Teachly identity.
 
-## Future Capabilities
+## Current Pilot Capabilities
 
-- REST/OpenAPI resource access;
+- reviewed REST/OpenAPI contracts and generated TypeScript types/client;
+- external learner synchronization, assessment, theory, trainer, learner-intelligence, remediation, and API-key lifecycle operations;
+- stable error, pagination, idempotency, quota, scope, and compatibility rules documented in `docs/api/v1-policy.md`;
+
+## Deferred Capabilities
+
 - webhooks for assignment, attempt, assessment, and result changes;
 - SSO and external identity mapping;
 - content import/export contracts;
@@ -32,4 +37,4 @@ Teachly should eventually operate as both a standalone application and a platfor
 
 ## Rollout
 
-Do not implement public integration APIs in MVP. First validate internal workflows, identify stable resource boundaries, then run one narrow integration pilot before committing to broad SDK or webhook surface area.
+Run one narrow integration pilot through `/v1` and the example consumer before committing to a broad SDK, webhook, or embeddable surface. Keep those additions behind evidence from real delivery, retry, authentication, and user-interface boundaries.

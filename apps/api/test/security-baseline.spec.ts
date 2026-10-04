@@ -17,6 +17,12 @@ class SecurityTestController {
   healthLike() {
     return { ok: true };
   }
+
+  @Get('v1/versioned')
+  @SkipThrottle()
+  versioned() {
+    return { ok: true };
+  }
 }
 
 @Module({
@@ -48,6 +54,27 @@ describe('HTTP security baseline', () => {
     const limited = await request(app.getHttpServer()).get('/limited').expect(429);
     expect(limited.body).toMatchObject({ statusCode: 429, code: 'TOO_MANY_REQUESTS' });
     expect(limited.body.requestId).toEqual(expect.any(String));
+  });
+
+  it('marks versioned responses and echoes the caller request id', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/v1/versioned')
+      .set('x-request-id', 'partner-request-123')
+      .expect(200);
+
+    expect(response.headers['x-request-id']).toBe('partner-request-123');
+    expect(response.headers['x-teachly-api-version']).toBe('1');
+  });
+
+  it('replaces an oversized request id instead of reflecting it', async () => {
+    const oversized = 'x'.repeat(201);
+    const response = await request(app.getHttpServer())
+      .get('/v1/versioned')
+      .set('x-request-id', oversized)
+      .expect(200);
+
+    expect(response.headers['x-request-id']).not.toBe(oversized);
+    expect(response.headers['x-request-id']).toEqual(expect.any(String));
   });
 
   it('allows health endpoints to opt out of throttling', async () => {

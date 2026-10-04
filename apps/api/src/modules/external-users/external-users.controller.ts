@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query, UseGuards } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiCreatedResponse,
@@ -16,7 +16,7 @@ import { CurrentTenantContext } from '../../common/request-context';
 import { ApiKeyGuard } from '../integrations/api-key.guard';
 import type { TenantContext } from '../core/core.types';
 import { RequireIntegrationScopes } from '../integrations/scope.decorator';
-import { ExternalUserResponseDto, UpsertExternalUserDto } from './external-users.dto';
+import { ExternalUserResponseDto, ListExternalUsersDto, UpsertExternalUserDto } from './external-users.dto';
 import { ExternalUsersService } from './external-users.service';
 
 @ApiTags('external-users')
@@ -54,8 +54,14 @@ export class ExternalUsersController {
 
   @Get()
   @RequireIntegrationScopes('external_users:read')
-  @ApiOkResponse({ type: [ExternalUserResponseDto] })
-  async list(@CurrentTenantContext() context: TenantContext): Promise<ExternalUserResponseDto[]> {
-    return (await this.externalUsers.list(context)).map(ExternalUserResponseDto.from);
+  @ApiOkResponse({
+    type: [ExternalUserResponseDto],
+    description: 'Newest integration-scoped external users, bounded by limit (maximum 100).',
+  })
+  async list(
+    @CurrentTenantContext() context: TenantContext,
+    @Query() query: ListExternalUsersDto,
+  ): Promise<ExternalUserResponseDto[]> {
+    return (await this.externalUsers.list(context, query.limit)).map(ExternalUserResponseDto.from);
   }
 }
