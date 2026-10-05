@@ -83,3 +83,17 @@ test("desktop sidebar does not overlap content", async ({ page }, testInfo) => {
   expect(layout).not.toBeNull();
   expect(layout!.mainLeft).toBeGreaterThanOrEqual(layout!.asideRight - 1);
 });
+
+test("production responses include the security baseline", async ({ request }) => {
+  const response = await request.get("/ecosystem");
+  expect(response.ok()).toBeTruthy();
+  const headers = response.headers();
+  expect(headers["content-security-policy"]).toContain("default-src 'self'");
+  expect(headers["content-security-policy"]).toContain("frame-ancestors 'none'");
+  expect(headers["permissions-policy"]).toContain("camera=()");
+  expect(headers["referrer-policy"]).toBe("strict-origin-when-cross-origin");
+  expect(headers["strict-transport-security"]).toContain("max-age=63072000");
+  expect(headers["x-content-type-options"]).toBe("nosniff");
+  expect(headers["x-frame-options"]).toBe("DENY");
+  expect(headers["x-powered-by"]).toBeUndefined();
+});

@@ -1,6 +1,6 @@
 import { config as loadDotenv } from 'dotenv';
 import { plainToInstance } from 'class-transformer';
-import { IsIn, IsNotEmpty, IsOptional, IsString, Matches, validateSync } from 'class-validator';
+import { IsIn, IsNotEmpty, IsOptional, IsString, Matches, MinLength, validateSync } from 'class-validator';
 import { resolve } from 'node:path';
 
 loadDotenv({
@@ -26,6 +26,11 @@ class EnvironmentSchema {
   @IsOptional()
   @Matches(/^\d+$/)
   PORT?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(32)
+  METRICS_TOKEN?: string;
 }
 
 export function isProduction(): boolean {
@@ -39,12 +44,13 @@ export function developmentAuthEnabled(): boolean {
 export function requiredEnvironment(env: NodeJS.ProcessEnv = process.env): void {
   const config = plainToInstance(EnvironmentSchema, {
     NODE_ENV: env.NODE_ENV, DEV_AUTH_ENABLED: env.DEV_AUTH_ENABLED,
-    DATABASE_URL: env.DATABASE_URL, PORT: env.PORT,
+    DATABASE_URL: env.DATABASE_URL, PORT: env.PORT, METRICS_TOKEN: env.METRICS_TOKEN,
   });
   const errors = validateSync(config, { skipMissingProperties: false });
   if (errors.length > 0) throw new Error(`Invalid environment: ${errors.map((error) => error.property).join(', ')}`);
   if (env.DEV_AUTH_ENABLED === 'true' && env.NODE_ENV === 'production') throw new Error('Development authentication cannot be enabled in production');
   if (env.NODE_ENV === 'production' && !env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY is required in production');
+  if (env.NODE_ENV === 'production' && !env.METRICS_TOKEN) throw new Error('METRICS_TOKEN is required in production');
   try {
     const url = new URL(config.DATABASE_URL);
     if (!['postgres:', 'postgresql:'].includes(url.protocol) || !url.hostname || !url.pathname.slice(1)) throw new Error();

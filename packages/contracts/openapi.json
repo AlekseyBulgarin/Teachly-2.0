@@ -1014,6 +1014,20 @@
         ],
         "type": "object"
       },
+      "HealthLivenessDto": {
+        "properties": {
+          "status": {
+            "enum": [
+              "ok"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "type": "object"
+      },
       "HealthStatusDto": {
         "properties": {
           "database": {
@@ -2510,6 +2524,12 @@
       }
     },
     "securitySchemes": {
+      "metrics-token": {
+        "bearerFormat": "Metrics token",
+        "description": "Dedicated token for Prometheus-compatible metrics scraping.",
+        "scheme": "bearer",
+        "type": "http"
+      },
       "workspace-api-key": {
         "bearerFormat": "Teachly workspace API key",
         "description": "Workspace-scoped API key. Never expose it in browser code.",
@@ -2758,6 +2778,87 @@
             "description": "The database availability check failed."
           }
         },
+        "tags": [
+          "operations"
+        ]
+      }
+    },
+    "/health/live": {
+      "get": {
+        "operationId": "HealthController_live",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthLivenessDto"
+                }
+              }
+            },
+            "description": "The API process is accepting requests."
+          }
+        },
+        "tags": [
+          "operations"
+        ]
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "operationId": "HealthController_ready",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthStatusDto"
+                }
+              }
+            },
+            "description": "The API process and database are available."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthUnavailableDto"
+                }
+              }
+            },
+            "description": "The database availability check failed."
+          }
+        },
+        "tags": [
+          "operations"
+        ]
+      }
+    },
+    "/metrics": {
+      "get": {
+        "operationId": "MetricsController_read",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Prometheus text exposition for the API process."
+          },
+          "401": {
+            "description": "The metrics bearer token is missing or invalid."
+          }
+        },
+        "security": [
+          {
+            "metrics-token": []
+          }
+        ],
         "tags": [
           "operations"
         ]

@@ -12,6 +12,12 @@ export function createOpenApiDocument(app: INestApplication): OpenAPIObject {
       bearerFormat: 'Teachly workspace API key',
       description: 'Workspace-scoped API key. Never expose it in browser code.',
     }, 'workspace-api-key')
+    .addBearerAuth({
+      type: 'http',
+      scheme: 'bearer',
+      bearerFormat: 'Metrics token',
+      description: 'Dedicated token for Prometheus-compatible metrics scraping.',
+    }, 'metrics-token')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
