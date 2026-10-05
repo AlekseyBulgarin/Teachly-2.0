@@ -81,6 +81,8 @@ describe('B2B external users API (PostgreSQL)', () => {
     expect(bounded.body).toHaveLength(1);
     await request(app.getHttpServer()).get('/v1/external-users')
       .set(auth).query({ limit: 101 }).expect(400);
+    await request(app.getHttpServer()).get('/v1/knowledge/status')
+      .set(auth).query({ limit: 101 }).expect(400);
 
     await request(app.getHttpServer()).get(`/v1/external-users/${created.body.id}`).set(auth).expect(200);
     const otherAuth = { Authorization: `Bearer ${other.key.secret}` };

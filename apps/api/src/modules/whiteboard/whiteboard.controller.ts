@@ -13,6 +13,7 @@ import {
   SaveWhiteboardStateDto,
   UpdateWhiteboardDto,
   WhiteboardListQueryDto,
+  WhiteboardResourceListQueryDto,
   WhiteboardResponseDto,
   WhiteboardResourceResponseDto,
   WhiteboardSaveStateResponseDto,
@@ -96,8 +97,12 @@ export class WhiteboardController {
   @ApiOperation({ summary: 'List optional published resource links attached to a whiteboard' })
   @ApiOkResponse({ type: [WhiteboardResourceResponseDto] })
   @ApiNotFoundResponse({ type: ApiErrorDto })
-  listResources(@Param('boardId', ParseUUIDPipe) boardId: string, @OptionalTenantContext() tenant: TenantContext) {
-    return this.whiteboard.listResources(tenant, boardId);
+  listResources(
+    @Param('boardId', ParseUUIDPipe) boardId: string,
+    @Query() query: WhiteboardResourceListQueryDto,
+    @OptionalTenantContext() tenant: TenantContext,
+  ) {
+    return this.whiteboard.listResources(tenant, boardId, query.limit);
   }
 
   @Post(':boardId/resources')

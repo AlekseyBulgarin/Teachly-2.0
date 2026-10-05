@@ -1,4 +1,16 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsInt, IsOptional, Max, Min } from 'class-validator';
+
+export class KnowledgeStatusQueryDto {
+  @ApiPropertyOptional({ type: Number, minimum: 1, maximum: 100, default: 50 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit = 50;
+}
 
 export class KnowledgeStatusResponseDto {
   @ApiProperty({ format: 'uuid' }) sourceId!: string;

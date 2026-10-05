@@ -3101,6 +3101,17 @@
             }
           },
           {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
             "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
@@ -5246,6 +5257,17 @@
         "operationId": "KnowledgeController_status",
         "parameters": [
           {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
             "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
@@ -7005,6 +7027,17 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "number"
             }
           },
           {

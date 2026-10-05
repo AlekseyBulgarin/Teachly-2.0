@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDateString, IsIn, IsInt, IsObject, IsOptional, IsString, IsUUID, MaxLength, MinLength, Min } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsDateString, IsIn, IsInt, IsObject, IsOptional, IsString, IsUUID, Max, MaxLength, MinLength, Min } from 'class-validator';
 import type { CurriculumMappingType } from './task-bank.types';
 
 export class CreateTaskSourceDto {
@@ -33,7 +34,8 @@ export class UpdateDraftDto {
 
 export class TaskBankListQueryDto {
   @ApiPropertyOptional({ format: 'uuid' }) @IsOptional() @IsUUID() workspaceId?: string;
-  @ApiPropertyOptional({ default: 50, minimum: 1, maximum: 100 }) @IsOptional() limit?: number;
+  @ApiPropertyOptional({ type: Number, default: 50, minimum: 1, maximum: 100 })
+  @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(100) limit = 50;
 }
 
 export class CreateCurriculumMappingDto {
@@ -50,6 +52,8 @@ export class CreateCurriculumMappingDto {
 export class CurriculumMappingQueryDto {
   @ApiPropertyOptional({ format: 'uuid' }) @IsOptional() @IsUUID() workspaceId?: string;
   @ApiPropertyOptional({ format: 'uuid' }) @IsOptional() @IsUUID() taskSourceId?: string;
+  @ApiPropertyOptional({ type: Number, default: 50, minimum: 1, maximum: 100 })
+  @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(100) limit = 50;
 }
 
 export class ExternalResultObservationDto {

@@ -71,9 +71,12 @@ export class TaskBankService {
     return this.toSourceView(source);
   }
 
-  async listSources(auth: TaskBankAuthContext, workspaceId?: string) {
+  async listSources(auth: TaskBankAuthContext, workspaceId?: string, limit = 50) {
     const workspace = await this.resolveReadWorkspace(auth, workspaceId);
-    const rows = await this.database.db.select().from(taskSources).where(eq(taskSources.workspaceId, workspace));
+    const rows = await this.database.db.select().from(taskSources)
+      .where(eq(taskSources.workspaceId, workspace))
+      .orderBy(desc(taskSources.createdAt), desc(taskSources.id))
+      .limit(Math.min(Math.max(limit, 1), 100));
     return rows.map((source) => this.toSourceView(source));
   }
 
@@ -114,7 +117,12 @@ export class TaskBankService {
     return this.toMappingView(mapping);
   }
 
-  async listCurriculumMappings(auth: TaskBankAuthContext, workspaceId?: string, taskSourceId?: string) {
+  async listCurriculumMappings(
+    auth: TaskBankAuthContext,
+    workspaceId?: string,
+    taskSourceId?: string,
+    limit = 50,
+  ) {
     const workspace = await this.resolveReadWorkspace(auth, workspaceId);
     if (taskSourceId) {
       const source = await this.requireSource(taskSourceId);
@@ -124,7 +132,8 @@ export class TaskBankService {
     const rows = await this.database.db.select().from(taskCurriculumMappings).where(and(
       eq(taskCurriculumMappings.workspaceId, workspace),
       taskSourceId ? eq(taskCurriculumMappings.taskSourceId, taskSourceId) : undefined,
-    ));
+    )).orderBy(desc(taskCurriculumMappings.createdAt), desc(taskCurriculumMappings.id))
+      .limit(Math.min(Math.max(limit, 1), 100));
     return rows.map((mapping) => this.toMappingView(mapping));
   }
 

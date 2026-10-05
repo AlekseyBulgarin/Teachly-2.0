@@ -85,6 +85,8 @@ describe('Assessment Variants V1 (PostgreSQL)', () => {
     const read = await request(app.getHttpServer()).get(`/v1/assessment/variants/${published.body.id}`).set(primary.auth).expect(200);
     expect(read.body.items.map((item: { position: number }) => item.position)).toEqual([0, 1]);
     expect(JSON.stringify(read.body)).not.toMatch(/correctOptionId|answerSchema|"answer"/);
+    await request(app.getHttpServer()).get('/v1/assessment/variants')
+      .set(primary.auth).query({ limit: 101 }).expect(400);
 
     const unresolved = await request(app.getHttpServer()).post('/v1/assessment/variants').set(primary.auth).send({
       taskSourceId: source.body.id,

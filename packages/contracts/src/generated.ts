@@ -2243,6 +2243,7 @@ export interface operations {
     readonly TaskBankController_listCurriculumMappings: {
         readonly parameters: {
             readonly query?: {
+                readonly limit?: number;
                 readonly taskSourceId?: string;
                 readonly workspaceId?: string;
             };
@@ -3783,7 +3784,9 @@ export interface operations {
     };
     readonly KnowledgeController_status: {
         readonly parameters: {
-            readonly query?: never;
+            readonly query?: {
+                readonly limit?: number;
+            };
             readonly header?: {
                 /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
                 readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
@@ -4957,7 +4960,9 @@ export interface operations {
     };
     readonly WhiteboardController_listResources: {
         readonly parameters: {
-            readonly query?: never;
+            readonly query?: {
+                readonly limit?: number;
+            };
             readonly header?: {
                 /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
                 readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];

@@ -32,7 +32,8 @@ export class UpdateVariantDraftDto {
 
 export class VariantListQueryDto {
   @ApiPropertyOptional({ format: 'uuid' }) @IsOptional() @IsUUID() workspaceId?: string;
-  @ApiPropertyOptional({ default: 50, minimum: 1, maximum: 100 }) @IsOptional() @IsInt() @Min(1) @Max(100) limit?: number;
+  @ApiPropertyOptional({ type: Number, default: 50, minimum: 1, maximum: 100 })
+  @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(100) limit = 50;
 }
 
 export class VariantItemResponseDto {
