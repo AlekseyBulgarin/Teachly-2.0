@@ -6,7 +6,8 @@ Teachly is a teacher-first educational operating system. This repository current
 
 - `apps/api`: NestJS modular monolith backend.
 - `apps/web`: Next.js Teachly Ecosystem presentation site and live reference client.
-- `packages/contracts`: reserved for generated API contracts.
+- `packages/contracts`: generated OpenAPI contracts and the typed pilot client.
+- `examples/teachly-consumer`: minimal server-side integration consumer.
 - `database`: migrations and development fixture references.
 - `docs`: product, architecture, and development decisions.
 
@@ -76,6 +77,16 @@ corepack pnpm build
 corepack pnpm test:unit
 corepack pnpm test
 ```
+
+Verify the generated integration contract and example consumer with:
+
+```text
+corepack pnpm contracts:check
+corepack pnpm --filter @teachly/contracts test
+corepack pnpm --filter @teachly/example-consumer check
+```
+
+The integration quickstart is in `docs/integrations/quickstart.md`; `/v1` compatibility and protocol rules are in `docs/api/v1-policy.md`.
 
 Unit tests do not need PostgreSQL:
 

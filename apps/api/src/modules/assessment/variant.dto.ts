@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsArray, IsBoolean, IsInt, IsObject, IsOptional, IsString, IsUUID, MaxLength, Min, MinLength, ValidateNested } from 'class-validator';
+import { IsArray, IsBoolean, IsInt, IsObject, IsOptional, IsString, IsUUID, Max, MaxLength, Min, MinLength, ValidateNested } from 'class-validator';
 
 export class VariantItemDto {
   @ApiPropertyOptional() @IsOptional() @IsString() @MinLength(1) @MaxLength(200) externalTaskId?: string;
@@ -32,7 +32,7 @@ export class UpdateVariantDraftDto {
 
 export class VariantListQueryDto {
   @ApiPropertyOptional({ format: 'uuid' }) @IsOptional() @IsUUID() workspaceId?: string;
-  @ApiPropertyOptional({ default: 50 }) @IsOptional() @IsInt() @Min(1) limit?: number;
+  @ApiPropertyOptional({ default: 50, minimum: 1, maximum: 100 }) @IsOptional() @IsInt() @Min(1) @Max(100) limit?: number;
 }
 
 export class VariantItemResponseDto {

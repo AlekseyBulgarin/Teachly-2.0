@@ -1,6 +1,7 @@
 packages:
   - apps/*
   - packages/*
+  - examples/*
 
 overrides:
   js-yaml: 5.4.1
