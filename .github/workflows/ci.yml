@@ -16,16 +16,12 @@ jobs:
   api-static:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/setup@v3
         with:
-          version: 12.6.0
-          run_install: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+          runtime: node@24
+          cache: true
+          require-lockfile: true
       - run: pnpm --filter @teachly/api typecheck
       - run: pnpm --filter @teachly/api lint
       - run: pnpm --filter @teachly/api build
@@ -37,18 +33,13 @@ jobs:
     env:
       ALLOW_TEST_DB_RESET: "true"
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/setup@v3
         with:
-          version: 12.6.0
-          run_install: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @teachly/api test:integration
-      - run: pnpm --filter @teachly/api test:e2e
+          runtime: node@24
+          cache: true
+          require-lockfile: true
+      - run: pnpm --filter @teachly/api test:database
       - name: Verify generated migrations are committed
         run: |
           pnpm db:generate
@@ -61,16 +52,12 @@ jobs:
   contracts:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/setup@v3
         with:
-          version: 12.6.0
-          run_install: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+          runtime: node@24
+          cache: true
+          require-lockfile: true
       - run: pnpm contracts:check
       - run: pnpm --filter @teachly/contracts typecheck
       - run: pnpm --filter @teachly/contracts test
@@ -79,16 +66,12 @@ jobs:
   web:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/setup@v3
         with:
-          version: 12.6.0
-          run_install: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+          runtime: node@24
+          cache: true
+          require-lockfile: true
       - run: pnpm --filter @teachly/web typecheck
       - run: pnpm --filter @teachly/web test:unit
       - run: pnpm --filter @teachly/web build
@@ -107,16 +90,12 @@ jobs:
   lighthouse:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/setup@v3
         with:
-          version: 12.6.0
-          run_install: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+          runtime: node@24
+          cache: true
+          require-lockfile: true
       - run: pnpm --filter @teachly/web build
       - run: pnpm --filter @teachly/web exec lhci autorun
       - uses: actions/upload-artifact@v4
@@ -129,18 +108,14 @@ jobs:
   security:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/setup@v3
         with:
-          version: 12.6.0
-          run_install: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+          runtime: node@24
+          cache: true
+          require-lockfile: true
       - run: pnpm security:audit
       - name: Scan committed history for secrets
         uses: gitleaks/gitleaks-action@v2
