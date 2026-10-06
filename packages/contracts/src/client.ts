@@ -15,6 +15,12 @@ export type TeachlyClientOptions = {
   requestId?: () => string;
 };
 
+function removeTrailingSlashes(value: string): string {
+  let end = value.length;
+  while (end > 0 && value.charCodeAt(end - 1) === 47) end -= 1;
+  return value.slice(0, end);
+}
+
 export function createTeachlyClient(options: TeachlyClientOptions) {
   if (options.apiKey && options.getApiKey) {
     throw new Error('Provide either apiKey or getApiKey, not both');
@@ -24,7 +30,7 @@ export function createTeachlyClient(options: TeachlyClientOptions) {
   // response containers, so the client receives an equivalent mutable view to
   // preserve native Array methods in inferred response types.
   const client = createClient<ClientContract<paths>>({
-    baseUrl: options.baseUrl.replace(/\/+$/, ''),
+    baseUrl: removeTrailingSlashes(options.baseUrl),
     fetch: options.fetch,
   });
   const authentication: Middleware = {

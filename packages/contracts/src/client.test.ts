@@ -5,7 +5,7 @@ import { createTeachlyClient } from './client';
 test('adds workspace authentication and a request id to v1 requests', async () => {
   let captured: Request | undefined;
   const client = createTeachlyClient({
-    baseUrl: 'https://api.example.test/',
+    baseUrl: 'https://api.example.test////',
     apiKey: 'test-only-key',
     requestId: () => 'request-123',
     fetch: async (request) => {
