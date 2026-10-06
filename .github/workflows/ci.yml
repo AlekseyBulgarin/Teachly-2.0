@@ -81,7 +81,7 @@ jobs:
           PLAYWRIGHT_CHANNEL: chromium
       - name: Upload browser failures
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-results
           path: apps/web/test-results
@@ -98,7 +98,7 @@ jobs:
           require-lockfile: true
       - run: pnpm --filter @teachly/web build
       - run: pnpm --filter @teachly/web exec lhci autorun
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: lighthouse-reports
