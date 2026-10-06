@@ -1,7 +1,7 @@
 {
   "name": "teachly",
   "private": true,
-  "packageManager": "pnpm@12.6.0",
+  "packageManager": "pnpm@12.9.1",
   "scripts": {
     "build": "corepack pnpm --filter @teachly/api build",
     "dev": "corepack pnpm --parallel --filter @teachly/api --filter @teachly/web dev",
