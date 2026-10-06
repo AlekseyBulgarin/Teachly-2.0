@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test:lighthouse": "corepack pnpm build && lhci autorun",
     "test:e2e": "playwright test",
     "test:unit": "tsx --test lib/*.test.ts",
     "typecheck": "tsc --noEmit"
@@ -19,6 +20,7 @@
     "react-dom": "19.2.0"
   },
   "devDependencies": {
+    "@lhci/cli": "0.15.1",
     "@playwright/test": "1.63.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^26.6.3",

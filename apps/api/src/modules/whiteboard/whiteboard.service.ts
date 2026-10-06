@@ -102,12 +102,13 @@ export class WhiteboardService {
     });
   }
 
-  async listResources(tenant: TenantContext, boardId: string): Promise<WhiteboardResourceView[]> {
+  async listResources(tenant: TenantContext, boardId: string, limit = 50): Promise<WhiteboardResourceView[]> {
     await this.requireBoard(tenant, boardId);
     const links = await this.database.db.select().from(whiteboardResources).where(and(
       eq(whiteboardResources.boardId, boardId),
       eq(whiteboardResources.workspaceId, tenant.workspaceId),
-    )).orderBy(asc(whiteboardResources.createdAt), asc(whiteboardResources.id));
+    )).orderBy(asc(whiteboardResources.createdAt), asc(whiteboardResources.id))
+      .limit(Math.min(Math.max(limit, 1), 100));
     return links.map((link) => this.toResourceView(link));
   }
 

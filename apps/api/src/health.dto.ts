@@ -8,6 +8,11 @@ export class HealthStatusDto {
   database!: 'ok';
 }
 
+export class HealthLivenessDto {
+  @ApiProperty({ enum: ['ok'] })
+  status!: 'ok';
+}
+
 export class HealthUnavailableDto {
   @ApiProperty({ enum: ['degraded'] })
   status!: 'degraded';

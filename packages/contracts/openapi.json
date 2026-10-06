@@ -1,5 +1,39 @@
 {
   "components": {
+    "parameters": {
+      "TeachlyRequestId": {
+        "description": "Optional caller correlation id. Echoed in the response; generated when omitted.",
+        "in": "header",
+        "name": "x-request-id",
+        "required": false,
+        "schema": {
+          "maxLength": 200,
+          "type": "string"
+        }
+      }
+    },
+    "responses": {
+      "TeachlyInternalError": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ApiErrorDto"
+            }
+          }
+        },
+        "description": "Unexpected server error. Report the x-request-id to Teachly support."
+      },
+      "TeachlyTooManyRequests": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ApiErrorDto"
+            }
+          }
+        },
+        "description": "Quota exceeded. Retry after the current rate-limit window."
+      }
+    },
     "schemas": {
       "AiTraceResponseDto": {
         "properties": {
@@ -977,6 +1011,20 @@
           "status",
           "createdAt",
           "updatedAt"
+        ],
+        "type": "object"
+      },
+      "HealthLivenessDto": {
+        "properties": {
+          "status": {
+            "enum": [
+              "ok"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
         ],
         "type": "object"
       },
@@ -2476,18 +2524,25 @@
       }
     },
     "securitySchemes": {
+      "metrics-token": {
+        "bearerFormat": "Metrics token",
+        "description": "Dedicated token for Prometheus-compatible metrics scraping.",
+        "scheme": "bearer",
+        "type": "http"
+      },
       "workspace-api-key": {
-        "in": "header",
-        "name": "Authorization",
-        "type": "apiKey"
+        "bearerFormat": "Teachly workspace API key",
+        "description": "Workspace-scoped API key. Never expose it in browser code.",
+        "scheme": "bearer",
+        "type": "http"
       }
     }
   },
   "info": {
     "contact": {},
-    "description": "Teacher-first learning vertical slice",
+    "description": "Versioned integration API for the Teachly learning platform",
     "title": "Teachly API",
-    "version": "0.1.0"
+    "version": "1.0.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -2723,6 +2778,87 @@
             "description": "The database availability check failed."
           }
         },
+        "tags": [
+          "operations"
+        ]
+      }
+    },
+    "/health/live": {
+      "get": {
+        "operationId": "HealthController_live",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthLivenessDto"
+                }
+              }
+            },
+            "description": "The API process is accepting requests."
+          }
+        },
+        "tags": [
+          "operations"
+        ]
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "operationId": "HealthController_ready",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthStatusDto"
+                }
+              }
+            },
+            "description": "The API process and database are available."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthUnavailableDto"
+                }
+              }
+            },
+            "description": "The database availability check failed."
+          }
+        },
+        "tags": [
+          "operations"
+        ]
+      }
+    },
+    "/metrics": {
+      "get": {
+        "operationId": "MetricsController_read",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Prometheus text exposition for the API process."
+          },
+          "401": {
+            "description": "The metrics bearer token is missing or invalid."
+          }
+        },
+        "security": [
+          {
+            "metrics-token": []
+          }
+        ],
         "tags": [
           "operations"
         ]
@@ -2985,7 +3121,11 @@
       "get": {
         "description": "Auth: workspace API key (Authorization: Bearer) with scope external_users:read. Returns the 20 most recent AI requests visible to this integration, with provider, model, latency, knowledge references, and outcome. Prompts, outputs, and answers are never exposed.",
         "operationId": "AiTraceController_list",
-        "parameters": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -3019,6 +3159,12 @@
               }
             },
             "description": "API key lacks the required integration scope."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -3054,6 +3200,20 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -3109,6 +3269,12 @@
               }
             },
             "description": "Requested workspace or task source does not exist."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -3124,7 +3290,11 @@
       "post": {
         "description": "Auth: workspace API key with scope assessment:manage, or a user session with a manage-capable role. Upserted per (workspace, taskSource, mappingType, externalValue) and applied to already imported tasks.",
         "operationId": "TaskBankController_upsertCurriculumMapping",
-        "parameters": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -3185,6 +3355,12 @@
               }
             },
             "description": "Task source or referenced curriculum target not found."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -3202,7 +3378,11 @@
       "post": {
         "description": "Auth: workspace API key with scope assessment:write (integration authentication is required). Records an immutable observation and hands off to Learning; replaying the same idempotencyKey returns idempotentReplay=true.",
         "operationId": "TaskBankController_observeExternalResult",
-        "parameters": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -3263,6 +3443,12 @@
               }
             },
             "description": "External learner, imported task, or published task version not found."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -3290,6 +3476,9 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "requestBody": {
@@ -3352,6 +3541,12 @@
               }
             },
             "description": "Task draft not found."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -3379,6 +3574,9 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -3431,6 +3629,12 @@
               }
             },
             "description": "Task draft not found."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -3468,6 +3672,9 @@
               "minimum": 1,
               "type": "number"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -3523,6 +3730,12 @@
               }
             },
             "description": "Requested workspace does not exist."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -3538,7 +3751,11 @@
       "post": {
         "description": "Auth: workspace API key with scope assessment:manage, or a user session with organization_admin, workspace_admin, or content_editor role.",
         "operationId": "TaskBankController_createSource",
-        "parameters": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -3589,6 +3806,12 @@
               }
             },
             "description": "Missing role, wrong workspace, or missing required assessment scope."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -3616,6 +3839,9 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -3668,6 +3894,12 @@
               }
             },
             "description": "Task source not found in this tenant."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -3695,6 +3927,9 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "requestBody": {
@@ -3757,6 +3992,12 @@
               }
             },
             "description": "Task source not found in this tenant."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -3794,6 +4035,9 @@
               "minimum": 1,
               "type": "number"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -3849,6 +4093,12 @@
               }
             },
             "description": "Requested workspace does not exist."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -3876,6 +4126,9 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "requestBody": {
@@ -3938,6 +4191,12 @@
               }
             },
             "description": "Task not found in this workspace."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -3965,6 +4224,9 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -4017,6 +4279,12 @@
               }
             },
             "description": "No published task version with this id."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -4044,6 +4312,9 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -4096,6 +4367,12 @@
               }
             },
             "description": "No published task version with this id."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -4129,8 +4406,13 @@
             "required": false,
             "schema": {
               "default": 50,
+              "maximum": 100,
+              "minimum": 1,
               "type": "number"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -4186,6 +4468,12 @@
               }
             },
             "description": "Requested workspace does not exist."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -4201,7 +4489,11 @@
       "post": {
         "description": "Auth: workspace API key with scope assessment:write, or a user session with a write-capable role. Items reference tasks by taskVersionId or externalTaskId; duplicates of idempotencyKey are replayed.",
         "operationId": "VariantController_create",
-        "parameters": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -4262,6 +4554,12 @@
               }
             },
             "description": "Workspace or referenced task source not found."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -4289,6 +4587,9 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -4341,6 +4642,12 @@
               }
             },
             "description": "No published variant version with this id."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -4366,6 +4673,9 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "requestBody": {
@@ -4428,6 +4738,12 @@
               }
             },
             "description": "Variant version not found."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -4455,6 +4771,9 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -4507,6 +4826,12 @@
               }
             },
             "description": "Variant version not found."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -4523,7 +4848,22 @@
     "/v1/external-users": {
       "get": {
         "operationId": "ExternalUsersController_list",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -4536,7 +4876,7 @@
                 }
               }
             },
-            "description": ""
+            "description": "Newest integration-scoped external users, bounded by limit (maximum 100)."
           },
           "400": {
             "content": {
@@ -4567,6 +4907,12 @@
               }
             },
             "description": ""
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -4580,7 +4926,11 @@
       },
       "post": {
         "operationId": "ExternalUsersController_upsert",
-        "parameters": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -4631,6 +4981,12 @@
               }
             },
             "description": ""
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -4655,6 +5011,9 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -4707,6 +5066,12 @@
               }
             },
             "description": ""
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -4722,7 +5087,11 @@
     "/v1/integration": {
       "get": {
         "operationId": "IntegrationsController_current",
-        "parameters": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -4733,6 +5102,12 @@
               }
             },
             "description": "Current integration metadata"
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -4760,6 +5135,9 @@
               "minimum": 1,
               "type": "number"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -4784,6 +5162,12 @@
           },
           "403": {
             "description": ""
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -4799,7 +5183,11 @@
       "post": {
         "description": "Requires the integrations:write scope. The raw secret is returned exactly once.",
         "operationId": "ApiKeyLifecycleController_create",
-        "parameters": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -4829,6 +5217,12 @@
           },
           "403": {
             "description": ""
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -4854,6 +5248,9 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -4878,6 +5275,12 @@
           },
           "404": {
             "description": "Active API key not found"
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -4903,6 +5306,9 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -4927,6 +5333,12 @@
           },
           "404": {
             "description": "Active API key not found"
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -4944,7 +5356,22 @@
       "get": {
         "description": "Auth: workspace API key (Authorization: Bearer) with scope external_users:read. One row per knowledge document version in the API key workspace, including license and external-AI permission.",
         "operationId": "KnowledgeController_status",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -4988,6 +5415,12 @@
               }
             },
             "description": "Integration is not active in this workspace."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -5004,7 +5437,11 @@
     "/v1/learner-intelligence/activity": {
       "get": {
         "operationId": "LearnerIntelligenceController_activity",
-        "parameters": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -5028,6 +5465,12 @@
               }
             },
             "description": "API key lacks learner_intelligence:read."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -5044,7 +5487,11 @@
     "/v1/learner-intelligence/profile": {
       "get": {
         "operationId": "LearnerIntelligenceController_profile",
-        "parameters": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -5068,6 +5515,12 @@
               }
             },
             "description": "API key lacks learner_intelligence:read."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -5084,7 +5537,11 @@
     "/v1/learner-intelligence/progress": {
       "get": {
         "operationId": "LearnerIntelligenceController_progress",
-        "parameters": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -5108,6 +5565,12 @@
               }
             },
             "description": "API key lacks learner_intelligence:read."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -5124,7 +5587,11 @@
     "/v1/learner-intelligence/skills": {
       "get": {
         "operationId": "LearnerIntelligenceController_skills",
-        "parameters": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -5148,6 +5615,12 @@
               }
             },
             "description": "API key lacks learner_intelligence:read."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -5165,7 +5638,11 @@
       "post": {
         "description": "Auth: workspace API key (Authorization: Bearer) with scopes external_users:read and remediation:write. Runs the AiRuntime against the authoritative attempt and approved knowledge; scoring, attempts, and learning state are never modified. Replaying the same idempotencyKey returns the stored result. The model may abstain (abstained=true) when context is insufficient.",
         "operationId": "PartnerRemediationController_create",
-        "parameters": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -5236,6 +5713,12 @@
               }
             },
             "description": ""
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           },
           "503": {
             "content": {
@@ -5318,6 +5801,9 @@
               "minimum": 1,
               "type": "number"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -5363,6 +5849,12 @@
               }
             },
             "description": "Missing role or required Theory scope."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -5377,7 +5869,11 @@
       },
       "post": {
         "operationId": "TheoryController_create",
-        "parameters": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -5428,6 +5924,12 @@
               }
             },
             "description": "Missing role or required Theory scope."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -5452,6 +5954,9 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -5504,6 +6009,12 @@
               }
             },
             "description": "Theory material not found in this workspace."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -5528,6 +6039,9 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "requestBody": {
@@ -5580,6 +6094,12 @@
               }
             },
             "description": "Missing role or required Theory scope."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -5604,6 +6124,9 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -5646,6 +6169,12 @@
               }
             },
             "description": "Missing role or required Theory scope."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -5719,6 +6248,9 @@
               "minimum": 1,
               "type": "number"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -5764,6 +6296,12 @@
               }
             },
             "description": "Missing role or required Theory scope."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -5788,6 +6326,9 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -5840,6 +6381,12 @@
               }
             },
             "description": "Published Theory material not found in this workspace."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -5856,7 +6403,11 @@
     "/v1/trainer/sessions": {
       "post": {
         "operationId": "TrainerController_create",
-        "parameters": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -5897,6 +6448,12 @@
               }
             },
             "description": "Missing Trainer scope or cross-workspace access."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -5921,6 +6478,9 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -5963,6 +6523,12 @@
               }
             },
             "description": ""
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -5987,6 +6553,9 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -6019,6 +6588,12 @@
               }
             },
             "description": "Missing Trainer scope or cross-workspace access."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -6043,6 +6618,9 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -6075,6 +6653,12 @@
               }
             },
             "description": "Missing Trainer scope or cross-workspace access."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -6099,6 +6683,9 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -6131,6 +6718,12 @@
               }
             },
             "description": "Missing Trainer scope or cross-workspace access."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -6155,6 +6748,9 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "requestBody": {
@@ -6197,6 +6793,12 @@
               }
             },
             "description": "Missing Trainer scope or cross-workspace access."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -6236,6 +6838,9 @@
               "minimum": 1,
               "type": "number"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -6271,6 +6876,12 @@
               }
             },
             "description": "Missing Whiteboard scope or cross-workspace access."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -6285,7 +6896,11 @@
       },
       "post": {
         "operationId": "WhiteboardController_create",
-        "parameters": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -6326,6 +6941,12 @@
               }
             },
             "description": "Missing Whiteboard scope or cross-workspace access."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -6350,6 +6971,9 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -6392,6 +7016,12 @@
               }
             },
             "description": ""
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -6414,6 +7044,9 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "requestBody": {
@@ -6466,6 +7099,12 @@
               }
             },
             "description": ""
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -6490,6 +7129,20 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -6535,6 +7188,12 @@
               }
             },
             "description": ""
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -6557,6 +7216,9 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "requestBody": {
@@ -6609,6 +7271,12 @@
               }
             },
             "description": ""
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -6641,6 +7309,9 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -6673,6 +7344,12 @@
               }
             },
             "description": ""
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -6697,6 +7374,9 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
@@ -6739,6 +7419,12 @@
               }
             },
             "description": ""
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [
@@ -6761,6 +7447,9 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "requestBody": {
@@ -6813,6 +7502,12 @@
               }
             },
             "description": ""
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
           }
         },
         "security": [

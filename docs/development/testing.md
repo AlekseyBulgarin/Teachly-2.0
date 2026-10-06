@@ -12,6 +12,15 @@ Test state transitions such as publish, start, submit, assign, complete, moderat
 
 Use a real PostgreSQL-compatible test environment for transactions, constraints, tenant scoping, migrations, task-version references, and concurrent submission behavior. Test queue/job persistence separately from worker execution. Local runs use the embedded PostgreSQL lifecycle — see [Local PostgreSQL E2E Setup](./e2e-postgres.md).
 
+The API Jest suites use separate checked-in configs so shell escaping cannot broaden a targeted run:
+
+- `pnpm --filter @teachly/api test:unit` runs only `*.spec.ts` suites and does not start PostgreSQL.
+- `pnpm --filter @teachly/api test:integration` runs only `*.integration-spec.ts` suites.
+- `pnpm --filter @teachly/api test:e2e` runs only `*.e2e-spec.ts` suites.
+- `pnpm --filter @teachly/api test:database` runs integration and e2e suites in one embedded PostgreSQL lifecycle; CI uses this command to avoid a stop/start race between database suites.
+
+Database suites require `ALLOW_TEST_DB_RESET=true` and must never point at a shared or production database.
+
 ## API Tests
 
 Validate DTOs, error contracts, authentication, organization scope, guardian scope, idempotency, pagination, and rate-limit behavior. Include negative cross-tenant and cross-student cases.

@@ -263,6 +263,8 @@ describe('Whiteboard V1 (PostgreSQL)', () => {
 
     const listed = await request(app.getHttpServer()).get(`/v1/whiteboards/${board.id}/resources`).set(auth).expect(200);
     expect(listed.body).toHaveLength(2);
+    await request(app.getHttpServer()).get(`/v1/whiteboards/${board.id}/resources`)
+      .set(auth).query({ limit: 101 }).expect(400);
     expect(listed.body).toEqual(expect.arrayContaining([
       { id: taskLink.body.id, type: 'task', resourceId: fixtureIds.version },
       { id: theoryLink.body.id, type: 'theory', resourceId: theory.version.id },

@@ -25,11 +25,10 @@ button:disabled { cursor: not-allowed; }
 a:focus-visible, button:focus-visible, [role='button']:focus-visible { outline: 2px solid rgba(69, 230, 168, .8); outline-offset: 3px; }
 .interactive { transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease; }
 .interactive:active { transform: scale(.985); }
-.showcase-page { animation: showcase-enter 380ms cubic-bezier(.2,.8,.2,1); }
+.showcase-page { animation: none; }
 .section-reveal { animation: section-enter 460ms cubic-bezier(.2,.8,.2,1) both; }
 .section-reveal[data-delay='1'] { animation-delay: 70ms; }
 .section-reveal[data-delay='2'] { animation-delay: 130ms; }
-@keyframes showcase-enter { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes section-enter { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
 .motion-ready .section-reveal { animation: none; opacity: 0; filter: blur(5px); transform: translateY(28px) scale(.988); transition: opacity 680ms cubic-bezier(.2,.8,.2,1), transform 680ms cubic-bezier(.2,.8,.2,1), filter 680ms ease; transition-delay: var(--reveal-delay, 0ms); }
 .motion-ready .section-reveal.is-visible { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }

@@ -18,6 +18,11 @@ export class WhiteboardListQueryDto {
   @ApiPropertyOptional({ minimum: 1, maximum: 100, default: 50 }) @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(100) limit?: number;
 }
 
+export class WhiteboardResourceListQueryDto {
+  @ApiPropertyOptional({ type: Number, minimum: 1, maximum: 100, default: 50 })
+  @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(100) limit = 50;
+}
+
 export class SaveWhiteboardStateDto {
   @ApiProperty({ minimum: 0 }) @IsInt() @Min(0) expectedRevision!: number;
   @ApiProperty({ type: Object }) @IsObject() data!: Record<string, unknown>;

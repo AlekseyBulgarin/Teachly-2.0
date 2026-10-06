@@ -13,5 +13,7 @@ coverage/
 .playwright-mcp/
 test-results/
 playwright-report/
+lighthouse-reports/
+.lighthouseci/
 /qa-*.png
 /before-*.png

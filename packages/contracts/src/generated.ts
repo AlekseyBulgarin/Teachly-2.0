@@ -84,6 +84,54 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/health/live": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get: operations["HealthController_live"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/health/ready": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get: operations["HealthController_ready"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/metrics": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get: operations["MetricsController_read"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/students": {
         readonly parameters: {
             readonly query?: never;
@@ -1330,6 +1378,10 @@ export interface components {
             /** Format: uuid */
             readonly workspaceId: string;
         };
+        readonly HealthLivenessDto: {
+            /** @enum {string} */
+            readonly status: "ok";
+        };
         readonly HealthStatusDto: {
             /** @enum {string} */
             readonly database: "ok";
@@ -1801,8 +1853,30 @@ export interface components {
             readonly revision: number;
         };
     };
-    responses: never;
-    parameters: never;
+    responses: {
+        /** @description Unexpected server error. Report the x-request-id to Teachly support. */
+        readonly TeachlyInternalError: {
+            headers: {
+                readonly [name: string]: unknown;
+            };
+            content: {
+                readonly "application/json": components["schemas"]["ApiErrorDto"];
+            };
+        };
+        /** @description Quota exceeded. Retry after the current rate-limit window. */
+        readonly TeachlyTooManyRequests: {
+            headers: {
+                readonly [name: string]: unknown;
+            };
+            content: {
+                readonly "application/json": components["schemas"]["ApiErrorDto"];
+            };
+        };
+    };
+    parameters: {
+        /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+        readonly TeachlyRequestId: string;
+    };
     requestBodies: never;
     headers: never;
     pathItems: never;
@@ -1986,6 +2060,82 @@ export interface operations {
                 content: {
                     readonly "application/json": components["schemas"]["HealthUnavailableDto"];
                 };
+            };
+        };
+    };
+    readonly HealthController_live: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description The API process is accepting requests. */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["HealthLivenessDto"];
+                };
+            };
+        };
+    };
+    readonly HealthController_ready: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description The API process and database are available. */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["HealthStatusDto"];
+                };
+            };
+            /** @description The database availability check failed. */
+            readonly 503: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["HealthUnavailableDto"];
+                };
+            };
+        };
+    };
+    readonly MetricsController_read: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Prometheus text exposition for the API process. */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "text/plain": string;
+                };
+            };
+            /** @description The metrics bearer token is missing or invalid. */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -2178,7 +2328,10 @@ export interface operations {
     readonly AiTraceController_list: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -2211,15 +2364,21 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly TaskBankController_listCurriculumMappings: {
         readonly parameters: {
             readonly query?: {
+                readonly limit?: number;
                 readonly taskSourceId?: string;
                 readonly workspaceId?: string;
             };
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -2270,12 +2429,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly TaskBankController_upsertCurriculumMapping: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -2330,12 +2494,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly TaskBankController_observeExternalResult: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -2390,12 +2559,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly TaskBankController_updateDraft: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 /** @description Task version id (draft or published). */
                 readonly draftId: string;
@@ -2453,12 +2627,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly TaskBankController_publish: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 /** @description Draft task version id. */
                 readonly draftId: string;
@@ -2512,6 +2691,8 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly TaskBankController_listSources: {
@@ -2520,7 +2701,10 @@ export interface operations {
                 readonly limit?: number;
                 readonly workspaceId?: string;
             };
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -2571,12 +2755,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly TaskBankController_createSource: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -2622,12 +2811,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly TaskBankController_getSource: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 /** @description Task source id. */
                 readonly id: string;
@@ -2681,12 +2875,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly TaskBankController_import: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 /** @description Task source id, must be active. */
                 readonly id: string;
@@ -2744,6 +2943,8 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly TaskBankController_list: {
@@ -2752,7 +2953,10 @@ export interface operations {
                 readonly limit?: number;
                 readonly workspaceId?: string;
             };
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -2803,12 +3007,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly TaskBankController_createDraft: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 /** @description Task id. */
                 readonly taskId: string;
@@ -2866,12 +3075,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly TaskBankController_get: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 /** @description Published task version id. */
                 readonly taskVersionId: string;
@@ -2925,12 +3139,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly TaskBankController_answer: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 /** @description Published task version id. */
                 readonly taskVersionId: string;
@@ -2984,6 +3203,8 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly VariantController_list: {
@@ -2992,7 +3213,10 @@ export interface operations {
                 readonly limit?: number;
                 readonly workspaceId?: string;
             };
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -3043,12 +3267,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly VariantController_create: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -3103,12 +3332,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly VariantController_get: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 /** @description Published variant version id. */
                 readonly variantVersionId: string;
@@ -3162,12 +3396,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly VariantController_update: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 /** @description Variant version id (draft or published). */
                 readonly variantVersionId: string;
@@ -3225,12 +3464,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly VariantController_publish: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 /** @description Draft variant version id. */
                 readonly variantVersionId: string;
@@ -3284,17 +3528,25 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly ExternalUsersController_list: {
         readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
+            readonly query?: {
+                readonly limit?: number;
+            };
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
         readonly requestBody?: never;
         readonly responses: {
+            /** @description Newest integration-scoped external users, bounded by limit (maximum 100). */
             readonly 200: {
                 headers: {
                     readonly [name: string]: unknown;
@@ -3327,12 +3579,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly ExternalUsersController_upsert: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -3374,12 +3631,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly ExternalUsersController_get: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 readonly id: string;
             };
@@ -3427,12 +3689,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly IntegrationsController_current: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -3447,6 +3714,8 @@ export interface operations {
                     readonly "application/json": Record<string, never>;
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly ApiKeyLifecycleController_list: {
@@ -3454,7 +3723,10 @@ export interface operations {
             readonly query?: {
                 readonly limit?: number;
             };
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -3486,12 +3758,17 @@ export interface operations {
                 };
                 content?: never;
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly ApiKeyLifecycleController_create: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -3527,12 +3804,17 @@ export interface operations {
                 };
                 content?: never;
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly ApiKeyLifecycleController_revoke: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 readonly id: string;
             };
@@ -3573,12 +3855,17 @@ export interface operations {
                 };
                 content?: never;
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly ApiKeyLifecycleController_rotate: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 readonly id: string;
             };
@@ -3619,12 +3906,19 @@ export interface operations {
                 };
                 content?: never;
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly KnowledgeController_status: {
         readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
+            readonly query?: {
+                readonly limit?: number;
+            };
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -3666,12 +3960,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly LearnerIntelligenceController_activity: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -3701,12 +4000,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly LearnerIntelligenceController_profile: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -3736,12 +4040,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly LearnerIntelligenceController_progress: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -3771,12 +4080,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly LearnerIntelligenceController_skills: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -3806,12 +4120,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly PartnerRemediationController_create: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -3873,6 +4192,8 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
             readonly 503: {
                 headers: {
                     readonly [name: string]: unknown;
@@ -3893,7 +4214,10 @@ export interface operations {
                 readonly topicId?: string;
                 readonly workspaceId?: string;
             };
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -3934,12 +4258,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly TheoryController_create: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -3984,12 +4313,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly TheoryController_getEditor: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 readonly materialId: string;
             };
@@ -4041,12 +4375,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly TheoryController_updateDraft: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 readonly materialId: string;
             };
@@ -4093,12 +4432,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly TheoryController_publish: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 readonly materialId: string;
             };
@@ -4141,6 +4485,8 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly TheoryController_listPublished: {
@@ -4153,7 +4499,10 @@ export interface operations {
                 readonly topicId?: string;
                 readonly workspaceId?: string;
             };
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -4194,12 +4543,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly TheoryController_getPublished: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 readonly materialId: string;
             };
@@ -4251,12 +4605,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly TrainerController_create: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -4292,12 +4651,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly TrainerController_get: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 readonly sessionId: string;
             };
@@ -4339,12 +4703,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly TrainerController_complete: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 readonly sessionId: string;
             };
@@ -4378,12 +4747,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly TrainerController_current: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 readonly sessionId: string;
             };
@@ -4417,12 +4791,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly TrainerController_next: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 readonly sessionId: string;
             };
@@ -4456,12 +4835,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly TrainerController_submit: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 readonly sessionId: string;
             };
@@ -4499,6 +4883,8 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly WhiteboardController_list: {
@@ -4507,7 +4893,10 @@ export interface operations {
                 readonly limit?: number;
                 readonly status?: "active" | "archived";
             };
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -4539,12 +4928,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly WhiteboardController_create: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -4580,12 +4974,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly WhiteboardController_get: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 readonly boardId: string;
             };
@@ -4627,12 +5026,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly WhiteboardController_update: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 readonly boardId: string;
             };
@@ -4678,12 +5082,19 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly WhiteboardController_listResources: {
         readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
+            readonly query?: {
+                readonly limit?: number;
+            };
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 readonly boardId: string;
             };
@@ -4725,12 +5136,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly WhiteboardController_attachResource: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 readonly boardId: string;
             };
@@ -4776,12 +5192,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly WhiteboardController_detachResource: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 readonly boardId: string;
                 readonly resourceLinkId: string;
@@ -4816,12 +5237,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly WhiteboardController_getState: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 readonly boardId: string;
             };
@@ -4863,12 +5289,17 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
     readonly WhiteboardController_saveState: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
             readonly path: {
                 readonly boardId: string;
             };
@@ -4914,6 +5345,8 @@ export interface operations {
                     readonly "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
         };
     };
 }

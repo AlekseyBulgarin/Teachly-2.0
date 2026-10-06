@@ -58,6 +58,10 @@ describe('Assessment Task Bank V1 (PostgreSQL)', () => {
   it('isolates sources and preserves source-scoped external identity', async () => {
     const a = await tenant('Organization A');
     const b = await tenant('Organization B');
+    await request(app.getHttpServer()).get('/v1/assessment/task-sources')
+      .set(a.auth).query({ limit: 101 }).expect(400);
+    await request(app.getHttpServer()).get('/v1/assessment/curriculum-mappings')
+      .set(a.auth).query({ limit: 101 }).expect(400);
     const sourceA = await createTaskSource(app, a.auth, 'A source', 'json');
     const sourceB = await createTaskSource(app, b.auth, 'B source', 'json');
     const importedA = await request(app.getHttpServer()).post(`/v1/assessment/task-sources/${sourceA.body.id}/import`).set(a.auth)

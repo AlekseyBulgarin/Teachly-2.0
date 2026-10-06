@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import {
   ApiForbiddenResponse,
   ApiNotFoundResponse,
@@ -14,7 +14,7 @@ import { CurrentTenantContext } from '../../common/request-context';
 import { ApiKeyGuard } from '../integrations/api-key.guard';
 import { RequireIntegrationScopes } from '../integrations/scope.decorator';
 import type { TenantContext } from '../core/core.types';
-import { KnowledgeStatusResponseDto } from './knowledge.dto';
+import { KnowledgeStatusQueryDto, KnowledgeStatusResponseDto } from './knowledge.dto';
 import { KnowledgeService } from './knowledge.service';
 
 @ApiTags('knowledge')
@@ -35,7 +35,10 @@ export class KnowledgeController {
   })
   @ApiOkResponse({ description: 'Knowledge status rows for the workspace, newest version first.', type: KnowledgeStatusResponseDto, isArray: true })
   @ApiNotFoundResponse({ description: 'Integration is not active in this workspace.', type: ApiErrorDto })
-  async status(@CurrentTenantContext() context: TenantContext) {
-    return this.knowledge.listStatus(context);
+  async status(
+    @CurrentTenantContext() context: TenantContext,
+    @Query() query: KnowledgeStatusQueryDto,
+  ) {
+    return this.knowledge.listStatus(context, query.limit);
   }
 }

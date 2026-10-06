@@ -3,8 +3,10 @@ import type { NestApplication } from '@nestjs/core';
 import helmet from 'helmet';
 import { HttpExceptionFilter } from './http-exception.filter';
 import { requestIdMiddleware } from './request-id.middleware';
+import { MetricsService } from '../infrastructure/observability/metrics.service';
+import { createHttpObservabilityMiddleware } from '../infrastructure/observability/http-observability.middleware';
 
-export function configureHttpApp(app: NestApplication): void {
+export function configureHttpApp(app: NestApplication, metrics?: MetricsService): void {
   // Railway and local reverse proxies terminate TLS one hop in front of the API.
   // Trust exactly that hop so IP-based controls use the originating address.
   app.getHttpAdapter().getInstance().set('trust proxy', 1);
@@ -20,6 +22,7 @@ export function configureHttpApp(app: NestApplication): void {
   }));
   app.useBodyParser('json', { limit: '2mb' });
   app.use(requestIdMiddleware);
+  if (metrics) app.use(createHttpObservabilityMiddleware(metrics));
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
   app.useGlobalFilters(new HttpExceptionFilter());
 }

@@ -106,7 +106,7 @@ export class TaskBankController {
   @ApiOkResponse({ description: 'Task sources of the resolved workspace.', type: TaskSourceResponseDto, isArray: true })
   @ApiNotFoundResponse({ description: 'Requested workspace does not exist.', type: ApiErrorDto })
   async listSources(@Query() query: TaskBankListQueryDto, @OptionalTenantContext() tenant: TenantContext | undefined, @OptionalPrincipal() principal: AuthenticatedPrincipal | undefined) {
-    return this.taskBank.listSources(this.auth(tenant, principal), query.workspaceId);
+    return this.taskBank.listSources(this.auth(tenant, principal), query.workspaceId, query.limit);
   }
 
   @Get('task-sources/:id')
@@ -156,7 +156,7 @@ export class TaskBankController {
   @ApiOkResponse({ description: 'Curriculum mappings of the resolved workspace.', type: CurriculumMappingResponseDto, isArray: true })
   @ApiNotFoundResponse({ description: 'Requested workspace or task source does not exist.', type: ApiErrorDto })
   async listCurriculumMappings(@Query() query: CurriculumMappingQueryDto, @OptionalTenantContext() tenant: TenantContext | undefined, @OptionalPrincipal() principal: AuthenticatedPrincipal | undefined) {
-    return this.taskBank.listCurriculumMappings(this.auth(tenant, principal), query.workspaceId, query.taskSourceId);
+    return this.taskBank.listCurriculumMappings(this.auth(tenant, principal), query.workspaceId, query.taskSourceId, query.limit);
   }
 
   @Post('results/external')

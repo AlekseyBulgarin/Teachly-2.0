@@ -45,6 +45,9 @@ describe('teacher to student vertical slice (PostgreSQL)', () => {
     const schemas = openApi.components?.schemas as Record<string, { properties?: Record<string, unknown> }>;
     expect(openApi.paths['/attempts/{attemptId}/submissions']?.post?.responses?.['201']).toBeDefined();
     expect(openApi.paths['/health']?.get?.responses?.['200']).toBeDefined();
+    expect(openApi.paths['/health/live']?.get?.responses?.['200']).toBeDefined();
+    expect(openApi.paths['/health/ready']?.get?.responses?.['200']).toBeDefined();
+    expect(openApi.paths['/metrics']?.get?.responses?.['200']).toBeDefined();
     expect(schemas.HealthStatusDto?.properties).toMatchObject({ status: expect.any(Object), database: expect.any(Object) });
     expect(schemas.SubmitAnswerDto).toBeDefined();
     expect(schemas.SubmitAnswerResponseDto).toBeDefined();

@@ -280,7 +280,7 @@ export class KnowledgeService implements KnowledgeRetrievalPort {
     return this.retrieveApproved(input, true);
   }
 
-  async listStatus(context: TenantContext) {
+  async listStatus(context: TenantContext, limit = 50) {
     await this.requireContext(context);
     return this.database.db.select({
       sourceId: knowledgeSources.id,
@@ -307,7 +307,8 @@ export class KnowledgeService implements KnowledgeRetrievalPort {
         eq(knowledgeDocumentVersions.workspaceId, context.workspaceId),
       ))
       .where(eq(knowledgeSources.workspaceId, context.workspaceId))
-      .orderBy(desc(knowledgeDocumentVersions.createdAt));
+      .orderBy(desc(knowledgeDocumentVersions.createdAt), desc(knowledgeDocumentVersions.id))
+      .limit(Math.min(Math.max(limit, 1), 100));
   }
 
   private async retrieveApproved(input: KnowledgeRetrievalInput, externalAiOnly: boolean): Promise<RetrievedKnowledgeExcerpt[]> {

@@ -74,6 +74,16 @@ describe('B2B external users API (PostgreSQL)', () => {
       .send({ externalUserId: 'learner-42' }).expect(201);
     expect(replay.body.id).toBe(created.body.id);
 
+    await request(app.getHttpServer()).post('/v1/external-users').set(auth)
+      .send({ externalUserId: 'learner-43' }).expect(201);
+    const bounded = await request(app.getHttpServer()).get('/v1/external-users')
+      .set(auth).query({ limit: 1 }).expect(200);
+    expect(bounded.body).toHaveLength(1);
+    await request(app.getHttpServer()).get('/v1/external-users')
+      .set(auth).query({ limit: 101 }).expect(400);
+    await request(app.getHttpServer()).get('/v1/knowledge/status')
+      .set(auth).query({ limit: 101 }).expect(400);
+
     await request(app.getHttpServer()).get(`/v1/external-users/${created.body.id}`).set(auth).expect(200);
     const otherAuth = { Authorization: `Bearer ${other.key.secret}` };
     await request(app.getHttpServer()).get(`/v1/external-users/${created.body.id}`).set(otherAuth).expect(404);

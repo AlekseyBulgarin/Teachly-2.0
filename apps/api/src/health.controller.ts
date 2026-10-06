@@ -3,7 +3,7 @@ import { ApiOkResponse, ApiServiceUnavailableResponse, ApiTags } from '@nestjs/s
 import { Public } from './common/public.decorator';
 import { DatabaseService } from './infrastructure/database/database';
 import { SkipThrottle } from '@nestjs/throttler';
-import { HealthStatusDto, HealthUnavailableDto } from './health.dto';
+import { HealthLivenessDto, HealthStatusDto, HealthUnavailableDto } from './health.dto';
 
 @Controller('health')
 @SkipThrottle()
@@ -16,6 +16,21 @@ export class HealthController {
   @ApiOkResponse({ description: 'API process and database are available.', type: HealthStatusDto })
   @ApiServiceUnavailableResponse({ description: 'The database availability check failed.', type: HealthUnavailableDto })
   async health(): Promise<HealthStatusDto> {
+    return this.ready();
+  }
+
+  @Public()
+  @Get('live')
+  @ApiOkResponse({ description: 'The API process is accepting requests.', type: HealthLivenessDto })
+  live(): HealthLivenessDto {
+    return { status: 'ok' };
+  }
+
+  @Public()
+  @Get('ready')
+  @ApiOkResponse({ description: 'The API process and database are available.', type: HealthStatusDto })
+  @ApiServiceUnavailableResponse({ description: 'The database availability check failed.', type: HealthUnavailableDto })
+  async ready(): Promise<HealthStatusDto> {
     try {
       await this.database.ping();
       return { status: 'ok', database: 'ok' };

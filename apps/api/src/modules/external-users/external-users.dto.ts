@@ -1,5 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, MaxLength, MinLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
 import type { ExternalUserView } from './external-users.types';
 
 export class UpsertExternalUserDto {
@@ -8,6 +9,16 @@ export class UpsertExternalUserDto {
   @MinLength(1)
   @MaxLength(255)
   externalUserId!: string;
+}
+
+export class ListExternalUsersDto {
+  @ApiPropertyOptional({ type: Number, minimum: 1, maximum: 100, default: 50 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit = 50;
 }
 
 export class ExternalUserResponseDto {

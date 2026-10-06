@@ -1,0 +1,10 @@
+[
+  {
+    "advisory": "GHSA-vfj7-8cjw-p6xm",
+    "package": "braces",
+    "severity": "high",
+    "allowedPathFragment": "sass>chokidar>braces",
+    "reviewBy": "2027-01-31",
+    "rationale": "No patched release exists. The package is only reached through Sass/Chokidar build and watch tooling and does not process user-controlled production request data."
+  }
+]

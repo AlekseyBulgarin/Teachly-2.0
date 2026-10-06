@@ -17,6 +17,7 @@ describe('environment validation', () => {
       NODE_ENV: 'production',
       DEV_AUTH_ENABLED: 'false',
       OPENAI_API_KEY: 'test-openai-key',
+      METRICS_TOKEN: 'test-metrics-token-at-least-32-characters',
     })).not.toThrow();
   });
 
@@ -25,7 +26,18 @@ describe('environment validation', () => {
       ...base,
       NODE_ENV: 'production',
       DEV_AUTH_ENABLED: 'false',
+      METRICS_TOKEN: 'test-metrics-token-at-least-32-characters',
     })).toThrow('OPENAI_API_KEY is required in production');
+  });
+
+  it('requires a strong metrics token in production', () => {
+    expect(() => requiredEnvironment({
+      ...base,
+      NODE_ENV: 'production',
+      DEV_AUTH_ENABLED: 'false',
+      OPENAI_API_KEY: 'test-openai-key',
+    })).toThrow('METRICS_TOKEN is required in production');
+    expect(() => requiredEnvironment({ ...base, METRICS_TOKEN: 'too-short' })).toThrow('METRICS_TOKEN');
   });
 
   it('fails closed without an explicit environment', () => {
