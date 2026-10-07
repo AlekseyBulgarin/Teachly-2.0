@@ -63,6 +63,19 @@ jobs:
       - run: pnpm --filter @teachly/contracts test
       - run: pnpm --filter @teachly/example-consumer check
 
+  observability-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker compose -f infra/observability/compose.yaml config --quiet
+      - name: Validate Prometheus configuration and rules
+        run: |
+          docker run --rm --entrypoint promtool \
+            -v "$PWD/infra/observability/prometheus.local.yml:/etc/prometheus/prometheus.yml:ro" \
+            -v "$PWD/infra/observability/rules:/etc/prometheus/rules:ro" \
+            prom/prometheus:v3.15.0 \
+            check config /etc/prometheus/prometheus.yml
+
   web:
     runs-on: ubuntu-latest
     steps:

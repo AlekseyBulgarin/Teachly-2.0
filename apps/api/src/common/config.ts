@@ -35,6 +35,10 @@ class EnvironmentSchema {
   @IsOptional()
   @IsIn(['disabled', 'openai', 'openai-compatible', 'fake'])
   AI_PROVIDER?: string;
+
+  @IsOptional()
+  @IsString()
+  PROMETHEUS_URL?: string;
 }
 
 export function isProduction(): boolean {
@@ -49,7 +53,7 @@ export function requiredEnvironment(env: NodeJS.ProcessEnv = process.env): void 
   const config = plainToInstance(EnvironmentSchema, {
     NODE_ENV: env.NODE_ENV, DEV_AUTH_ENABLED: env.DEV_AUTH_ENABLED,
     DATABASE_URL: env.DATABASE_URL, PORT: env.PORT, METRICS_TOKEN: env.METRICS_TOKEN,
-    AI_PROVIDER: env.AI_PROVIDER,
+    AI_PROVIDER: env.AI_PROVIDER, PROMETHEUS_URL: env.PROMETHEUS_URL,
   });
   const errors = validateSync(config, { skipMissingProperties: false });
   if (errors.length > 0) throw new Error(`Invalid environment: ${errors.map((error) => error.property).join(', ')}`);
@@ -71,6 +75,14 @@ export function requiredEnvironment(env: NodeJS.ProcessEnv = process.env): void 
       if (env.NODE_ENV === 'production' && aiUrl.protocol !== 'https:') throw new Error();
     } catch {
       throw new Error('AI_BASE_URL must be a valid HTTPS URL in production');
+    }
+  }
+  if (env.PROMETHEUS_URL) {
+    try {
+      const prometheusUrl = new URL(env.PROMETHEUS_URL);
+      if (!['http:', 'https:'].includes(prometheusUrl.protocol) || prometheusUrl.username || prometheusUrl.password) throw new Error();
+    } catch {
+      throw new Error('PROMETHEUS_URL must be a valid HTTP(S) URL without embedded credentials');
     }
   }
   try {

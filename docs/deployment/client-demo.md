@@ -39,11 +39,22 @@ API server-only:
 - `METRICS_TOKEN`
 - `SERVICE_VERSION`
 - `DEPLOYMENT_ENVIRONMENT`
+- `PROMETHEUS_URL` (private server-side URL; optional until Teachly Monitor is enabled)
+- `PROMETHEUS_BEARER_TOKEN` (optional server-side Prometheus query credential)
+- `PROMETHEUS_TIMEOUT_MS` (optional, capped at 15 seconds)
 - `PORT` (provided by Railway)
 - `TEACHLY_DEMO_SEED_ENABLED` (required only for the explicit seed command)
 - `TEACHLY_DEMO_API_KEY` (required only for the explicit seed command; it must match the Web value)
 
 Never prefix these variables with `NEXT_PUBLIC_`.
+
+Internal Web monitoring variables:
+
+- `TEACHLY_MONITOR_USER`
+- `TEACHLY_MONITOR_PASSWORD` (strong unique value)
+- `METRICS_TOKEN` (same API metrics token; server-to-server only)
+
+Without the two Monitor credentials, `/monitor` and `/api/monitor/*` fail closed. Place the Monitor behind an additional platform access policy or private network when available.
 
 ## Build and start commands
 

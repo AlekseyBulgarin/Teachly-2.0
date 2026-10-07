@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { createHash } from 'node:crypto';
 import { and, eq, sql } from 'drizzle-orm';
 import { DatabaseService } from '../../infrastructure/database/database';
+import { MetricsService } from '../../infrastructure/observability/metrics.service';
 import { aiEvaluationRecords, aiRequests, aiUsageRecords } from '../../infrastructure/database/schema';
 import { requireTenantContext } from '../core/core.access';
 import type { TenantContext } from '../core/core.types';
@@ -36,6 +37,7 @@ export class AiRuntime {
     private readonly database: DatabaseService,
     private readonly audit: AuditService,
     private readonly assembler: AiContextAssembler,
+    private readonly metrics: MetricsService,
     @Inject(AI_PROVIDER) private readonly provider: AiProvider,
   ) {}
 
@@ -62,13 +64,18 @@ export class AiRuntime {
       if (!existing.structuredOutput || !existing.provider || !existing.model) {
         throw new AiRuntimeError('invalid_output', 'AI request has no replayable output', existing.id);
       }
+      const usage = await this.findUsage(existing.id, input.context.workspaceId);
+      this.metrics.observeAiRequest({
+        status: 'replayed', provider: existing.provider, model: existing.model,
+        durationSeconds: 0, usage, abstained: Boolean((existing.structuredOutput as GroundedRemediationOutput).abstained),
+      });
       return {
         requestId: existing.id,
         status: 'succeeded',
         provider: existing.provider,
         model: existing.model,
         output: existing.structuredOutput as GroundedRemediationOutput,
-        usage: await this.findUsage(existing.id, input.context.workspaceId),
+        usage,
         replayed: true,
       };
     }
@@ -123,6 +130,10 @@ export class AiRuntime {
           provider: response.provider, model: response.model, latencyMs,
         }, input.context.workspaceId);
       });
+      this.metrics.observeAiRequest({
+        status: 'succeeded', provider: response.provider, model: response.model,
+        durationSeconds: latencyMs / 1000, usage: response.usage, abstained: output.abstained,
+      });
       return {
         requestId: request.id,
         status: 'succeeded',
@@ -142,6 +153,13 @@ export class AiRuntime {
           latencyMs: Date.now() - startedAt, completedAt: new Date(),
         }).where(and(eq(aiRequests.id, request.id), eq(aiRequests.workspaceId, input.context.workspaceId)));
         await this.audit.record(null, 'ai_request_failed', 'ai_request', request.id, { category }, input.context.workspaceId);
+      });
+      const providerStatus = this.provider.status();
+      this.metrics.observeAiRequest({
+        status: category === 'timeout' ? 'timeout' : category === 'invalid_output' ? 'invalid_output' : 'failed',
+        provider: providerStatus.provider,
+        model: providerStatus.model,
+        durationSeconds: (Date.now() - startedAt) / 1000,
       });
       throw new AiRuntimeError(category, message, request.id);
     } finally {

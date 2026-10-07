@@ -17,9 +17,10 @@ import { PartnerRemediationController } from './partner-remediation.controller';
 import { PartnerRemediationService } from './partner-remediation.service';
 import { AiTraceController } from './ai-trace.controller';
 import { AiStatusController } from './ai-status.controller';
+import { ObservabilityModule } from '../../infrastructure/observability/observability.module';
 
 @Module({
-  imports: [AttemptsModule, AuditModule, EducationModule, ExternalUsersModule, IntegrationsModule, KnowledgeModule, LearningModule],
+  imports: [AttemptsModule, AuditModule, EducationModule, ExternalUsersModule, IntegrationsModule, KnowledgeModule, LearningModule, ObservabilityModule],
   controllers: [PartnerRemediationController, AiTraceController, AiStatusController],
   providers: [DisabledAiProvider, FakeAiProvider, OpenAiProvider, AiContextAssembler, AiRuntime, PartnerRemediationService, {
     provide: AI_PROVIDER,

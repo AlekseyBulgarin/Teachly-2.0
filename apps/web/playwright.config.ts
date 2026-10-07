@@ -23,6 +23,11 @@ export default defineConfig({
     : {
         command: `corepack pnpm run build && corepack pnpm exec next start -p ${port}`,
         url: `http://127.0.0.1:${port}/ecosystem`,
+        env: {
+          ...process.env,
+          TEACHLY_MONITOR_USER: "playwright-operator",
+          TEACHLY_MONITOR_PASSWORD: "playwright-monitor-password",
+        },
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
       },
