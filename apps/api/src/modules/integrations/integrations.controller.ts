@@ -6,6 +6,7 @@ import { ApiKeyGuard } from './api-key.guard';
 import type { TenantContext } from '../core/core.types';
 import { IntegrationsService } from './integrations.service';
 import { RequireIntegrationScopes } from './scope.decorator';
+import { IntegrationContextDto } from './integration.dto';
 
 @ApiTags('integrations')
 @ApiSecurity('workspace-api-key')
@@ -17,7 +18,7 @@ export class IntegrationsController {
 
   @Get()
   @RequireIntegrationScopes('external_users:read')
-  @ApiOkResponse({ description: 'Current integration metadata', type: Object })
+  @ApiOkResponse({ description: 'Current integration metadata and granted scopes', type: IntegrationContextDto })
   async current(@CurrentTenantContext() context: TenantContext) {
     const integration = await this.integrations.getCurrent(context);
     return {

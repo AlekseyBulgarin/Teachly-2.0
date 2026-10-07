@@ -1108,7 +1108,7 @@ export interface components {
             /** @description Whether a real or explicitly selected test provider is ready for requests. */
             readonly configured: boolean;
             /** @example gpt-4o-mini */
-            readonly model: Record<string, never> | null;
+            readonly model: string | null;
             /**
              * @description Safe provider label. Credentials are never returned.
              * @example openai
@@ -1209,6 +1209,21 @@ export interface components {
             /** @enum {string|null} */
             readonly manualReviewStatus: "pending" | null;
             readonly result: components["schemas"]["ResultDto"] | null;
+        };
+        readonly AttemptSummaryDto: {
+            readonly correct: number;
+            readonly evaluated: number;
+            /** Format: date-time */
+            readonly firstStartedAt: string | null;
+            readonly incorrect: number;
+            readonly invalid: number;
+            /** Format: date-time */
+            readonly lastActivityAt: string | null;
+            readonly mappedResults: number;
+            /** @example 0.75 */
+            readonly outcomeRate: Record<string, never> | null;
+            readonly started: number;
+            readonly submitted: number;
         };
         readonly CourseDto: {
             /** Format: uuid */
@@ -1342,6 +1357,17 @@ export interface components {
             readonly externalReference?: string;
             readonly title: string;
         };
+        readonly CurriculumDescriptorDto: {
+            readonly course: components["schemas"]["CurriculumEntityDto"];
+            readonly skill: components["schemas"]["CurriculumEntityDto"];
+            readonly subject: components["schemas"]["CurriculumSubjectDto"];
+            readonly topic: components["schemas"]["CurriculumEntityDto"];
+        };
+        readonly CurriculumEntityDto: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly name: string;
+        };
         readonly CurriculumMappingResponseDto: {
             /** Format: uuid */
             readonly courseId: Record<string, never> | null;
@@ -1372,6 +1398,21 @@ export interface components {
             readonly updatedAt: string;
             /** Format: uuid */
             readonly workspaceId: string;
+        };
+        readonly CurriculumSubjectDto: {
+            readonly code: string;
+            readonly name: string;
+        };
+        readonly DailyActivityDto: {
+            /** @example 2026-10-07 */
+            readonly date: string;
+            readonly evidenceCount: number;
+        };
+        readonly DateRangeDto: {
+            /** Format: date-time */
+            readonly from: string;
+            /** Format: date-time */
+            readonly to: string;
         };
         readonly ExternalResultObservationDto: {
             readonly externalLearnerId: string;
@@ -1467,7 +1508,7 @@ export interface components {
             /** Format: date-time */
             readonly publishedAt: string | null;
             /** Format: uuid */
-            readonly rawSnapshotId: Record<string, never> | null;
+            readonly rawSnapshotId: string | null;
             /** @enum {string} */
             readonly status: "draft" | "published" | "archived";
             /** Format: uuid */
@@ -1481,6 +1522,20 @@ export interface components {
             readonly externalTaskId: string;
             readonly idempotencyKey: string;
             readonly rawPayload: Record<string, never>;
+        };
+        readonly IntegrationContextDto: {
+            /** Format: date-time */
+            readonly createdAt: string;
+            /** Format: uuid */
+            readonly id: string;
+            readonly name: string;
+            /** Format: uuid */
+            readonly organizationId: string;
+            readonly scopes: readonly ("integrations:read" | "integrations:write" | "external_users:read" | "external_users:write" | "remediation:write" | "assessment:read" | "assessment:answer:read" | "assessment:write" | "assessment:manage" | "theory:read" | "theory:write" | "theory:manage" | "trainer:read" | "trainer:write" | "learner_intelligence:read" | "whiteboard:read" | "whiteboard:write")[];
+            /** @enum {string} */
+            readonly status: "active" | "disabled";
+            /** Format: uuid */
+            readonly workspaceId: string;
         };
         readonly KnowledgeStatusResponseDto: {
             /** Format: date-time */
@@ -1514,6 +1569,74 @@ export interface components {
             readonly versionId: string;
             /** @enum {string} */
             readonly versionStatus: "draft" | "approved" | "rejected" | "disabled" | "superseded";
+        };
+        readonly LearnerActivityItemDto: {
+            readonly curriculum: components["schemas"]["CurriculumDescriptorDto"];
+            /** Format: date-time */
+            readonly occurredAt: string;
+            /** @enum {string} */
+            readonly origin: "assessment" | "trainer" | "external_observation";
+            /** @enum {string} */
+            readonly outcome: "correct" | "incorrect" | "invalid";
+        };
+        readonly LearnerActivityResponseDto: {
+            readonly items: readonly components["schemas"]["LearnerActivityItemDto"][];
+            readonly learner: components["schemas"]["LearnerReferenceDto"];
+            readonly nextCursor: string | null;
+        };
+        readonly LearnerProfileResponseDto: {
+            readonly activity: components["schemas"]["ProfileActivitySummaryDto"];
+            /** Format: date-time */
+            readonly asOf: string;
+            readonly attempts: components["schemas"]["AttemptSummaryDto"];
+            readonly learner: components["schemas"]["LearnerReferenceDto"];
+            readonly mappingCoverage: components["schemas"]["MappingCoverageDto"];
+            readonly needsPractice: readonly components["schemas"]["LearnerSkillDto"][];
+            readonly recentActivity: readonly components["schemas"]["LearnerActivityItemDto"][];
+            readonly skills: components["schemas"]["SkillStateCountsDto"];
+            readonly strengths: readonly components["schemas"]["LearnerSkillDto"][];
+            readonly trainer: components["schemas"]["TrainerSummaryDto"];
+        };
+        readonly LearnerProgressResponseDto: {
+            readonly activityByDay: readonly components["schemas"]["DailyActivityDto"][];
+            /** Format: date-time */
+            readonly asOf: string;
+            readonly dimensions: readonly {
+                readonly [key: string]: unknown;
+            }[];
+            /** @enum {string} */
+            readonly groupBy: "skill" | "topic" | "course" | "subject";
+            readonly learner: components["schemas"]["LearnerReferenceDto"];
+            readonly mappingCoverage: components["schemas"]["MappingCoverageDto"];
+            readonly recentOutcomeTrend: readonly components["schemas"]["SkillTrendItemDto"][];
+            readonly skillStates: components["schemas"]["SkillStateCountsDto"];
+            readonly summary: components["schemas"]["OutcomeSummaryDto"];
+            readonly window: components["schemas"]["DateRangeDto"];
+        };
+        readonly LearnerReferenceDto: {
+            /** @example learner-42 */
+            readonly externalUserId: string;
+            /** @enum {string} */
+            readonly status: "active" | "disabled";
+        };
+        readonly LearnerSkillDto: {
+            readonly curriculum: components["schemas"]["CurriculumDescriptorDto"];
+            readonly state: components["schemas"]["PublicSkillStateDto"];
+            readonly taskEvidenceCount: number;
+            readonly trainerEvidenceCount: number;
+            readonly trend: components["schemas"]["PublicSkillTrendDto"];
+            readonly window: components["schemas"]["OutcomeSummaryDto"];
+        };
+        readonly LearnerSkillsResponseDto: {
+            /** Format: date-time */
+            readonly asOf: string;
+            readonly items: readonly components["schemas"]["LearnerSkillDto"][];
+            readonly learner: components["schemas"]["LearnerReferenceDto"];
+            readonly nextCursor: string | null;
+        };
+        readonly MappingCoverageDto: {
+            readonly evaluatedResults: number;
+            readonly withSkillEvidence: number;
         };
         readonly MonitoringOverviewDto: {
             readonly generatedAt: string;
@@ -1551,6 +1674,14 @@ export interface components {
             };
             readonly points: readonly components["schemas"]["MonitoringPointDto"][];
         };
+        readonly OutcomeSummaryDto: {
+            readonly correct: number;
+            readonly evidenceCount: number;
+            readonly incorrect: number;
+            readonly invalid: number;
+            /** @example 0.75 */
+            readonly outcomeRate: Record<string, never> | null;
+        };
         readonly PartnerRemediationContentDto: {
             readonly abstained: boolean;
             readonly confidence: number;
@@ -1574,6 +1705,19 @@ export interface components {
             /** Format: uuid */
             readonly requestId: string;
         };
+        readonly ProfileActivitySummaryDto: {
+            readonly activeDays: number;
+            readonly correct: number;
+            readonly evidenceCount: number;
+            /** Format: date-time */
+            readonly firstObservedAt: string | null;
+            readonly incorrect: number;
+            readonly invalid: number;
+            /** Format: date-time */
+            readonly lastObservedAt: string | null;
+            /** @example 0.75 */
+            readonly outcomeRate: Record<string, never> | null;
+        };
         readonly PublicAnswerSchemaDto: {
             /** @example automatic */
             readonly evaluatorCapability: string;
@@ -1581,6 +1725,26 @@ export interface components {
             readonly required?: boolean;
             /** @example single-choice */
             readonly type?: string;
+        };
+        readonly PublicSkillStateDto: {
+            /** Format: date-time */
+            readonly asOf: string;
+            readonly evidenceCount: number;
+            /** Format: date-time */
+            readonly lastObservedAt: string | null;
+            readonly recentOutcomes: readonly ("correct" | "incorrect" | "invalid")[];
+            /** @enum {string} */
+            readonly rule: "learning_state.v1";
+            /** @enum {string} */
+            readonly status: "insufficient_evidence" | "needs_practice" | "showing_progress";
+        };
+        readonly PublicSkillTrendDto: {
+            readonly currentCorrect: number;
+            readonly previousCorrect: number;
+            /** @enum {string} */
+            readonly rule: "learning_trend.v1";
+            /** @enum {string} */
+            readonly status: "improving" | "stable" | "declining" | "insufficient_evidence";
         };
         readonly PublicTaskVersionDto: {
             readonly content: components["schemas"]["TaskContentDto"];
@@ -1636,6 +1800,19 @@ export interface components {
             /** Format: uuid */
             readonly topicId: string;
         };
+        readonly SkillStateBreakdownDto: {
+            readonly insufficient_evidence: number;
+            readonly needs_practice: number;
+            readonly showing_progress: number;
+        };
+        readonly SkillStateCountsDto: {
+            readonly byStatus: components["schemas"]["SkillStateBreakdownDto"];
+            readonly observed: number;
+        };
+        readonly SkillTrendItemDto: {
+            readonly curriculum: components["schemas"]["CurriculumDescriptorDto"];
+            readonly trend: components["schemas"]["PublicSkillTrendDto"];
+        };
         readonly StartAttemptDto: {
             /** Format: uuid */
             readonly assignmentId: string;
@@ -1678,7 +1855,9 @@ export interface components {
             readonly name: string;
         };
         readonly SubmitAnswerDto: {
-            readonly answer: Record<string, never>;
+            readonly answer: {
+                readonly [key: string]: unknown;
+            };
             readonly idempotencyKey: string;
         };
         readonly SubmitAnswerResponseDto: {
@@ -1689,7 +1868,9 @@ export interface components {
             readonly result: components["schemas"]["ResultDto"] | null;
         };
         readonly SubmitTrainerAnswerDto: {
-            readonly answer: Record<string, never>;
+            readonly answer: {
+                readonly [key: string]: unknown;
+            };
             readonly idempotencyKey: string;
             /** Format: uuid */
             readonly itemId: string;
@@ -1769,7 +1950,7 @@ export interface components {
             /** Format: date-time */
             readonly publishedAt: string | null;
             /** Format: uuid */
-            readonly rawSnapshotId: Record<string, never> | null;
+            readonly rawSnapshotId: string | null;
             /** @enum {string} */
             readonly status: "draft" | "published" | "archived";
             /** Format: uuid */
@@ -1798,17 +1979,59 @@ export interface components {
             readonly id: string;
             readonly name: string;
         };
+        readonly TrainerFiltersDto: {
+            /** Format: uuid */
+            readonly courseId: string | null;
+            /** Format: uuid */
+            readonly skillId: string | null;
+            /** Format: uuid */
+            readonly subjectId: string | null;
+            /** Format: uuid */
+            readonly topicId: string | null;
+        };
+        readonly TrainerItemDto: {
+            /** Format: uuid */
+            readonly attemptId: string | null;
+            /** Format: uuid */
+            readonly id: string;
+            readonly position: number;
+            readonly result: components["schemas"]["ResultDto"] | null;
+            /** @enum {string} */
+            readonly status: "pending" | "started" | "submitted";
+            readonly task: components["schemas"]["PublicTaskVersionDto"];
+        };
+        readonly TrainerProgressDto: {
+            readonly completed: number;
+            readonly total: number;
+        };
         readonly TrainerSessionResponseDto: {
             readonly canComplete: boolean;
-            readonly current?: Record<string, never> | null;
-            readonly filters: Record<string, never>;
+            readonly current?: components["schemas"]["TrainerItemDto"] | null;
+            readonly filters: components["schemas"]["TrainerFiltersDto"];
             /** Format: uuid */
             readonly id: string;
             readonly idempotentReplay: boolean;
-            readonly latestResult?: Record<string, never> | null;
-            readonly progress: Record<string, never>;
+            readonly latestResult?: components["schemas"]["ResultDto"] | null;
+            readonly progress: components["schemas"]["TrainerProgressDto"];
             /** @enum {string} */
             readonly status: "active" | "completed";
+        };
+        readonly TrainerSubmissionResponseDto: {
+            readonly session: components["schemas"]["TrainerSessionResponseDto"];
+            readonly submitted: components["schemas"]["SubmitAnswerResponseDto"];
+            readonly teacherSignal: {
+                readonly [key: string]: unknown;
+            } | null;
+            readonly theory: readonly {
+                readonly [key: string]: unknown;
+            }[];
+        };
+        readonly TrainerSummaryDto: {
+            readonly itemsSubmitted: number;
+            /** Format: date-time */
+            readonly lastActivityAt: string | null;
+            readonly sessionsCompleted: number;
+            readonly sessionsStarted: number;
         };
         readonly UpdateDraftDto: {
             readonly answerSchema?: Record<string, never>;
@@ -3861,13 +4084,13 @@ export interface operations {
         };
         readonly requestBody?: never;
         readonly responses: {
-            /** @description Current integration metadata */
+            /** @description Current integration metadata and granted scopes */
             readonly 200: {
                 headers: {
                     readonly [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": Record<string, never>;
+                    readonly "application/json": components["schemas"]["IntegrationContextDto"];
                 };
             };
             readonly 429: components["responses"]["TeachlyTooManyRequests"];
@@ -4122,7 +4345,14 @@ export interface operations {
     };
     readonly LearnerIntelligenceController_activity: {
         readonly parameters: {
-            readonly query?: never;
+            readonly query: {
+                /** @description Opaque cursor returned by the previous page. */
+                readonly cursor?: string;
+                readonly externalUserId: string;
+                readonly from?: string;
+                readonly limit?: number;
+                readonly to?: string;
+            };
             readonly header?: {
                 /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
                 readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
@@ -4136,7 +4366,9 @@ export interface operations {
                 headers: {
                     readonly [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    readonly "application/json": components["schemas"]["LearnerActivityResponseDto"];
+                };
             };
             /** @description Workspace API key required. */
             readonly 401: {
@@ -4162,7 +4394,10 @@ export interface operations {
     };
     readonly LearnerIntelligenceController_profile: {
         readonly parameters: {
-            readonly query?: never;
+            readonly query: {
+                readonly externalUserId: string;
+                readonly recentLimit?: number;
+            };
             readonly header?: {
                 /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
                 readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
@@ -4176,7 +4411,9 @@ export interface operations {
                 headers: {
                     readonly [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    readonly "application/json": components["schemas"]["LearnerProfileResponseDto"];
+                };
             };
             /** @description Workspace API key required. */
             readonly 401: {
@@ -4202,7 +4439,12 @@ export interface operations {
     };
     readonly LearnerIntelligenceController_progress: {
         readonly parameters: {
-            readonly query?: never;
+            readonly query: {
+                readonly externalUserId: string;
+                readonly from?: string;
+                readonly groupBy?: "skill" | "topic" | "course" | "subject";
+                readonly to?: string;
+            };
             readonly header?: {
                 /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
                 readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
@@ -4216,7 +4458,9 @@ export interface operations {
                 headers: {
                     readonly [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    readonly "application/json": components["schemas"]["LearnerProgressResponseDto"];
+                };
             };
             /** @description Workspace API key required. */
             readonly 401: {
@@ -4242,7 +4486,13 @@ export interface operations {
     };
     readonly LearnerIntelligenceController_skills: {
         readonly parameters: {
-            readonly query?: never;
+            readonly query: {
+                /** @description Opaque cursor returned by the previous page. */
+                readonly cursor?: string;
+                readonly externalUserId: string;
+                readonly limit?: number;
+                readonly status?: "insufficient_evidence" | "needs_practice" | "showing_progress";
+            };
             readonly header?: {
                 /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
                 readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
@@ -4256,7 +4506,9 @@ export interface operations {
                 headers: {
                     readonly [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    readonly "application/json": components["schemas"]["LearnerSkillsResponseDto"];
+                };
             };
             /** @description Workspace API key required. */
             readonly 401: {
@@ -5018,7 +5270,7 @@ export interface operations {
                     readonly [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": Record<string, never>;
+                    readonly "application/json": components["schemas"]["TrainerSubmissionResponseDto"];
                 };
             };
             /** @description Workspace API key required. */

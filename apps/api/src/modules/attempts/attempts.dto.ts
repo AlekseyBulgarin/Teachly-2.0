@@ -19,7 +19,7 @@ export class SubmitAnswerDto {
   @MinLength(1)
   idempotencyKey!: string;
 
-  @ApiProperty({ type: Object })
+  @ApiProperty({ type: 'object', additionalProperties: true })
   @IsNotEmptyObject()
   answer!: Record<string, unknown>;
 }

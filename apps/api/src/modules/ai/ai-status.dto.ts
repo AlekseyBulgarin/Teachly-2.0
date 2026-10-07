@@ -7,7 +7,7 @@ export class AiStatusResponseDto {
   @ApiProperty({ example: 'openai', description: 'Safe provider label. Credentials are never returned.' })
   provider!: string;
 
-  @ApiProperty({ nullable: true, example: 'gpt-4o-mini' })
+  @ApiProperty({ type: String, nullable: true, example: 'gpt-4o-mini' })
   model!: string | null;
 
   @ApiProperty({ enum: ['responses', 'chat_completions'], nullable: true })
