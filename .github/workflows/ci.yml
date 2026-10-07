@@ -76,6 +76,17 @@ jobs:
             prom/prometheus:v3.15.0 \
             check config /etc/prometheus/prometheus.yml
 
+  operational-readiness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/setup@v3
+        with:
+          runtime: node@24
+          cache: true
+          require-lockfile: true
+      - run: pnpm operations:check
+
   web:
     runs-on: ubuntu-latest
     steps:

@@ -19,7 +19,9 @@
     "db:seed:demo": "corepack pnpm --filter @teachly/api db:seed:demo",
     "contracts:generate": "corepack pnpm --filter @teachly/api openapi:generate && corepack pnpm --filter @teachly/contracts generate",
     "contracts:check": "corepack pnpm --filter @teachly/api openapi:check && corepack pnpm --filter @teachly/contracts check",
-    "security:audit": "node scripts/check-security-audit.mjs"
+    "security:audit": "node scripts/check-security-audit.mjs",
+    "operations:check": "node --test scripts/capacity-smoke.test.mjs && node scripts/check-operational-readiness.mjs",
+    "smoke:capacity": "node scripts/capacity-smoke.mjs"
   },
   "devDependencies": {
     "@neon/config": "^1.7.3"
