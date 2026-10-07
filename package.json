@@ -24,6 +24,6 @@
     "smoke:capacity": "node scripts/capacity-smoke.mjs"
   },
   "devDependencies": {
-    "@neon/config": "^1.7.3"
+    "@neon/config": "^1.8.3"
   }
 }
