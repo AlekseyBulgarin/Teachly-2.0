@@ -66,6 +66,7 @@ describe('Phase 2 PostgreSQL invariants', () => {
     expect(demoKey?.revokedAt).toBeNull();
     expect(demoKey?.scopes).toEqual([
       'assessment:read', 'theory:read', 'trainer:read', 'trainer:write', 'learner_intelligence:read',
+      'external_users:read', 'remediation:write',
       'whiteboard:read', 'whiteboard:write',
     ]);
     expect(await database.db.select().from(attempts)).toHaveLength(14);

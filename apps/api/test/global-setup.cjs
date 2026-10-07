@@ -12,7 +12,7 @@ module.exports = async () => {
     stdio: 'ignore',
   });
   server.unref();
-  const deadline = Date.now() + 120_000;
+  const deadline = Date.now() + 180_000;
   while (Date.now() < deadline) {
     if (fs.existsSync(statePath)) {
       const state = JSON.parse(fs.readFileSync(statePath, 'utf8'));

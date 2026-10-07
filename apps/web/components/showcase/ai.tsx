@@ -16,6 +16,7 @@ import { capabilityRegistry } from "@/lib/capabilities";
 import { PageHeader, SectionCard, StatusBadge } from "@/components/ui";
 import { EcosystemNextStep, PipelineStep } from "@/components/showcase/shared";
 import { QuickSectionNav } from "@/components/showcase/quick-section-nav";
+import { AiRemediationDemo } from "@/components/showcase/demos/ai-remediation-demo";
 
 export function AiPage() {
   const { t, locale } = useEcosystem();
@@ -109,31 +110,8 @@ export function AiPage() {
           tone="amber"
         />
       </div>
-      <div
-        id="assistant"
-        className="scroll-mt-28 grid gap-6 xl:grid-cols-[.85fr_1.15fr]"
-      >
-        <SectionCard
-          title={t("ai.context")}
-          detail={t("ai.contextDetail")}
-          icon={ShieldCheck}
-        >
-          <div className="p-5 text-sm leading-7 text-slate-400 sm:p-7">
-            {t("ai.requestDetail")}
-          </div>
-        </SectionCard>
-        <SectionCard
-          title={t("ai.proposal")}
-          detail={t("ai.previewDetail")}
-          icon={Sparkles}
-          action={<StatusBadge status="COMING NEXT" locale={locale} />}
-        >
-          <div className="p-5 sm:p-7">
-            <p className="max-w-xl text-sm leading-7 text-slate-400">
-              {t("ai.previewDetail")}
-            </p>
-          </div>
-        </SectionCard>
+      <div id="assistant" className="scroll-mt-28">
+        <AiRemediationDemo />
       </div>
       <SectionCard title={t("ai.roadmapTitle")} icon={CheckCircle2}>
         <div className="grid gap-3 p-5 sm:grid-cols-3 sm:p-7">

@@ -10,20 +10,26 @@ import { AI_PROVIDER } from './ai-provider';
 import { AiContextAssembler } from './ai-context-assembler';
 import { AiRuntime } from './ai-runtime.service';
 import { FakeAiProvider } from './fake-ai-provider';
+import { DisabledAiProvider } from './disabled-ai-provider';
 import { OpenAiProvider } from './openai-provider';
+import { resolveAiProviderConfiguration } from './ai-provider.config';
 import { PartnerRemediationController } from './partner-remediation.controller';
 import { PartnerRemediationService } from './partner-remediation.service';
 import { AiTraceController } from './ai-trace.controller';
+import { AiStatusController } from './ai-status.controller';
 
 @Module({
   imports: [AttemptsModule, AuditModule, EducationModule, ExternalUsersModule, IntegrationsModule, KnowledgeModule, LearningModule],
-  controllers: [PartnerRemediationController, AiTraceController],
-  providers: [FakeAiProvider, OpenAiProvider, AiContextAssembler, AiRuntime, PartnerRemediationService, {
+  controllers: [PartnerRemediationController, AiTraceController, AiStatusController],
+  providers: [DisabledAiProvider, FakeAiProvider, OpenAiProvider, AiContextAssembler, AiRuntime, PartnerRemediationService, {
     provide: AI_PROVIDER,
-    useFactory: (fake: FakeAiProvider, openai: OpenAiProvider) => (
-      process.env.NODE_ENV === 'production' || process.env.OPENAI_API_KEY ? openai : fake
-    ),
-    inject: [FakeAiProvider, OpenAiProvider],
+    useFactory: (disabled: DisabledAiProvider, fake: FakeAiProvider, openai: OpenAiProvider) => {
+      const mode = resolveAiProviderConfiguration().mode;
+      if (mode === 'fake') return fake;
+      if (mode === 'openai' || mode === 'openai-compatible') return openai;
+      return disabled;
+    },
+    inject: [DisabledAiProvider, FakeAiProvider, OpenAiProvider],
   }],
   exports: [AiRuntime, AiContextAssembler],
 })
