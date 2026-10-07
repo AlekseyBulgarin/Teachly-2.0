@@ -1,7 +1,17 @@
-import { createHash, timingSafeEqual } from 'node:crypto';
+import { timingSafeEqual } from 'node:crypto';
 
-function digest(value: string): Buffer {
-  return createHash('sha256').update(value).digest();
+const MAX_CREDENTIAL_BYTES = 1_024;
+
+function constantTimeEqual(value: string, expected: string): boolean {
+  const valueBytes = Buffer.from(value, 'utf8');
+  const expectedBytes = Buffer.from(expected, 'utf8');
+  if (valueBytes.length > MAX_CREDENTIAL_BYTES || expectedBytes.length > MAX_CREDENTIAL_BYTES) return false;
+  const size = Math.max(valueBytes.length, expectedBytes.length, 1);
+  const paddedValue = Buffer.alloc(size);
+  const paddedExpected = Buffer.alloc(size);
+  valueBytes.copy(paddedValue);
+  expectedBytes.copy(paddedExpected);
+  return timingSafeEqual(paddedValue, paddedExpected) && valueBytes.length === expectedBytes.length;
 }
 
 export function monitorRequestAuthorized(authorization: string | null, env: NodeJS.ProcessEnv = process.env): boolean {
@@ -18,6 +28,5 @@ export function monitorRequestAuthorized(authorization: string | null, env: Node
   if (separator < 0) return false;
   const user = supplied.slice(0, separator);
   const password = supplied.slice(separator + 1);
-  return timingSafeEqual(digest(user), digest(expectedUser))
-    && timingSafeEqual(digest(password), digest(expectedPassword));
+  return constantTimeEqual(user, expectedUser) && constantTimeEqual(password, expectedPassword);
 }
