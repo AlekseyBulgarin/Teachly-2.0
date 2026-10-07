@@ -17,6 +17,16 @@ export type Integration = { id: string; name: string; organizationId: string; wo
 export type KnowledgeStatus = { sourceId: string; sourceName: string; sourceType: string; sourceStatus: string; sourceLicenseStatus: string; documentId: string; documentTitle: string; documentStatus: string; versionId: string; version: number; versionStatus: string; licenseStatus: string; externalAiPermission: string; approvedAt: string | null };
 export type AiTrace = { requestId: string; capability: string; status: string; provider: string | null; model: string | null; latencyMs: number | null; knowledgeReferences: string[]; outcome: string | null; createdAt: string; completedAt: string | null };
 export type RemediationResponse = { requestId: string; remediation: { summary: string; explanation: string; hint: string; likelyGap: string | null; confidence: number; abstained: boolean }; evidenceRefs: string[]; knowledgeRefs: string[] };
+export type AiProviderStatus = { configured: boolean; provider: string; model: string | null; apiMode: 'responses' | 'chat_completions' | null };
+export type PublishedVariant = {
+  id: string;
+  version: number;
+  status: string;
+  title: string | null;
+  description: string | null;
+  publishedAt: string | null;
+  items: Array<{ id: string; position: number; required: boolean; resolutionStatus: string; section: string | null }>;
+};
 export type HealthStatus = components['schemas']['HealthStatusDto'];
 
 export type LearnerCurriculum = {
@@ -199,8 +209,10 @@ export const api = {
   integration: () => request<Integration>('v1/integration'),
   knowledge: () => request<KnowledgeStatus[]>('v1/knowledge/status'),
   aiTraces: () => request<AiTrace[]>('v1/ai-requests'),
-  remediation: (body: { externalUserId: string; attemptId: string; learnerQuestion?: string; idempotencyKey: string }) => request<RemediationResponse>('v1/remediations', { method: 'POST', body: JSON.stringify(body), headers: { 'x-request-id': crypto.randomUUID() } }),
+  aiStatus: (signal?: AbortSignal) => request<AiProviderStatus>('v1/ai/status', { signal }),
+  remediation: (body: { learnerQuestion?: string; idempotencyKey: string }, signal?: AbortSignal) => request<RemediationResponse>('v1/remediations', { method: 'POST', body: JSON.stringify(body), headers: { 'x-request-id': crypto.randomUUID() }, signal }),
   publishedTasks: (signal?: AbortSignal) => request<PublishedTask[]>('v1/assessment/tasks', { signal }),
+  publishedVariants: (signal?: AbortSignal) => request<PublishedVariant[]>('v1/assessment/variants', { signal }),
   theoryMaterials: (signal?: AbortSignal) => request<TheoryMaterial[]>('v1/theory/materials', { signal }),
   trainerStart: (body: { idempotencyKey: string }, signal?: AbortSignal) => request<TrainerSession>('v1/trainer/sessions', { method: 'POST', body: JSON.stringify(body), signal }),
   trainerCurrent: (sessionId: string, signal?: AbortSignal) => request<TrainerSession>(`v1/trainer/sessions/${sessionId}/current`, { signal }),

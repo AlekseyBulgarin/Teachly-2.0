@@ -16,6 +16,15 @@ export class FakeAiProvider implements AiProvider {
     this.behavior = behavior;
   }
 
+  status() {
+    return {
+      configured: true,
+      provider: 'fake',
+      model: 'deterministic-v1',
+      apiMode: null,
+    } as const;
+  }
+
   async complete(request: AiProviderRequest, signal: AbortSignal): Promise<AiProviderResponse> {
     if (signal.aborted) throw new Error('AI provider request aborted');
     if (this.behavior.error) throw this.behavior.error;

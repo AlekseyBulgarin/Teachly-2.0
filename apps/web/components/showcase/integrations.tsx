@@ -4,6 +4,7 @@ import {
   AppWindow,
   ArrowRight,
   Check,
+  KeyRound,
   Layers3,
   Mail,
   MessageCircle,
@@ -17,6 +18,7 @@ import { capabilityRegistry } from "@/lib/capabilities";
 import { PageHeader, SectionCard, StatusBadge } from "@/components/ui";
 import { PipelineStep } from "@/components/showcase/shared";
 import { QuickSectionNav } from "@/components/showcase/quick-section-nav";
+import { IntegrationProof } from "@/components/showcase/demos/integration-proof";
 
 export function IntegrationsPage() {
   const { t, locale } = useEcosystem();
@@ -53,6 +55,7 @@ export function IntegrationsPage() {
           { id: "overview", label: t("integrations.navOverview") },
           { id: "model", label: t("integrations.navModel") },
           { id: "process", label: t("integrations.navProcess") },
+          { id: "proof", label: locale === "ru" ? "API-доступ" : "API access" },
           { id: "contact", label: t("integrations.navContact") },
         ]}
       />
@@ -83,6 +86,17 @@ export function IntegrationsPage() {
               </div>
             ))}
           </div>
+        </SectionCard>
+      </div>
+
+      <div id="proof" className="scroll-mt-28">
+        <SectionCard
+          title={locale === "ru" ? "Живое подключение и жизненный цикл ключа" : "Live connection and key lifecycle"}
+          detail={locale === "ru" ? "Показываем безопасные сведения реальной demo-интеграции — без раскрытия секрета." : "Safe details from the live demo integration, without exposing its secret."}
+          icon={KeyRound}
+          action={<StatusBadge status="LIVE" locale={locale} />}
+        >
+          <div className="p-5 sm:p-7"><IntegrationProof /></div>
         </SectionCard>
       </div>
 

@@ -3,8 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "check": "tsc --noEmit",
-    "start": "tsx src/index.ts"
+    "check": "tsc --noEmit && tsx --test src/*.test.ts",
+    "preflight": "tsx src/index.ts preflight",
+    "start": "tsx src/index.ts run",
+    "test": "tsx --test src/*.test.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@teachly/contracts": "workspace:*",

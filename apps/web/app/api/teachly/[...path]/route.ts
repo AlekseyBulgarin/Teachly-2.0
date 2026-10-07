@@ -7,6 +7,9 @@ import { createDemoBoardBinding, verifyDemoBoardBinding } from '@/lib/demo-board
 // requires an integrity-protected HttpOnly binding created with that board, so
 // learning another visitor's UUID is insufficient to read or write it.
 const whiteboardCreateRoute = /^v1\/whiteboards$/;
+const variantsRoute = /^v1\/assessment\/variants$/;
+const aiStatusRoute = /^v1\/ai\/status$/;
+const remediationRoute = /^v1\/remediations$/;
 const whiteboardStateRoute =
   /^v1\/whiteboards\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\/state$/i;
 const demoBoardCookie = 'teachly-demo-board';
@@ -15,6 +18,9 @@ const upstreamTimeoutMs = 15_000;
 const allowedGetRoutes = [
   /^health$/,
   /^v1\/assessment\/tasks$/,
+  variantsRoute,
+  aiStatusRoute,
+  /^v1\/integration$/,
   /^v1\/theory\/materials$/,
   /^v1\/trainer\/sessions\/[0-9a-f-]+$/i,
   /^v1\/trainer\/sessions\/[0-9a-f-]+\/current$/i,
@@ -27,6 +33,7 @@ const allowedPostRoutes = [
   /^v1\/trainer\/sessions$/,
   /^v1\/trainer\/sessions\/[0-9a-f-]+\/(submissions|next|complete)$/i,
   whiteboardCreateRoute,
+  remediationRoute,
 ];
 
 const allowedPutRoutes = [whiteboardStateRoute];
@@ -126,12 +133,37 @@ function publicWhiteboardCreate(value: unknown) {
   return { id: board.id, currentRevision: board.currentRevision };
 }
 
+function publicVariant(value: unknown) {
+  const variant = asRecord(value);
+  return {
+    id: variant.id,
+    version: variant.version,
+    status: variant.status,
+    title: variant.title,
+    description: variant.description,
+    publishedAt: variant.publishedAt,
+    items: Array.isArray(variant.items) ? variant.items.map((entry) => {
+      const item = asRecord(entry);
+      return {
+        id: item.id,
+        position: item.position,
+        required: item.required,
+        resolutionStatus: item.resolutionStatus,
+        section: item.section,
+      };
+    }) : [],
+  };
+}
+
 function sanitizeResponse(path: string, value: unknown): unknown {
   if (whiteboardCreateRoute.test(path)) {
     return publicWhiteboardCreate(value);
   }
   if (path === 'v1/theory/materials') {
     return Array.isArray(value) ? value.map(publicTheoryMaterial) : [];
+  }
+  if (variantsRoute.test(path)) {
+    return Array.isArray(value) ? value.map(publicVariant) : [];
   }
   if (/^v1\/trainer\/sessions\/[0-9a-f-]+\/submissions$/i.test(path)) {
     const response = asRecord(value);
@@ -176,7 +208,9 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
       { status: 503 },
     );
   }
-  const apiBaseUrl = configuredApiBaseUrl.replace(/\/+$/, '');
+  let baseUrlEnd = configuredApiBaseUrl.length;
+  while (baseUrlEnd > 0 && configuredApiBaseUrl.charCodeAt(baseUrlEnd - 1) === 47) baseUrlEnd -= 1;
+  const apiBaseUrl = configuredApiBaseUrl.slice(0, baseUrlEnd);
   // The learner identity is server-owned: the browser can never choose which
   // external learner to read. Any client-supplied value is discarded.
   const isLearnerIntelligence = joinedPath === 'v1/learner-intelligence/profile' || joinedPath === 'v1/learner-intelligence/progress';
@@ -262,6 +296,30 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
           taskIds,
         });
       }
+      if (remediationRoute.test(joinedPath)) {
+        let input: Record<string, unknown>;
+        try {
+          input = body ? JSON.parse(body) as Record<string, unknown> : {};
+        } catch {
+          return NextResponse.json({ code: 'INVALID_JSON', message: 'Request body must be valid JSON' }, { status: 400 });
+        }
+        const externalUserId = process.env.TEACHLY_DEMO_EXTERNAL_LEARNER_ID
+          ?? (process.env.NODE_ENV === 'production' ? null : 'demo-learner-01');
+        const attemptId = process.env.TEACHLY_DEMO_ATTEMPT_ID
+          ?? (process.env.NODE_ENV === 'production' ? null : '00000000-0000-4000-8000-000000000014');
+        if (!externalUserId || !attemptId) {
+          return NextResponse.json(
+            { code: 'DEMO_NOT_CONFIGURED', message: 'The live Teachly demo is not configured' },
+            { status: 503 },
+          );
+        }
+        body = JSON.stringify({
+          externalUserId,
+          attemptId,
+          learnerQuestion: typeof input.learnerQuestion === 'string' ? input.learnerQuestion.slice(0, 1_000) : undefined,
+          idempotencyKey: typeof input.idempotencyKey === 'string' ? input.idempotencyKey.slice(0, 255) : undefined,
+        });
+      }
     }
     const response = await fetch(target, {
       method: request.method,
@@ -291,7 +349,7 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
       });
       return result;
     }
-    if (joinedPath === 'v1/theory/materials' || joinedPath.startsWith('v1/trainer/sessions')) {
+    if (joinedPath === 'v1/theory/materials' || variantsRoute.test(joinedPath) || joinedPath.startsWith('v1/trainer/sessions')) {
       return NextResponse.json(sanitizeResponse(joinedPath, await response.json()), { status: response.status });
     }
     return new NextResponse(response.body, {

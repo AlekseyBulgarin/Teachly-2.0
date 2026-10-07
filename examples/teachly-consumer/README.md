@@ -1,5 +1,7 @@
-# Teachly example consumer
+# Teachly reference pilot consumer
 
-Minimal server-side TypeScript consumer for the first integration scenario. Copy `.env.example` to a local `.env`, supply a workspace API key with `external_users:write` and `learner_intelligence:read`, then run the commands in `docs/integrations/quickstart.md`.
+Server-side TypeScript reference for the first partner workflow. It checks scopes and AI readiness, synchronizes a pseudonymous learner, creates an idempotent Trainer session, and reads the four Learner Intelligence views through the generated OpenAPI client. A configured answer can optionally exercise deterministic submission and grounded remediation.
 
-This example intentionally contains no webhook, browser widget, or SDK abstraction. Those surfaces remain deferred until a real partner integration proves their contracts.
+Copy `.env.example` to `.env`, then follow `docs/integrations/quickstart.md`. The API key stays server-side and the public task contract never exposes an answer key.
+
+Webhooks, browser widgets, and a separately versioned public SDK remain deferred until a real partner validates their delivery and UI requirements.

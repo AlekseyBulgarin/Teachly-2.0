@@ -35,6 +35,39 @@
       }
     },
     "schemas": {
+      "AiStatusResponseDto": {
+        "properties": {
+          "apiMode": {
+            "enum": [
+              "responses",
+              "chat_completions"
+            ],
+            "nullable": true,
+            "type": "string"
+          },
+          "configured": {
+            "description": "Whether a real or explicitly selected test provider is ready for requests.",
+            "type": "boolean"
+          },
+          "model": {
+            "example": "gpt-4o-mini",
+            "nullable": true,
+            "type": "string"
+          },
+          "provider": {
+            "description": "Safe provider label. Credentials are never returned.",
+            "example": "openai",
+            "type": "string"
+          }
+        },
+        "required": [
+          "configured",
+          "provider",
+          "model",
+          "apiMode"
+        ],
+        "type": "object"
+      },
       "AiTraceResponseDto": {
         "properties": {
           "capability": {
@@ -342,6 +375,59 @@
           "attempt",
           "result",
           "manualReviewStatus"
+        ],
+        "type": "object"
+      },
+      "AttemptSummaryDto": {
+        "properties": {
+          "correct": {
+            "type": "number"
+          },
+          "evaluated": {
+            "type": "number"
+          },
+          "firstStartedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "incorrect": {
+            "type": "number"
+          },
+          "invalid": {
+            "type": "number"
+          },
+          "lastActivityAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "mappedResults": {
+            "type": "number"
+          },
+          "outcomeRate": {
+            "example": 0.75,
+            "nullable": true,
+            "type": "object"
+          },
+          "started": {
+            "type": "number"
+          },
+          "submitted": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "started",
+          "submitted",
+          "evaluated",
+          "correct",
+          "incorrect",
+          "invalid",
+          "mappedResults",
+          "firstStartedAt",
+          "lastActivityAt",
+          "outcomeRate"
         ],
         "type": "object"
       },
@@ -761,6 +847,45 @@
         ],
         "type": "object"
       },
+      "CurriculumDescriptorDto": {
+        "properties": {
+          "course": {
+            "$ref": "#/components/schemas/CurriculumEntityDto"
+          },
+          "skill": {
+            "$ref": "#/components/schemas/CurriculumEntityDto"
+          },
+          "subject": {
+            "$ref": "#/components/schemas/CurriculumSubjectDto"
+          },
+          "topic": {
+            "$ref": "#/components/schemas/CurriculumEntityDto"
+          }
+        },
+        "required": [
+          "subject",
+          "course",
+          "topic",
+          "skill"
+        ],
+        "type": "object"
+      },
+      "CurriculumEntityDto": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "type": "object"
+      },
       "CurriculumMappingResponseDto": {
         "properties": {
           "courseId": {
@@ -845,6 +970,54 @@
           "status",
           "createdAt",
           "updatedAt"
+        ],
+        "type": "object"
+      },
+      "CurriculumSubjectDto": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ],
+        "type": "object"
+      },
+      "DailyActivityDto": {
+        "properties": {
+          "date": {
+            "example": "2026-10-07",
+            "type": "string"
+          },
+          "evidenceCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "date",
+          "evidenceCount"
+        ],
+        "type": "object"
+      },
+      "DateRangeDto": {
+        "properties": {
+          "from": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "to": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "from",
+          "to"
         ],
         "type": "object"
       },
@@ -1113,7 +1286,7 @@
           "rawSnapshotId": {
             "format": "uuid",
             "nullable": true,
-            "type": "object"
+            "type": "string"
           },
           "status": {
             "enum": [
@@ -1170,6 +1343,71 @@
           "externalTaskId",
           "idempotencyKey",
           "rawPayload"
+        ],
+        "type": "object"
+      },
+      "IntegrationContextDto": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "organizationId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "scopes": {
+            "items": {
+              "enum": [
+                "integrations:read",
+                "integrations:write",
+                "external_users:read",
+                "external_users:write",
+                "remediation:write",
+                "assessment:read",
+                "assessment:answer:read",
+                "assessment:write",
+                "assessment:manage",
+                "theory:read",
+                "theory:write",
+                "theory:manage",
+                "trainer:read",
+                "trainer:write",
+                "learner_intelligence:read",
+                "whiteboard:read",
+                "whiteboard:write"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "disabled"
+            ],
+            "type": "string"
+          },
+          "workspaceId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "organizationId",
+          "workspaceId",
+          "status",
+          "scopes",
+          "createdAt"
         ],
         "type": "object"
       },
@@ -1276,6 +1514,457 @@
         ],
         "type": "object"
       },
+      "LearnerActivityItemDto": {
+        "properties": {
+          "curriculum": {
+            "$ref": "#/components/schemas/CurriculumDescriptorDto"
+          },
+          "occurredAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "origin": {
+            "enum": [
+              "assessment",
+              "trainer",
+              "external_observation"
+            ],
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "correct",
+              "incorrect",
+              "invalid"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "occurredAt",
+          "origin",
+          "outcome",
+          "curriculum"
+        ],
+        "type": "object"
+      },
+      "LearnerActivityResponseDto": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/LearnerActivityItemDto"
+            },
+            "type": "array"
+          },
+          "learner": {
+            "$ref": "#/components/schemas/LearnerReferenceDto"
+          },
+          "nextCursor": {
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "learner",
+          "items",
+          "nextCursor"
+        ],
+        "type": "object"
+      },
+      "LearnerProfileResponseDto": {
+        "properties": {
+          "activity": {
+            "$ref": "#/components/schemas/ProfileActivitySummaryDto"
+          },
+          "asOf": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "attempts": {
+            "$ref": "#/components/schemas/AttemptSummaryDto"
+          },
+          "learner": {
+            "$ref": "#/components/schemas/LearnerReferenceDto"
+          },
+          "mappingCoverage": {
+            "$ref": "#/components/schemas/MappingCoverageDto"
+          },
+          "needsPractice": {
+            "items": {
+              "$ref": "#/components/schemas/LearnerSkillDto"
+            },
+            "type": "array"
+          },
+          "recentActivity": {
+            "items": {
+              "$ref": "#/components/schemas/LearnerActivityItemDto"
+            },
+            "type": "array"
+          },
+          "skills": {
+            "$ref": "#/components/schemas/SkillStateCountsDto"
+          },
+          "strengths": {
+            "items": {
+              "$ref": "#/components/schemas/LearnerSkillDto"
+            },
+            "type": "array"
+          },
+          "trainer": {
+            "$ref": "#/components/schemas/TrainerSummaryDto"
+          }
+        },
+        "required": [
+          "learner",
+          "asOf",
+          "activity",
+          "attempts",
+          "mappingCoverage",
+          "skills",
+          "strengths",
+          "needsPractice",
+          "trainer",
+          "recentActivity"
+        ],
+        "type": "object"
+      },
+      "LearnerProgressResponseDto": {
+        "properties": {
+          "activityByDay": {
+            "items": {
+              "$ref": "#/components/schemas/DailyActivityDto"
+            },
+            "type": "array"
+          },
+          "asOf": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "dimensions": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "groupBy": {
+            "enum": [
+              "skill",
+              "topic",
+              "course",
+              "subject"
+            ],
+            "type": "string"
+          },
+          "learner": {
+            "$ref": "#/components/schemas/LearnerReferenceDto"
+          },
+          "mappingCoverage": {
+            "$ref": "#/components/schemas/MappingCoverageDto"
+          },
+          "recentOutcomeTrend": {
+            "items": {
+              "$ref": "#/components/schemas/SkillTrendItemDto"
+            },
+            "type": "array"
+          },
+          "skillStates": {
+            "$ref": "#/components/schemas/SkillStateCountsDto"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/OutcomeSummaryDto"
+          },
+          "window": {
+            "$ref": "#/components/schemas/DateRangeDto"
+          }
+        },
+        "required": [
+          "learner",
+          "asOf",
+          "window",
+          "summary",
+          "mappingCoverage",
+          "skillStates",
+          "activityByDay",
+          "groupBy",
+          "dimensions",
+          "recentOutcomeTrend"
+        ],
+        "type": "object"
+      },
+      "LearnerReferenceDto": {
+        "properties": {
+          "externalUserId": {
+            "example": "learner-42",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "disabled"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "externalUserId",
+          "status"
+        ],
+        "type": "object"
+      },
+      "LearnerSkillDto": {
+        "properties": {
+          "curriculum": {
+            "$ref": "#/components/schemas/CurriculumDescriptorDto"
+          },
+          "state": {
+            "$ref": "#/components/schemas/PublicSkillStateDto"
+          },
+          "taskEvidenceCount": {
+            "type": "number"
+          },
+          "trainerEvidenceCount": {
+            "type": "number"
+          },
+          "trend": {
+            "$ref": "#/components/schemas/PublicSkillTrendDto"
+          },
+          "window": {
+            "$ref": "#/components/schemas/OutcomeSummaryDto"
+          }
+        },
+        "required": [
+          "curriculum",
+          "state",
+          "trend",
+          "window",
+          "taskEvidenceCount",
+          "trainerEvidenceCount"
+        ],
+        "type": "object"
+      },
+      "LearnerSkillsResponseDto": {
+        "properties": {
+          "asOf": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/LearnerSkillDto"
+            },
+            "type": "array"
+          },
+          "learner": {
+            "$ref": "#/components/schemas/LearnerReferenceDto"
+          },
+          "nextCursor": {
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "learner",
+          "asOf",
+          "items",
+          "nextCursor"
+        ],
+        "type": "object"
+      },
+      "MappingCoverageDto": {
+        "properties": {
+          "evaluatedResults": {
+            "type": "number"
+          },
+          "withSkillEvidence": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "evaluatedResults",
+          "withSkillEvidence"
+        ],
+        "type": "object"
+      },
+      "MonitoringOverviewDto": {
+        "properties": {
+          "generatedAt": {
+            "type": "string"
+          },
+          "panels": {
+            "items": {
+              "$ref": "#/components/schemas/MonitoringPanelDto"
+            },
+            "type": "array"
+          },
+          "range": {
+            "enum": [
+              "15m",
+              "1h",
+              "6h",
+              "24h",
+              "7d"
+            ],
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "prometheus",
+              "not_configured"
+            ],
+            "type": "string"
+          },
+          "stale": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "source",
+          "range",
+          "generatedAt",
+          "stale",
+          "panels"
+        ],
+        "type": "object"
+      },
+      "MonitoringPanelDto": {
+        "properties": {
+          "alert": {
+            "enum": [
+              "healthy",
+              "warning",
+              "critical",
+              "unknown"
+            ],
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "stat",
+              "timeseries"
+            ],
+            "type": "string"
+          },
+          "message": {
+            "nullable": true,
+            "type": "object"
+          },
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/MonitoringSeriesDto"
+            },
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "empty",
+              "error",
+              "not_configured"
+            ],
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "unit": {
+            "enum": [
+              "requests_per_second",
+              "ratio",
+              "seconds",
+              "count",
+              "bytes",
+              "tokens_per_second",
+              "micros_per_second"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "kind",
+          "unit",
+          "status",
+          "alert",
+          "series"
+        ],
+        "type": "object"
+      },
+      "MonitoringPointDto": {
+        "properties": {
+          "timestamp": {
+            "example": 1791396000,
+            "type": "number"
+          },
+          "value": {
+            "example": 0.42,
+            "type": "number"
+          }
+        },
+        "required": [
+          "timestamp",
+          "value"
+        ],
+        "type": "object"
+      },
+      "MonitoringSeriesDto": {
+        "properties": {
+          "labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/MonitoringPointDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "labels",
+          "points"
+        ],
+        "type": "object"
+      },
+      "OutcomeSummaryDto": {
+        "properties": {
+          "correct": {
+            "type": "number"
+          },
+          "evidenceCount": {
+            "type": "number"
+          },
+          "incorrect": {
+            "type": "number"
+          },
+          "invalid": {
+            "type": "number"
+          },
+          "outcomeRate": {
+            "example": 0.75,
+            "nullable": true,
+            "type": "object"
+          }
+        },
+        "required": [
+          "evidenceCount",
+          "correct",
+          "incorrect",
+          "invalid",
+          "outcomeRate"
+        ],
+        "type": "object"
+      },
       "PartnerRemediationContentDto": {
         "properties": {
           "abstained": {
@@ -1369,6 +2058,51 @@
         ],
         "type": "object"
       },
+      "ProfileActivitySummaryDto": {
+        "properties": {
+          "activeDays": {
+            "type": "number"
+          },
+          "correct": {
+            "type": "number"
+          },
+          "evidenceCount": {
+            "type": "number"
+          },
+          "firstObservedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "incorrect": {
+            "type": "number"
+          },
+          "invalid": {
+            "type": "number"
+          },
+          "lastObservedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "outcomeRate": {
+            "example": 0.75,
+            "nullable": true,
+            "type": "object"
+          }
+        },
+        "required": [
+          "evidenceCount",
+          "correct",
+          "incorrect",
+          "invalid",
+          "outcomeRate",
+          "firstObservedAt",
+          "lastObservedAt",
+          "activeDays"
+        ],
+        "type": "object"
+      },
       "PublicAnswerSchemaDto": {
         "properties": {
           "evaluatorCapability": {
@@ -1386,6 +2120,88 @@
         },
         "required": [
           "evaluatorCapability"
+        ],
+        "type": "object"
+      },
+      "PublicSkillStateDto": {
+        "properties": {
+          "asOf": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "evidenceCount": {
+            "type": "number"
+          },
+          "lastObservedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "recentOutcomes": {
+            "items": {
+              "enum": [
+                "correct",
+                "incorrect",
+                "invalid"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "rule": {
+            "enum": [
+              "learning_state.v1"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "insufficient_evidence",
+              "needs_practice",
+              "showing_progress"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "rule",
+          "status",
+          "evidenceCount",
+          "recentOutcomes",
+          "lastObservedAt",
+          "asOf"
+        ],
+        "type": "object"
+      },
+      "PublicSkillTrendDto": {
+        "properties": {
+          "currentCorrect": {
+            "type": "number"
+          },
+          "previousCorrect": {
+            "type": "number"
+          },
+          "rule": {
+            "enum": [
+              "learning_trend.v1"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "improving",
+              "stable",
+              "declining",
+              "insufficient_evidence"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "rule",
+          "status",
+          "currentCorrect",
+          "previousCorrect"
         ],
         "type": "object"
       },
@@ -1588,6 +2404,55 @@
         ],
         "type": "object"
       },
+      "SkillStateBreakdownDto": {
+        "properties": {
+          "insufficient_evidence": {
+            "type": "number"
+          },
+          "needs_practice": {
+            "type": "number"
+          },
+          "showing_progress": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "insufficient_evidence",
+          "needs_practice",
+          "showing_progress"
+        ],
+        "type": "object"
+      },
+      "SkillStateCountsDto": {
+        "properties": {
+          "byStatus": {
+            "$ref": "#/components/schemas/SkillStateBreakdownDto"
+          },
+          "observed": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "observed",
+          "byStatus"
+        ],
+        "type": "object"
+      },
+      "SkillTrendItemDto": {
+        "properties": {
+          "curriculum": {
+            "$ref": "#/components/schemas/CurriculumDescriptorDto"
+          },
+          "trend": {
+            "$ref": "#/components/schemas/PublicSkillTrendDto"
+          }
+        },
+        "required": [
+          "curriculum",
+          "trend"
+        ],
+        "type": "object"
+      },
       "StartAttemptDto": {
         "properties": {
           "assignmentId": {
@@ -1726,6 +2591,7 @@
       "SubmitAnswerDto": {
         "properties": {
           "answer": {
+            "additionalProperties": true,
             "type": "object"
           },
           "idempotencyKey": {
@@ -1775,6 +2641,7 @@
       "SubmitTrainerAnswerDto": {
         "properties": {
           "answer": {
+            "additionalProperties": true,
             "type": "object"
           },
           "idempotencyKey": {
@@ -1988,7 +2855,7 @@
           "rawSnapshotId": {
             "format": "uuid",
             "nullable": true,
-            "type": "object"
+            "type": "string"
           },
           "status": {
             "enum": [
@@ -2095,17 +2962,113 @@
         ],
         "type": "object"
       },
+      "TrainerFiltersDto": {
+        "properties": {
+          "courseId": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "skillId": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "subjectId": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "topicId": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "subjectId",
+          "courseId",
+          "topicId",
+          "skillId"
+        ],
+        "type": "object"
+      },
+      "TrainerItemDto": {
+        "properties": {
+          "attemptId": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "position": {
+            "type": "number"
+          },
+          "result": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ResultDto"
+              }
+            ],
+            "nullable": true,
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "started",
+              "submitted"
+            ],
+            "type": "string"
+          },
+          "task": {
+            "$ref": "#/components/schemas/PublicTaskVersionDto"
+          }
+        },
+        "required": [
+          "id",
+          "position",
+          "status",
+          "task",
+          "attemptId",
+          "result"
+        ],
+        "type": "object"
+      },
+      "TrainerProgressDto": {
+        "properties": {
+          "completed": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "completed",
+          "total"
+        ],
+        "type": "object"
+      },
       "TrainerSessionResponseDto": {
         "properties": {
           "canComplete": {
             "type": "boolean"
           },
           "current": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TrainerItemDto"
+              }
+            ],
             "nullable": true,
             "type": "object"
           },
           "filters": {
-            "type": "object"
+            "$ref": "#/components/schemas/TrainerFiltersDto"
           },
           "id": {
             "format": "uuid",
@@ -2115,11 +3078,16 @@
             "type": "boolean"
           },
           "latestResult": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ResultDto"
+              }
+            ],
             "nullable": true,
             "type": "object"
           },
           "progress": {
-            "type": "object"
+            "$ref": "#/components/schemas/TrainerProgressDto"
           },
           "status": {
             "enum": [
@@ -2136,6 +3104,60 @@
           "progress",
           "canComplete",
           "idempotentReplay"
+        ],
+        "type": "object"
+      },
+      "TrainerSubmissionResponseDto": {
+        "properties": {
+          "session": {
+            "$ref": "#/components/schemas/TrainerSessionResponseDto"
+          },
+          "submitted": {
+            "$ref": "#/components/schemas/SubmitAnswerResponseDto"
+          },
+          "teacherSignal": {
+            "additionalProperties": true,
+            "nullable": true,
+            "type": "object"
+          },
+          "theory": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "submitted",
+          "theory",
+          "teacherSignal",
+          "session"
+        ],
+        "type": "object"
+      },
+      "TrainerSummaryDto": {
+        "properties": {
+          "itemsSubmitted": {
+            "type": "number"
+          },
+          "lastActivityAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "sessionsCompleted": {
+            "type": "number"
+          },
+          "sessionsStarted": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "sessionsStarted",
+          "sessionsCompleted",
+          "itemsSubmitted",
+          "lastActivityAt"
         ],
         "type": "object"
       },
@@ -2835,6 +3857,52 @@
         ]
       }
     },
+    "/internal/monitoring/overview": {
+      "get": {
+        "operationId": "MonitoringController_overview",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "range",
+            "required": false,
+            "schema": {
+              "enum": [
+                "15m",
+                "1h",
+                "6h",
+                "24h",
+                "7d"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonitoringOverviewDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "description": "The metrics bearer token is missing or invalid."
+          }
+        },
+        "security": [
+          {
+            "metrics-token": []
+          }
+        ],
+        "summary": "Read the bounded Teachly Monitor overview",
+        "tags": [
+          "operations"
+        ]
+      }
+    },
     "/metrics": {
       "get": {
         "operationId": "MetricsController_read",
@@ -3173,6 +4241,64 @@
           }
         ],
         "summary": "List recent AI request diagnostics",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/v1/ai/status": {
+      "get": {
+        "description": "Returns only provider readiness, safe provider label, model, and API mode. Credentials and endpoints are never exposed.",
+        "operationId": "AiStatusController_status",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TeachlyRequestId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiStatusResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing, invalid, or revoked workspace API key."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "API key lacks remediation:write."
+          },
+          "429": {
+            "$ref": "#/components/responses/TeachlyTooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/TeachlyInternalError"
+          }
+        },
+        "security": [
+          {
+            "workspace-api-key": []
+          }
+        ],
+        "summary": "Read safe AI provider readiness",
         "tags": [
           "ai"
         ]
@@ -5097,11 +6223,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/IntegrationContextDto"
                 }
               }
             },
-            "description": "Current integration metadata"
+            "description": "Current integration metadata and granted scopes"
           },
           "429": {
             "$ref": "#/components/responses/TeachlyTooManyRequests"
@@ -5439,11 +6565,65 @@
         "operationId": "LearnerIntelligenceController_activity",
         "parameters": [
           {
+            "in": "query",
+            "name": "externalUserId",
+            "required": true,
+            "schema": {
+              "example": "learner-42",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque cursor returned by the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
             "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearnerActivityResponseDto"
+                }
+              }
+            },
             "description": ""
           },
           "401": {
@@ -5489,11 +6669,38 @@
         "operationId": "LearnerIntelligenceController_profile",
         "parameters": [
           {
+            "in": "query",
+            "name": "externalUserId",
+            "required": true,
+            "schema": {
+              "example": "learner-42",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "recentLimit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "maximum": 20,
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
             "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearnerProfileResponseDto"
+                }
+              }
+            },
             "description": ""
           },
           "401": {
@@ -5539,11 +6746,60 @@
         "operationId": "LearnerIntelligenceController_progress",
         "parameters": [
           {
+            "in": "query",
+            "name": "externalUserId",
+            "required": true,
+            "schema": {
+              "example": "learner-42",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "groupBy",
+            "required": false,
+            "schema": {
+              "default": "skill",
+              "enum": [
+                "skill",
+                "topic",
+                "course",
+                "subject"
+              ],
+              "type": "string"
+            }
+          },
+          {
             "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearnerProgressResponseDto"
+                }
+              }
+            },
             "description": ""
           },
           "401": {
@@ -5589,11 +6845,60 @@
         "operationId": "LearnerIntelligenceController_skills",
         "parameters": [
           {
+            "in": "query",
+            "name": "externalUserId",
+            "required": true,
+            "schema": {
+              "example": "learner-42",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "insufficient_evidence",
+                "needs_practice",
+                "showing_progress"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque cursor returned by the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
             "$ref": "#/components/parameters/TeachlyRequestId"
           }
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearnerSkillsResponseDto"
+                }
+              }
+            },
             "description": ""
           },
           "401": {
@@ -6768,7 +8073,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/TrainerSubmissionResponseDto"
                 }
               }
             },

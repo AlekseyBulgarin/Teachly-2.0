@@ -104,7 +104,7 @@ export class TaskVersionResponseDto {
   @ApiProperty({ example: 'single-choice.v1' }) evaluationRule!: string;
   @ApiProperty({ type: 'object', additionalProperties: true, description: 'Origin of the version (source, snapshot, edit history).' })
   provenance!: Record<string, unknown>;
-  @ApiProperty({ format: 'uuid', nullable: true }) rawSnapshotId!: string | null;
+  @ApiProperty({ type: String, format: 'uuid', nullable: true }) rawSnapshotId!: string | null;
   @ApiProperty({ type: String, format: 'date-time', nullable: true }) publishedAt!: Date | null;
   @ApiProperty({ type: String, format: 'date-time' }) createdAt!: Date;
 }

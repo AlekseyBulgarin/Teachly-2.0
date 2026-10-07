@@ -63,6 +63,30 @@ jobs:
       - run: pnpm --filter @teachly/contracts test
       - run: pnpm --filter @teachly/example-consumer check
 
+  observability-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker compose -f infra/observability/compose.yaml config --quiet
+      - name: Validate Prometheus configuration and rules
+        run: |
+          docker run --rm --entrypoint promtool \
+            -v "$PWD/infra/observability/prometheus.local.yml:/etc/prometheus/prometheus.yml:ro" \
+            -v "$PWD/infra/observability/rules:/etc/prometheus/rules:ro" \
+            prom/prometheus:v3.15.0 \
+            check config /etc/prometheus/prometheus.yml
+
+  operational-readiness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/setup@v3
+        with:
+          runtime: node@24
+          cache: true
+          require-lockfile: true
+      - run: pnpm operations:check
+
   web:
     runs-on: ubuntu-latest
     steps:
@@ -84,6 +108,27 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: playwright-results
+          path: apps/web/test-results
+          if-no-files-found: ignore
+
+  web-visual:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/setup@v3
+        with:
+          runtime: node@24
+          cache: true
+          require-lockfile: true
+      - run: pnpm --filter @teachly/web exec playwright install chromium
+      - run: pnpm --filter @teachly/web test:visual
+        env:
+          PLAYWRIGHT_CHANNEL: chromium
+      - name: Upload visual failures
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-visual-results
           path: apps/web/test-results
           if-no-files-found: ignore
 

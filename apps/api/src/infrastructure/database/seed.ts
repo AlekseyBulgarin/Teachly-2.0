@@ -13,6 +13,7 @@ import {
   teacherStudentRelationships, theoryMaterials, theoryMaterialTasks, theoryVersions,
   users, workspaces, attempts, skillEvidence,
   trainerSessions, trainerSessionItems,
+  variants, variantVersions, variantItems,
 } from './schema';
 
 const id = (n: number) => `00000000-0000-4000-8000-${n.toString().padStart(12, '0')}`;
@@ -30,6 +31,8 @@ export const fixtureIds = {
   secondSkill: id(34), trainerSession: id(35), trainerItem: id(36),
   trainerAttempt: id(240), trainerSubmission: id(241), trainerResult: id(242),
   trainerResultEvent: id(243), trainerEvidence: id(244),
+  demoVariant: id(245), demoVariantVersion: id(246),
+  demoVariantFirstItem: id(247), demoVariantSecondItem: id(248),
 };
 
 type SeedAssessmentChain = {
@@ -64,6 +67,8 @@ export const demoApiKeyScopes = [
   'trainer:read',
   'trainer:write',
   'learner_intelligence:read',
+  'external_users:read',
+  'remediation:write',
   'whiteboard:read',
   'whiteboard:write',
 ] as const;
@@ -195,6 +200,59 @@ export async function seedDevelopmentFixtures(
       },
       publishedAt: new Date('2026-01-01T00:01:00.000Z'),
     }).onConflictDoNothing();
+
+    await tx.insert(variants).values({
+      id: fixtureIds.demoVariant,
+      organizationId: fixtureIds.organization,
+      workspaceId: fixtureIds.workspace,
+      sourceKind: 'internal_fixture',
+    }).onConflictDoNothing();
+    const [storedDemoVariantVersion] = await tx.select({ id: variantVersions.id })
+      .from(variantVersions)
+      .where(eq(variantVersions.id, fixtureIds.demoVariantVersion))
+      .limit(1);
+    if (!storedDemoVariantVersion) {
+      await tx.insert(variantVersions).values({
+        id: fixtureIds.demoVariantVersion,
+        variantId: fixtureIds.demoVariant,
+        workspaceId: fixtureIds.workspace,
+        version: 1,
+        status: 'draft',
+        title: 'Teachly foundation check',
+        description: 'A short published practice set that connects evaluation and server authority.',
+        metadata: { audience: 'demo', estimatedMinutes: 5 },
+        provenance: { sourceKind: 'internal_fixture', fixtureVersion: 'stage-4' },
+        createdAt: new Date('2026-09-01T08:00:00.000Z'),
+      });
+      await tx.insert(variantItems).values([
+        {
+          id: fixtureIds.demoVariantFirstItem,
+          variantVersionId: fixtureIds.demoVariantVersion,
+          workspaceId: fixtureIds.workspace,
+          position: 0,
+          taskVersionId: fixtureIds.version,
+          required: true,
+          resolutionStatus: 'resolved',
+          section: 'Evaluation',
+          metadata: {},
+        },
+        {
+          id: fixtureIds.demoVariantSecondItem,
+          variantVersionId: fixtureIds.demoVariantVersion,
+          workspaceId: fixtureIds.workspace,
+          position: 1,
+          taskVersionId: fixtureIds.secondVersion,
+          required: true,
+          resolutionStatus: 'resolved',
+          section: 'Authority',
+          metadata: {},
+        },
+      ]);
+      await tx.update(variantVersions).set({
+        status: 'published',
+        publishedAt: new Date('2026-09-01T08:00:00.000Z'),
+      }).where(eq(variantVersions.id, fixtureIds.demoVariantVersion));
+    }
 
     const theoryFixtures = [
       {

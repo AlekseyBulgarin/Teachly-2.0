@@ -19,7 +19,9 @@ Web server-only:
 - `TEACHLY_DEMO_API_KEY`
 - `TEACHLY_DEMO_SESSION_SECRET` (recommended; signs HttpOnly demo-whiteboard bindings)
 - `TEACHLY_DEMO_EXTERNAL_LEARNER_ID`
+- `TEACHLY_DEMO_ATTEMPT_ID`
 - `TEACHLY_DEMO_TASK_IDS`
+- `TEACHLY_SITE_URL`
 
 API server-only:
 
@@ -27,14 +29,32 @@ API server-only:
 - `DEV_AUTH_ENABLED`
 - `DATABASE_URL`
 - `DATABASE_URL_UNPOOLED`
-- `OPENAI_API_KEY`
-- `AI_MODEL` (optional)
+- `AI_PROVIDER` (`disabled`, `openai`, or `openai-compatible`)
+- `AI_API_KEY` (`OPENAI_API_KEY` remains a backward-compatible alias for direct OpenAI)
+- `AI_PROVIDER_NAME` (safe display label for a compatible provider)
+- `AI_BASE_URL` (required only for an OpenAI-compatible provider)
+- `AI_API_MODE` (`responses` or `chat_completions`)
+- `AI_MODEL`
 - `AI_TIMEOUT_MS` (optional)
+- `METRICS_TOKEN`
+- `SERVICE_VERSION`
+- `DEPLOYMENT_ENVIRONMENT`
+- `PROMETHEUS_URL` (private server-side URL; optional until Teachly Monitor is enabled)
+- `PROMETHEUS_BEARER_TOKEN` (optional server-side Prometheus query credential)
+- `PROMETHEUS_TIMEOUT_MS` (optional, capped at 15 seconds)
 - `PORT` (provided by Railway)
 - `TEACHLY_DEMO_SEED_ENABLED` (required only for the explicit seed command)
 - `TEACHLY_DEMO_API_KEY` (required only for the explicit seed command; it must match the Web value)
 
 Never prefix these variables with `NEXT_PUBLIC_`.
+
+Internal Web monitoring variables:
+
+- `TEACHLY_MONITOR_USER`
+- `TEACHLY_MONITOR_PASSWORD` (strong unique value)
+- `METRICS_TOKEN` (same API metrics token; server-to-server only)
+
+Without the two Monitor credentials, `/monitor` and `/api/monitor/*` fail closed. Place the Monitor behind an additional platform access policy or private network when available.
 
 ## Build and start commands
 
@@ -60,7 +80,7 @@ Output: managed by Next.js/Vercel
 ## Safe initialization
 
 1. Create the Neon database and set both database URLs on Railway.
-2. Set `NODE_ENV=production`, `DEV_AUTH_ENABLED=false`, and the remaining API variables.
+2. Set `NODE_ENV=production`, `DEV_AUTH_ENABLED=false`, and the remaining API variables. Keep `AI_PROVIDER=disabled` until a provider credential is ready; the API and Showcase then fail closed without fabricated AI output.
 3. Run migrations with `corepack pnpm db:migrate`.
 4. Generate a fresh Teachly-format key; never use the deterministic development key from `apps/web/.env.example`. One suitable one-time command is `node -e "const {randomBytes}=require('node:crypto'); console.log('tlk_'+randomBytes(8).toString('hex')+'.'+randomBytes(32).toString('base64url'))"`.
 5. Temporarily set `TEACHLY_DEMO_SEED_ENABLED=true` and set `TEACHLY_DEMO_API_KEY` to that fresh key.
@@ -72,7 +92,7 @@ The production demo seed is guarded, idempotent, does not run at application sta
 ## Deployment order
 
 1. Provision Neon.
-2. Configure Render API environment.
+2. Configure the Railway API environment.
 3. Run database migrations.
 4. Run the explicit demo fixture initialization.
 5. Deploy/restart the Railway API.
