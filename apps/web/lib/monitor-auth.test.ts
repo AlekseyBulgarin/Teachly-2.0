@@ -9,4 +9,5 @@ test('monitor basic authentication fails closed and compares the complete creden
   assert.equal(monitorRequestAuthorized(`Basic ${Buffer.from('operator:wrong').toString('base64')}`, env), false);
   assert.equal(monitorRequestAuthorized(`Basic ${Buffer.from('operator:strong-monitor-password').toString('base64')}`, env), true);
   assert.equal(monitorRequestAuthorized(`Basic ${Buffer.from('other:strong-monitor-password').toString('base64')}`, env), false);
+  assert.equal(monitorRequestAuthorized(`Basic ${Buffer.from(`operator:${'x'.repeat(1025)}`).toString('base64')}`, env), false);
 });
