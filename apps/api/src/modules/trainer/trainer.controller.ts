@@ -6,7 +6,7 @@ import { OptionalTenantContext } from '../../common/request-context';
 import type { TenantContext } from '../core/core.types';
 import { ApiKeyGuard } from '../integrations/api-key.guard';
 import { RequireIntegrationScopes } from '../integrations/scope.decorator';
-import { CreateTrainerSessionDto, SubmitTrainerAnswerDto, TrainerSessionResponseDto } from './trainer.dto';
+import { CreateTrainerSessionDto, SubmitTrainerAnswerDto, TrainerSessionResponseDto, TrainerSubmissionResponseDto } from './trainer.dto';
 import { TrainerService } from './trainer.service';
 
 @ApiTags('trainer')
@@ -47,7 +47,7 @@ export class TrainerController {
   @Post('sessions/:sessionId/submissions')
   @RequireIntegrationScopes('trainer:write')
   @ApiOperation({ summary: 'Submit an answer for a trainer item using the existing deterministic Assessment evaluator' })
-  @ApiCreatedResponse({ type: Object })
+  @ApiCreatedResponse({ type: TrainerSubmissionResponseDto })
   submit(@Param('sessionId', ParseUUIDPipe) sessionId: string, @Body() body: SubmitTrainerAnswerDto, @OptionalTenantContext() tenant: TenantContext) {
     return this.trainer.submit(tenant, sessionId, body);
   }
