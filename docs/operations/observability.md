@@ -42,3 +42,13 @@ Initial alerts should cover readiness failure, error ratio above 5% for ten minu
 ## Grafana Cloud / OpenTelemetry path
 
 The current baseline intentionally avoids a required paid backend. A later deployment can scrape `/metrics` with an authenticated Prometheus collector and ship JSON logs to Grafana Cloud. Distributed traces and frontend RUM remain deferred until there is a real multi-service integration flow, a privacy/consent decision and Grafana credentials.
+
+## Teachly Monitor
+
+The internal `/monitor` route is the free, Teachly-branded read-only operating view. It is protected by HTTP Basic credentials (`TEACHLY_MONITOR_USER`, `TEACHLY_MONITOR_PASSWORD`) at the Web boundary and calls the API with the server-only `METRICS_TOKEN`. The browser never receives the Prometheus URL, Prometheus credentials, or the metrics token.
+
+The API exposes `GET /internal/monitoring/overview?range=...` for five bounded ranges (`15m`, `1h`, `6h`, `24h`, `7d`). The adapter owns a fixed catalog of reviewed PromQL expressions, a 15-second timeout ceiling, 24-series-per-panel limit, 2,500-points-per-series limit, label allowlist, and sanitized partial-failure states. Arbitrary browser-supplied PromQL is not supported.
+
+The first dashboards cover availability, request rate, 5xx ratio, p95 latency, requests in flight, process memory, AI request/failure rate, AI p95 latency, provider-reported tokens, abstentions, and estimated cost when the provider reports it. Metrics never label learner, workspace, API key, prompt, answer, request ID, raw error or SQL text.
+
+The opt-in local profile is in `infra/observability`. Production should run Prometheus on a private network with persistent storage and authenticated scraping. Back up Prometheus configuration and rules; raw local TSDB blocks are operational data and should use a storage-level snapshot/backup process rather than ad-hoc file copying while Prometheus is running.

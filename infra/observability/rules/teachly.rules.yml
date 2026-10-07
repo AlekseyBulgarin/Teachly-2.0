@@ -1,0 +1,48 @@
+groups:
+  - name: teachly-recording
+    interval: 30s
+    rules:
+      - record: teachly:api_request_rate5m
+        expr: sum(rate(teachly_http_requests_total[5m]))
+      - record: teachly:api_error_ratio5m
+        expr: sum(rate(teachly_http_requests_total{status_code=~"5.."}[5m])) / clamp_min(sum(rate(teachly_http_requests_total[5m])), 0.001)
+      - record: teachly:api_latency_p95_seconds5m
+        expr: histogram_quantile(0.95, sum(rate(teachly_http_request_duration_seconds_bucket[5m])) by (le))
+      - record: teachly:ai_failure_ratio5m
+        expr: sum(rate(teachly_ai_requests_total{status=~"failed|timeout|invalid_output"}[5m])) / clamp_min(sum(rate(teachly_ai_requests_total[5m])), 0.001)
+
+  - name: teachly-alerts
+    interval: 30s
+    rules:
+      - alert: TeachlyApiUnavailable
+        expr: up{job="teachly-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: Teachly API metrics target is unavailable
+          runbook: docs/operations/observability.md
+      - alert: TeachlyApiErrorRatioHigh
+        expr: teachly:api_error_ratio5m > 0.05
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: Teachly API 5xx ratio is above 5%
+          runbook: docs/operations/observability.md
+      - alert: TeachlyApiLatencyHigh
+        expr: teachly:api_latency_p95_seconds5m > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Teachly API p95 latency is above one second
+          runbook: docs/operations/observability.md
+      - alert: TeachlyAiFailureRatioHigh
+        expr: teachly:ai_failure_ratio5m > 0.15
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Teachly AI failure ratio is above 15%
+          runbook: docs/operations/observability.md

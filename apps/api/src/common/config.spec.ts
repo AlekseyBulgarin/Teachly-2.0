@@ -65,6 +65,12 @@ describe('environment validation', () => {
     expect(() => requiredEnvironment({ ...base, METRICS_TOKEN: 'too-short' })).toThrow('METRICS_TOKEN');
   });
 
+  it('validates the optional private Prometheus endpoint without accepting embedded credentials', () => {
+    expect(() => requiredEnvironment({ ...base, PROMETHEUS_URL: 'http://prometheus.internal:9090' })).not.toThrow();
+    expect(() => requiredEnvironment({ ...base, PROMETHEUS_URL: 'prometheus.internal' })).toThrow('PROMETHEUS_URL');
+    expect(() => requiredEnvironment({ ...base, PROMETHEUS_URL: 'https://user:secret@prometheus.example' })).toThrow('PROMETHEUS_URL');
+  });
+
   it('fails closed without an explicit environment', () => {
     const oldEnv = process.env.NODE_ENV;
     const oldFlag = process.env.DEV_AUTH_ENABLED;

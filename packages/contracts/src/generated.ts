@@ -116,6 +116,23 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/internal/monitoring/overview": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Read the bounded Teachly Monitor overview */
+        readonly get: operations["MonitoringController_overview"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/metrics": {
         readonly parameters: {
             readonly query?: never;
@@ -1498,6 +1515,42 @@ export interface components {
             /** @enum {string} */
             readonly versionStatus: "draft" | "approved" | "rejected" | "disabled" | "superseded";
         };
+        readonly MonitoringOverviewDto: {
+            readonly generatedAt: string;
+            readonly panels: readonly components["schemas"]["MonitoringPanelDto"][];
+            /** @enum {string} */
+            readonly range: "15m" | "1h" | "6h" | "24h" | "7d";
+            /** @enum {string} */
+            readonly source: "prometheus" | "not_configured";
+            readonly stale: boolean;
+        };
+        readonly MonitoringPanelDto: {
+            /** @enum {string} */
+            readonly alert: "healthy" | "warning" | "critical" | "unknown";
+            readonly description: string;
+            readonly id: string;
+            /** @enum {string} */
+            readonly kind: "stat" | "timeseries";
+            readonly message?: Record<string, never> | null;
+            readonly series: readonly components["schemas"]["MonitoringSeriesDto"][];
+            /** @enum {string} */
+            readonly status: "ok" | "empty" | "error" | "not_configured";
+            readonly title: string;
+            /** @enum {string} */
+            readonly unit: "requests_per_second" | "ratio" | "seconds" | "count" | "bytes" | "tokens_per_second" | "micros_per_second";
+        };
+        readonly MonitoringPointDto: {
+            /** @example 1791396000 */
+            readonly timestamp: number;
+            /** @example 0.42 */
+            readonly value: number;
+        };
+        readonly MonitoringSeriesDto: {
+            readonly labels: {
+                readonly [key: string]: string;
+            };
+            readonly points: readonly components["schemas"]["MonitoringPointDto"][];
+        };
         readonly PartnerRemediationContentDto: {
             readonly abstained: boolean;
             readonly confidence: number;
@@ -2142,6 +2195,34 @@ export interface operations {
                 content: {
                     readonly "application/json": components["schemas"]["HealthUnavailableDto"];
                 };
+            };
+        };
+    };
+    readonly MonitoringController_overview: {
+        readonly parameters: {
+            readonly query?: {
+                readonly range?: "15m" | "1h" | "6h" | "24h" | "7d";
+            };
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["MonitoringOverviewDto"];
+                };
+            };
+            /** @description The metrics bearer token is missing or invalid. */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

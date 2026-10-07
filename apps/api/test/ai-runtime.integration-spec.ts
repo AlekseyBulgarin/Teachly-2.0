@@ -17,6 +17,7 @@ import { TeachingService } from '../src/modules/teaching/teaching.service';
 import { TenancyService } from '../src/modules/tenancy/tenancy.service';
 import { UsersService } from '../src/modules/users/users.service';
 import { resetTestDatabase, testDatabase } from './postgres-test';
+import { MetricsService } from '../src/infrastructure/observability/metrics.service';
 
 jest.setTimeout(180_000);
 
@@ -28,6 +29,7 @@ describe('AI runtime foundation (PostgreSQL)', () => {
   let attempts: AttemptsService;
   let teaching: TeachingService;
   let knowledge: KnowledgeService;
+  let metrics: MetricsService;
 
   beforeEach(async () => {
     database = testDatabase();
@@ -43,10 +45,11 @@ describe('AI runtime foundation (PostgreSQL)', () => {
     attempts = new AttemptsService(database, education, audit, teaching, learning);
     knowledge = new KnowledgeService(database, integrations, audit);
     assembler = new AiContextAssembler(integrations, attempts, education, learning, knowledge);
-    runtime = new AiRuntime(database, audit, assembler, new FakeAiProvider());
+    metrics = new MetricsService();
+    runtime = new AiRuntime(database, audit, assembler, metrics, new FakeAiProvider());
   });
 
-  afterEach(async () => { await database?.onModuleDestroy(); });
+  afterEach(async () => { metrics?.onModuleDestroy(); await database?.onModuleDestroy(); });
 
   async function fixture() {
     const integration = await integrations.createIntegration(fixtureIds.organization, fixtureIds.workspace, 'AI test integration');
@@ -152,7 +155,7 @@ describe('AI runtime foundation (PostgreSQL)', () => {
       hint: 'Ask a teacher for a worked example.', likelyGap: null, evidenceRefs: [], knowledgeRefs: [],
       confidence: 0, abstained: true,
     } });
-    const abstainingRuntime = new AiRuntime(database, new AuditService(database), assembler, abstaining);
+    const abstainingRuntime = new AiRuntime(database, new AuditService(database), assembler, metrics, abstaining);
     const execution = await abstainingRuntime.execute({
       context: data.context, learnerId: fixtureIds.student, attemptId: data.attemptId,
       capability: 'grounded_remediation', learnerRequest: 'Explain this', idempotencyKey: 'abstain-1',
@@ -174,7 +177,7 @@ describe('AI runtime foundation (PostgreSQL)', () => {
     const data = await fixture();
     const invalidProvider = new FakeAiProvider({ output: { type: 'chat', text: 'unsafe' } });
     const audit = new AuditService(database);
-    const invalidRuntime = new AiRuntime(database, audit, assembler, invalidProvider);
+    const invalidRuntime = new AiRuntime(database, audit, assembler, metrics, invalidProvider);
     await expect(invalidRuntime.execute({
       context: data.context, learnerId: fixtureIds.student, attemptId: data.attemptId,
       capability: 'grounded_remediation', learnerRequest: 'Explain this', idempotencyKey: 'invalid-1',
@@ -189,7 +192,7 @@ describe('AI runtime foundation (PostgreSQL)', () => {
   it('normalizes provider failure and persists a failed trace', async () => {
     const data = await fixture();
     const failingProvider = new FakeAiProvider({ error: new Error('provider unavailable') });
-    const failingRuntime = new AiRuntime(database, new AuditService(database), assembler, failingProvider);
+    const failingRuntime = new AiRuntime(database, new AuditService(database), assembler, metrics, failingProvider);
     await expect(failingRuntime.execute({
       context: data.context, learnerId: fixtureIds.student, attemptId: data.attemptId,
       capability: 'grounded_remediation', learnerRequest: 'Explain this', idempotencyKey: 'failure-1',

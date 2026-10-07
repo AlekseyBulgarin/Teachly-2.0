@@ -1,21 +1,18 @@
-import { Controller, Get, Headers, Res, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Headers, Res } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
 import type { Response } from 'express';
-import { createHash, timingSafeEqual } from 'node:crypto';
 import { Public } from '../../common/public.decorator';
+import { assertMetricsAuthorization } from './metrics-auth';
 import { MetricsService } from './metrics.service';
-
-function tokenDigest(value: string): Buffer {
-  return createHash('sha256').update(value).digest();
-}
+import { DatabaseService } from '../database/database';
 
 @Controller('metrics')
 @SkipThrottle()
 @Public()
 @ApiTags('operations')
 export class MetricsController {
-  constructor(private readonly metrics: MetricsService) {}
+  constructor(private readonly metrics: MetricsService, private readonly database: DatabaseService) {}
 
   @Get()
   @ApiBearerAuth('metrics-token')
@@ -25,18 +22,16 @@ export class MetricsController {
   })
   @ApiUnauthorizedResponse({ description: 'The metrics bearer token is missing or invalid.' })
   async read(@Headers('authorization') authorization: string | undefined, @Res({ passthrough: true }) response: Response): Promise<string> {
-    this.assertAuthorized(authorization);
+    assertMetricsAuthorization(authorization);
+    try {
+      await this.database.ping();
+      this.metrics.setDatabaseAvailable(true);
+    } catch {
+      this.metrics.setDatabaseAvailable(false);
+    }
     response.setHeader('Content-Type', this.metrics.contentType);
     response.setHeader('Cache-Control', 'no-store');
     return this.metrics.exposition();
   }
 
-  private assertAuthorized(authorization: string | undefined): void {
-    const expected = process.env.METRICS_TOKEN;
-    if (!expected && process.env.NODE_ENV !== 'production') return;
-    const supplied = authorization?.startsWith('Bearer ') ? authorization.slice('Bearer '.length) : '';
-    if (!expected || !supplied || !timingSafeEqual(tokenDigest(expected), tokenDigest(supplied))) {
-      throw new UnauthorizedException('Invalid metrics token');
-    }
-  }
 }

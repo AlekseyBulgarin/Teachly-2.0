@@ -1309,6 +1309,156 @@
         ],
         "type": "object"
       },
+      "MonitoringOverviewDto": {
+        "properties": {
+          "generatedAt": {
+            "type": "string"
+          },
+          "panels": {
+            "items": {
+              "$ref": "#/components/schemas/MonitoringPanelDto"
+            },
+            "type": "array"
+          },
+          "range": {
+            "enum": [
+              "15m",
+              "1h",
+              "6h",
+              "24h",
+              "7d"
+            ],
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "prometheus",
+              "not_configured"
+            ],
+            "type": "string"
+          },
+          "stale": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "source",
+          "range",
+          "generatedAt",
+          "stale",
+          "panels"
+        ],
+        "type": "object"
+      },
+      "MonitoringPanelDto": {
+        "properties": {
+          "alert": {
+            "enum": [
+              "healthy",
+              "warning",
+              "critical",
+              "unknown"
+            ],
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "stat",
+              "timeseries"
+            ],
+            "type": "string"
+          },
+          "message": {
+            "nullable": true,
+            "type": "object"
+          },
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/MonitoringSeriesDto"
+            },
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "empty",
+              "error",
+              "not_configured"
+            ],
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "unit": {
+            "enum": [
+              "requests_per_second",
+              "ratio",
+              "seconds",
+              "count",
+              "bytes",
+              "tokens_per_second",
+              "micros_per_second"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "kind",
+          "unit",
+          "status",
+          "alert",
+          "series"
+        ],
+        "type": "object"
+      },
+      "MonitoringPointDto": {
+        "properties": {
+          "timestamp": {
+            "example": 1791396000,
+            "type": "number"
+          },
+          "value": {
+            "example": 0.42,
+            "type": "number"
+          }
+        },
+        "required": [
+          "timestamp",
+          "value"
+        ],
+        "type": "object"
+      },
+      "MonitoringSeriesDto": {
+        "properties": {
+          "labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/MonitoringPointDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "labels",
+          "points"
+        ],
+        "type": "object"
+      },
       "PartnerRemediationContentDto": {
         "properties": {
           "abstained": {
@@ -2863,6 +3013,52 @@
             "description": "The database availability check failed."
           }
         },
+        "tags": [
+          "operations"
+        ]
+      }
+    },
+    "/internal/monitoring/overview": {
+      "get": {
+        "operationId": "MonitoringController_overview",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "range",
+            "required": false,
+            "schema": {
+              "enum": [
+                "15m",
+                "1h",
+                "6h",
+                "24h",
+                "7d"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonitoringOverviewDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "description": "The metrics bearer token is missing or invalid."
+          }
+        },
+        "security": [
+          {
+            "metrics-token": []
+          }
+        ],
+        "summary": "Read the bounded Teachly Monitor overview",
         "tags": [
           "operations"
         ]
