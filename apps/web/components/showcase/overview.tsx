@@ -28,6 +28,12 @@ import { useState } from "react";
 import { useEcosystem } from "@/lib/ecosystem-context";
 import { capabilityRegistry, type CapabilityKey } from "@/lib/capabilities";
 import { StatusBadge } from "@/components/ui";
+import { EcosystemCatalog } from "@/components/showcase/ecosystem-catalog";
+import {
+  AudienceAndComparison,
+  BusinessProblemAndCore,
+  IntegrationPilotAndTrust,
+} from "@/components/showcase/overview-business";
 
 type ModuleGroup = "learning" | "intelligence" | "connection";
 type ProductModule = {
@@ -194,11 +200,12 @@ const modules: ProductModule[] = [
 const copy = {
   ru: {
     eyebrow: "Teachly — образовательный слой для вашего продукта",
-    title: "Задания, AI и аналитика — внутри вашей платформы.",
+    title: "Развивайте образовательную платформу без месяцев собственной разработки.",
     description:
-      "Teachly подключается к онлайн-школе, LMS или EdTech-продукту без перестройки: связывает задания, прогресс, AI и работу преподавателя.",
-    primary: "Обсудить пилот",
-    secondary: "Открыть живое демо",
+      "Teachly подключается к онлайн-школе, LMS или EdTech-продукту через единое ядро. Добавляйте задания, прогресс, AI и аналитику поэтапно — без миграции с вашей платформы.",
+    primary: "Запросить демонстрацию",
+    secondary: "Запустить пилот",
+    tertiary: "Посмотреть возможности",
     audience: "Для владельцев онлайн-школ, LMS и EdTech-продуктов",
     pilotNote: "Начинаем с одного полезного сценария и проверяем его вместе с вашей командой.",
     trust: [
@@ -296,11 +303,12 @@ const copy = {
   },
   en: {
     eyebrow: "Teachly — the education layer for your product",
-    title: "Tasks, AI and analytics — inside your platform.",
+    title: "Grow your education platform without months of in-house development.",
     description:
-      "Teachly connects to an online school, LMS or EdTech product without a rebuild: it links tasks, progress, AI and teacher workflows.",
-    primary: "Discuss a pilot",
-    secondary: "Open the live demo",
+      "Teachly connects to an online school, LMS or EdTech product through one core. Add tasks, progress, AI and analytics step by step — without migrating away from your platform.",
+    primary: "Request a demo",
+    secondary: "Start a pilot",
+    tertiary: "Explore capabilities",
     audience: "For owners of online schools, LMS and EdTech products",
     pilotNote: "Start with one useful scenario and validate it together with your team.",
     trust: [
@@ -410,7 +418,7 @@ export function OverviewPage() {
           <p className="text-[11px] font-bold uppercase tracking-[.23em] text-emerald-300">
             {c.eyebrow}
           </p>
-          <h1 className="mt-5 text-[clamp(2.5rem,4.7vw,4.15rem)] font-semibold leading-[1.02] tracking-[-.055em] text-slate-50">
+          <h1 className="mt-5 text-[clamp(2.35rem,4.1vw,3.55rem)] font-semibold leading-[1.04] tracking-[-.052em] text-slate-50">
             {c.title}
           </h1>
           <p className="mt-6 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg sm:leading-8">
@@ -419,7 +427,7 @@ export function OverviewPage() {
           <p className="mt-5 inline-flex rounded-full border border-white/[.09] bg-white/[.04] px-4 py-2 text-sm font-medium text-slate-300">
             {c.audience}
           </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <a
               href="#contact"
               className="cta-glow interactive inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--green)] px-6 py-4 text-sm font-semibold text-slate-950 shadow-[0_18px_50px_-22px_rgba(25,201,139,.8)] hover:-translate-y-0.5 hover:bg-[var(--green-accent)]"
@@ -427,13 +435,19 @@ export function OverviewPage() {
               {c.primary}
               <MessageCircle aria-hidden="true" size={17} />
             </a>
-            <Link
-              href="/trainer"
+            <a
+              href="#pilot"
               className="interactive inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--border-strong)] bg-white/[.035] px-6 py-4 text-sm font-semibold text-slate-100 hover:-translate-y-0.5 hover:bg-white/[.075]"
             >
               {c.secondary}
               <ArrowRight aria-hidden="true" size={17} />
-            </Link>
+            </a>
+            <a
+              href="#catalog"
+              className="interactive inline-flex items-center justify-center px-3 py-4 text-sm font-semibold text-slate-300 hover:text-white"
+            >
+              {c.tertiary}
+            </a>
           </div>
           <p className="mt-5 flex max-w-xl items-start gap-2 text-sm leading-6 text-slate-400">
             <CheckCircle2 aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-300" size={17} />
@@ -457,6 +471,8 @@ export function OverviewPage() {
           </div>
         ))}
       </section>
+
+      <BusinessProblemAndCore locale={locale} />
 
       <section id="how" className="section-reveal scroll-mt-28">
         <SectionHeading
@@ -504,6 +520,14 @@ export function OverviewPage() {
           active={moduleGroup}
           onChange={setModuleGroup}
         />
+        <div id="catalog" className="mt-16 scroll-mt-28 border-t border-white/[.08] pt-14">
+          <SectionHeading
+            eyebrow={locale === "ru" ? "Полная карта экосистемы" : "Complete ecosystem map"}
+            title={locale === "ru" ? "Понимайте статус и ценность каждого модуля" : "Understand the status and value of every module"}
+            detail={locale === "ru" ? "Выберите направление и откройте модуль: что он делает, кому помогает, какие данные использует и готов ли он к подключению." : "Choose an area and open a module to see what it does, who it helps, which data it uses and whether it is ready to connect."}
+          />
+          <EcosystemCatalog locale={locale} />
+        </div>
       </section>
       <section className="section-reveal overflow-hidden rounded-[34px] border border-[var(--border)] bg-[linear-gradient(130deg,rgba(125,182,255,.08),transparent_48%),var(--surface)] p-7 sm:p-10 lg:p-12">
         <SectionHeading
@@ -555,6 +579,7 @@ export function OverviewPage() {
           <ArrowRight aria-hidden="true" size={16} />
         </Link>
       </section>
+      <AudienceAndComparison locale={locale} />
       <section className="section-reveal grid gap-8 rounded-[34px] border border-emerald-300/15 bg-emerald-300/[.045] p-7 sm:p-10 lg:grid-cols-[.85fr_1.15fr] lg:p-12">
         <div>
           <SectionHeading
@@ -592,6 +617,7 @@ export function OverviewPage() {
           ))}
         </div>
       </section>
+      <IntegrationPilotAndTrust locale={locale} />
       <section
         id="contact"
         className="section-reveal scroll-mt-28 overflow-hidden rounded-[36px] border border-emerald-300/20 bg-[linear-gradient(125deg,rgba(25,201,139,.16),rgba(14,23,37,.92)_58%)] p-7 sm:p-10 lg:p-12"

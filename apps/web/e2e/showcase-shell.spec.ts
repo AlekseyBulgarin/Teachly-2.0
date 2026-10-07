@@ -44,10 +44,10 @@ test("navigation, module tabs and language switch stay usable", async ({ page })
   const primaryNavigation = isCompact
     ? page.getByRole("dialog", { name: "Основная навигация" })
     : page.getByRole("navigation", { name: "Основная навигация" });
-  const demoLink = primaryNavigation.locator('a[href="/trainer"]');
-  await expect(demoLink).toBeVisible();
-  await demoLink.click();
-  await expect(page).toHaveURL(/\/trainer$/);
+  const integrationLink = primaryNavigation.locator('a[href="/integrations"]');
+  await expect(integrationLink).toBeVisible();
+  await integrationLink.click();
+  await expect(page).toHaveURL(/\/integrations$/);
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
   await page.goto("/ecosystem");
@@ -65,12 +65,46 @@ test("navigation, module tabs and language switch stay usable", async ({ page })
     await page.getByRole("button", { name: /^en$/i }).click();
   }
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "Tasks, AI and analytics",
+    "Grow your education platform",
   );
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Tasks, AI and analytics");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Grow your education platform");
+});
+
+test("ecosystem catalog keeps all readiness states explicit", async ({ page }) => {
+  await page.goto("/ecosystem");
+  const catalog = page.locator("#catalog");
+  await catalog.scrollIntoViewIfNeeded();
+  await expect(catalog.getByRole("tab", { name: "Обучение", exact: true })).toBeVisible();
+  await expect(catalog.getByText("Доступно").first()).toBeVisible();
+  await expect(catalog.getByText("В разработке").first()).toBeVisible();
+
+  await catalog.getByRole("tab", { name: "Автоматизация" }).click();
+  await expect(catalog.getByText("Запланировано").first()).toBeVisible();
+  await expect(catalog.getByText("Демо").first()).toBeVisible();
+});
+
+test("ecosystem hydrates without browser errors", async ({ page }) => {
+  const errors: string[] = [];
+  await page.route("**/api/teachly/**", (route) => {
+    const body = route.request().url().endsWith("/health")
+      ? { status: "ok", database: "ok" }
+      : [];
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
+  });
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+
+  await page.goto("/ecosystem", { waitUntil: "networkidle" });
+  const sections = page.locator(".section-reveal");
+  for (let index = 0; index < await sections.count(); index += 1) {
+    await sections.nth(index).scrollIntoViewIfNeeded();
+  }
+  expect(errors).toEqual([]);
 });
 
 test("AI demo explains the provider-ready state without inventing a live response", async ({ page }) => {
