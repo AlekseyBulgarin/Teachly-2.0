@@ -5,9 +5,10 @@ import {
 } from "lucide-react";
 import { useEcosystem } from "@/lib/ecosystem-context";
 import { capabilityRegistry } from "@/lib/capabilities";
-import { PageHeader, StatusBadge } from "@/components/ui";
+import { PageHeader, SectionCard, StatusBadge } from "@/components/ui";
 import { EcosystemNextStep } from "@/components/showcase/shared";
 import { QuickSectionNav } from "@/components/showcase/quick-section-nav";
+import { ProgressDemo } from "@/components/showcase/demos/progress-demo";
 
 export function AnalyticsPage() {
   const { t, locale } = useEcosystem();
@@ -26,14 +27,28 @@ export function AnalyticsPage() {
           locale === "ru"
             ? [
                 { id: "overview", label: "Обзор" },
+                { id: "live", label: "Живые данные" },
                 { id: "signals", label: "Сигналы" },
               ]
             : [
                 { id: "overview", label: "Overview" },
+                { id: "live", label: "Live data" },
                 { id: "signals", label: "Signals" },
               ]
         }
       />
+      <div id="live" className="scroll-mt-28">
+        <SectionCard
+          title={t("analytics.liveTitle")}
+          detail={t("analytics.liveDetail")}
+          icon={BarChart3}
+          action={<StatusBadge status="LIVE" locale={locale} />}
+        >
+          <div className="p-5 sm:p-7">
+            <ProgressDemo />
+          </div>
+        </SectionCard>
+      </div>
       <section id="signals" className="scroll-mt-28 grid gap-8 lg:grid-cols-[.7fr_1.3fr] lg:items-start">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[.22em] text-emerald-300">

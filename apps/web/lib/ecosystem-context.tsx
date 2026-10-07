@@ -1,8 +1,9 @@
 'use client';
 
-import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { api, type AiTrace, type AttemptResult, type ExternalUser, type Integration, type KnowledgeStatus, type LearningState, type RemediationResponse, type Student, type Task } from '@/lib/api';
 import { translate, type Locale } from '@/lib/i18n';
+import { readStoredLocale, writeStoredLocale } from '@/lib/locale-storage';
 
 export type EnrichedLearner = { student: Student; results: AttemptResult[]; task?: Task; state?: LearningState; loading: boolean; error?: string };
 export type ApiStatus = 'checking' | 'healthy' | 'unavailable';
@@ -36,7 +37,7 @@ type EcosystemContextValue = {
 const EcosystemContext = createContext<EcosystemContextValue | null>(null);
 
 export function EcosystemProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocale] = useState<Locale>('ru');
+  const [locale, setLocaleState] = useState<Locale>('ru');
   const [learners, setLearners] = useState<EnrichedLearner[]>([]);
   const [externalUsers, setExternalUsers] = useState<ExternalUser[]>([]);
   const [integration, setIntegration] = useState<Integration | null>(null);
@@ -75,6 +76,16 @@ export function EcosystemProvider({ children }: { children: ReactNode }) {
     if (bootRequested.current) return;
     bootRequested.current = true;
     void reload();
+  }, []);
+
+  useEffect(() => {
+    const stored = readStoredLocale(window.localStorage);
+    if (stored) setLocaleState(stored);
+  }, []);
+
+  const setLocale = useCallback((next: Locale) => {
+    setLocaleState(next);
+    writeStoredLocale(window.localStorage, next);
   }, []);
 
   useEffect(() => {

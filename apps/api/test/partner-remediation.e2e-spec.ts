@@ -70,6 +70,23 @@ describe('Partner grounded remediation API (PostgreSQL)', () => {
     return { organization, workspace, integration, key, context };
   }
 
+  it('reports safe provider readiness without exposing credentials', async () => {
+    const tenant = await createKey();
+    const response = await request(app.getHttpServer())
+      .get('/v1/ai/status')
+      .set('Authorization', `Bearer ${tenant.key.secret}`)
+      .expect(200);
+
+    expect(response.body).toEqual({
+      configured: true,
+      provider: 'fake',
+      model: 'deterministic-v1',
+      apiMode: null,
+    });
+    expect(JSON.stringify(response.body)).not.toContain('secret');
+    expect(JSON.stringify(response.body)).not.toContain('apiKey');
+  });
+
   async function mapExternalUser(key: string, externalUserId: string) {
     const response = await request(app.getHttpServer()).post('/v1/external-users')
       .set('Authorization', `Bearer ${key}`)

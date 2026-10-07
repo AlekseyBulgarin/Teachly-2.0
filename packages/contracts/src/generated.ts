@@ -248,6 +248,26 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/v1/ai/status": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /**
+         * Read safe AI provider readiness
+         * @description Returns only provider readiness, safe provider label, model, and API mode. Credentials and endpoints are never exposed.
+         */
+        readonly get: operations["AiStatusController_status"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/v1/assessment/curriculum-mappings": {
         readonly parameters: {
             readonly query?: never;
@@ -1065,6 +1085,19 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        readonly AiStatusResponseDto: {
+            /** @enum {string|null} */
+            readonly apiMode: "responses" | "chat_completions" | null;
+            /** @description Whether a real or explicitly selected test provider is ready for requests. */
+            readonly configured: boolean;
+            /** @example gpt-4o-mini */
+            readonly model: Record<string, never> | null;
+            /**
+             * @description Safe provider label. Credentials are never returned.
+             * @example openai
+             */
+            readonly provider: string;
+        };
         readonly AiTraceResponseDto: {
             /** @example grounded_remediation */
             readonly capability: string;
@@ -2356,6 +2389,48 @@ export interface operations {
                 };
             };
             /** @description API key lacks the required integration scope. */
+            readonly 403: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            readonly 429: components["responses"]["TeachlyTooManyRequests"];
+            readonly 500: components["responses"]["TeachlyInternalError"];
+        };
+    };
+    readonly AiStatusController_status: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: {
+                /** @description Optional caller correlation id. Echoed in the response; generated when omitted. */
+                readonly "x-request-id"?: components["parameters"]["TeachlyRequestId"];
+            };
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AiStatusResponseDto"];
+                };
+            };
+            /** @description Missing, invalid, or revoked workspace API key. */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description API key lacks remediation:write. */
             readonly 403: {
                 headers: {
                     readonly [name: string]: unknown;

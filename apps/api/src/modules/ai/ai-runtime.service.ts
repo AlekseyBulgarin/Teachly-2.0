@@ -39,6 +39,10 @@ export class AiRuntime {
     @Inject(AI_PROVIDER) private readonly provider: AiProvider,
   ) {}
 
+  status() {
+    return this.provider.status();
+  }
+
   async execute(input: AiExecutionInput): Promise<AiExecutionResult> {
     if (!input.idempotencyKey.trim()) throw new AiRuntimeError('invalid_input', 'An idempotency key is required');
     const assembledContext = await this.assembler.assemble(input);

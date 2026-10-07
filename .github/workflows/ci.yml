@@ -87,6 +87,27 @@ jobs:
           path: apps/web/test-results
           if-no-files-found: ignore
 
+  web-visual:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/setup@v3
+        with:
+          runtime: node@24
+          cache: true
+          require-lockfile: true
+      - run: pnpm --filter @teachly/web exec playwright install chromium
+      - run: pnpm --filter @teachly/web test:visual
+        env:
+          PLAYWRIGHT_CHANNEL: chromium
+      - name: Upload visual failures
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-visual-results
+          path: apps/web/test-results
+          if-no-files-found: ignore
+
   lighthouse:
     runs-on: ubuntu-latest
     steps:

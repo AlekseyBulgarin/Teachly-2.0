@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "test:lighthouse": "corepack pnpm build && lhci autorun",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test --grep-invert @visual",
+    "test:visual": "playwright test e2e/showcase-visual.spec.ts",
     "test:unit": "tsx --test lib/*.test.ts",
     "typecheck": "tsc --noEmit"
   },

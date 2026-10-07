@@ -16,6 +16,13 @@ export type AiProviderResponse = {
   usage?: AiProviderUsage;
 };
 
+export type AiProviderStatus = {
+  configured: boolean;
+  provider: string;
+  model: string | null;
+  apiMode: 'responses' | 'chat_completions' | null;
+};
+
 export class AiProviderError extends Error {
   constructor(
     public readonly category: 'configuration' | 'rate_limit' | 'unavailable' | 'request',
@@ -26,5 +33,6 @@ export class AiProviderError extends Error {
 }
 
 export interface AiProvider {
+  status(): AiProviderStatus;
   complete(request: AiProviderRequest, signal: AbortSignal): Promise<AiProviderResponse>;
 }

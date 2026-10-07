@@ -68,6 +68,20 @@ test("navigation, module tabs and language switch stay usable", async ({ page })
     "Tasks, AI and analytics",
   );
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Tasks, AI and analytics");
+});
+
+test("AI demo explains the provider-ready state without inventing a live response", async ({ page }) => {
+  await page.route("**/api/teachly/v1/ai/status", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({ configured: false, provider: "disabled", model: null, apiMode: null }),
+  }));
+  await page.goto("/ai");
+  await expect(page.getByText(/Готово к подключению ключа|Ready for an API key/i)).toBeVisible();
+  await expect(page.getByRole("button", { name: /Получить объяснение|Get an explanation/i })).toBeDisabled();
 });
 
 test("desktop sidebar does not overlap content", async ({ page }, testInfo) => {

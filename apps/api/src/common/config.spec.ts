@@ -16,18 +16,44 @@ describe('environment validation', () => {
       ...base,
       NODE_ENV: 'production',
       DEV_AUTH_ENABLED: 'false',
-      OPENAI_API_KEY: 'test-openai-key',
       METRICS_TOKEN: 'test-metrics-token-at-least-32-characters',
     })).not.toThrow();
   });
 
-  it('requires OpenAI configuration in production', () => {
+  it('allows production to run with AI explicitly disabled', () => {
     expect(() => requiredEnvironment({
       ...base,
       NODE_ENV: 'production',
       DEV_AUTH_ENABLED: 'false',
       METRICS_TOKEN: 'test-metrics-token-at-least-32-characters',
-    })).toThrow('OPENAI_API_KEY is required in production');
+      AI_PROVIDER: 'disabled',
+    })).not.toThrow();
+  });
+
+  it('validates the selected AI provider without requiring a provider globally', () => {
+    expect(() => requiredEnvironment({
+      ...base,
+      AI_PROVIDER: 'openai',
+    })).toThrow('AI_API_KEY or OPENAI_API_KEY');
+    expect(() => requiredEnvironment({
+      ...base,
+      AI_PROVIDER: 'openai-compatible',
+      AI_API_KEY: 'test-provider-key',
+    })).toThrow('AI_BASE_URL and AI_MODEL');
+    expect(() => requiredEnvironment({
+      ...base,
+      AI_PROVIDER: 'openai-compatible',
+      AI_API_KEY: 'test-provider-key',
+      AI_BASE_URL: 'https://gateway.example.test/v1',
+      AI_MODEL: 'provider-model',
+    })).not.toThrow();
+    expect(() => requiredEnvironment({
+      ...base,
+      NODE_ENV: 'production',
+      DEV_AUTH_ENABLED: 'false',
+      METRICS_TOKEN: 'test-metrics-token-at-least-32-characters',
+      AI_PROVIDER: 'fake',
+    })).toThrow('AI_PROVIDER=fake is not allowed in production');
   });
 
   it('requires a strong metrics token in production', () => {
@@ -35,7 +61,6 @@ describe('environment validation', () => {
       ...base,
       NODE_ENV: 'production',
       DEV_AUTH_ENABLED: 'false',
-      OPENAI_API_KEY: 'test-openai-key',
     })).toThrow('METRICS_TOKEN is required in production');
     expect(() => requiredEnvironment({ ...base, METRICS_TOKEN: 'too-short' })).toThrow('METRICS_TOKEN');
   });
