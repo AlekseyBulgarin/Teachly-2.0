@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Activity, ArrowRight, BarChart3, BookOpen, BrainCircuit, FileCheck2, GraduationCap, Layers3, LayoutDashboard, Lightbulb, ListChecks, Menu, MessageCircle, Network, PanelsTopLeft, RefreshCw, UserRound, X, type LucideIcon } from 'lucide-react';
+import { Activity, ArrowRight, BarChart3, BookOpen, BrainCircuit, FileCheck2, GraduationCap, Layers3, LayoutDashboard, Lightbulb, ListChecks, Menu, MessageCircle, Network, PanelsTopLeft, RefreshCw, UserRound, Waypoints, X, type LucideIcon } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { EcosystemProvider, useEcosystem } from '@/lib/ecosystem-context';
 import { capabilityNavigationGroups, capabilityRegistry, type CapabilityKey } from '@/lib/capabilities';
@@ -20,6 +20,7 @@ const capabilityIcons: Record<CapabilityKey, LucideIcon> = {
   trainer: GraduationCap,
   whiteboard: PanelsTopLeft,
   learning: Activity,
+  'concept-loom': Waypoints,
   ai: BrainCircuit,
   'student-profile': UserRound,
   progress: Activity,

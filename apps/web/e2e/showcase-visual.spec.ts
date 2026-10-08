@@ -4,6 +4,7 @@ const visualRoutes = [
   "/ecosystem",
   "/platform",
   "/learning",
+  "/concept-loom",
   "/ai",
   "/teacher",
   "/knowledge",

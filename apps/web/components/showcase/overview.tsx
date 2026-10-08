@@ -22,6 +22,7 @@ import {
   Sparkles,
   UserRound,
   UsersRound,
+  Waypoints,
   type LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
@@ -118,6 +119,21 @@ const modules: ProductModule[] = [
       "Whiteboard",
       "Visual work around a learning task.",
       "Supports visual explanation; real-time collaboration is planned.",
+    ],
+  },
+  {
+    key: "concept-loom",
+    group: "intelligence",
+    icon: Waypoints,
+    ru: [
+      "Карта понимания",
+      "Короткий маршрут от цели к подтверждённому пониманию.",
+      "Находит границу знаний и предлагает следующий полезный шаг вместо длинного общего объяснения.",
+    ],
+    en: [
+      "Understanding map",
+      "A short route from a goal to evidenced understanding.",
+      "Finds the knowledge frontier and proposes the next useful step instead of a broad explanation.",
     ],
   },
   {
