@@ -84,8 +84,8 @@ export function PipelineStep({
       <p
         className={`mt-2 text-xs leading-5 transition-opacity duration-200 ${
           reveal
-            ? "text-slate-500 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus:opacity-100 md:group-focus-within:opacity-100"
-            : "text-slate-500"
+            ? "text-slate-400 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus:opacity-100 md:group-focus-within:opacity-100"
+            : "text-slate-400"
         }`}
       >
         {detail}

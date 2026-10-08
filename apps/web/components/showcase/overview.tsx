@@ -253,12 +253,15 @@ const copy = {
     ecosystemDetail:
       "Teachly не собирает набор несвязанных функций. Контекст проходит через весь путь ученика и помогает следующим модулям работать осмысленно.",
     chain: [
+      "Ученик",
       "Задание",
       "Попытка",
       "Результат",
+      "Teachly Core",
       "Прогресс",
       "AI-контекст",
-      "Сигнал преподавателю",
+      "Преподаватель",
+      "Аналитика",
       "Следующая активность",
     ],
     aiEyebrow: "Единый AI-слой",
@@ -356,12 +359,15 @@ const copy = {
     ecosystemDetail:
       "Teachly is not a collection of disconnected features. Context moves through the learner journey and helps each next module work with purpose.",
     chain: [
+      "Learner",
       "Task",
       "Attempt",
       "Result",
+      "Teachly Core",
       "Progress",
       "AI context",
-      "Teacher signal",
+      "Teacher",
+      "Analytics",
       "Next activity",
     ],
     aiEyebrow: "One AI layer",
@@ -847,21 +853,27 @@ function InteractiveEcosystemFlow({
   const details =
     locale === "ru"
       ? [
+          "Ученик работает в привычном интерфейсе вашей платформы.",
           "Задание задаёт учебную цель и тему.",
           "Попытка показывает, как ученик работает с задачей.",
           "Результат становится понятным сигналом, а не отдельным баллом.",
+          "Teachly Core связывает разрешённый контекст, правила и состояние.",
           "Прогресс связывает результаты в картину движения ученика.",
           "AI получает только уместный учебный контекст.",
           "Преподаватель видит сигнал там, где нужна поддержка.",
+          "Аналитика объединяет подтверждённые учебные сигналы для команды.",
           "Следующая активность опирается на уже пройденный путь.",
         ]
       : [
+          "The learner stays inside your product's familiar interface.",
           "A task sets the learning goal and topic.",
           "An attempt shows how a learner works with the task.",
           "A result becomes a useful signal, not an isolated score.",
+          "Teachly Core connects approved context, rules and state.",
           "Progress connects results into a picture of learner movement.",
           "AI receives only the relevant learning context.",
           "A teacher sees a signal where support is useful.",
+          "Analytics combines evidenced learning signals for the team.",
           "The next activity builds on the learner journey so far.",
         ];
   return (

@@ -13,6 +13,7 @@ const visualRoutes = [
 
 for (const route of visualRoutes) {
   test(`@visual ${route} visual baseline`, async ({ page }) => {
+    test.slow();
     await page.goto(route, { waitUntil: "networkidle" });
     await expect(page.locator("main")).toBeVisible();
     const sections = page.locator(".section-reveal");

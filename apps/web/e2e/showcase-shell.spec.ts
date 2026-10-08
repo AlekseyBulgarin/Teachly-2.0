@@ -86,6 +86,25 @@ test("ecosystem catalog keeps all readiness states explicit", async ({ page }) =
   await expect(catalog.getByText("Демо").first()).toBeVisible();
 });
 
+test("business comparison and technical integration path cover the promised decision criteria", async ({ page }) => {
+  await page.goto("/ecosystem");
+  await expect(page.getByRole("cell", { name: "Архитектура", exact: true })).toBeVisible();
+  await expect(page.getByRole("cell", { name: "Масштабирование", exact: true })).toBeVisible();
+  const ecosystemFlow = page.getByRole("tablist", { name: "Этапы учебного контекста" });
+  await expect(ecosystemFlow.getByRole("tab", { name: "Teachly Core", exact: true })).toBeVisible();
+  await expect(ecosystemFlow.getByRole("tab", { name: "Аналитика", exact: true })).toBeVisible();
+
+  await page.goto("/integrations#technical");
+  await expect(page.getByRole("heading", { name: "Техническая готовность подключения" })).toBeVisible();
+  await expect(page.getByText("Webhooks, SDK и embed", { exact: true })).toBeVisible();
+  await expect(page.getByText("В ПЛАНАХ", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Посмотреть OpenAPI" })).toHaveAttribute("href", "https://teachlyapi-production.up.railway.app/docs");
+
+  await page.getByRole("button", { name: /^en$/i }).click();
+  await expect(page.getByRole("heading", { name: "Technical integration readiness" })).toBeVisible();
+  await expect(page.getByText("Webhooks, SDK and embed", { exact: true })).toBeVisible();
+});
+
 test("ecosystem hydrates without browser errors", async ({ page }) => {
   const errors: string[] = [];
   await page.route("**/api/teachly/**", (route) => {

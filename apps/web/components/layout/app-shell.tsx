@@ -176,11 +176,11 @@ function ShellFrame({ children }: { children: ReactNode }) {
           <div className="mx-auto flex min-h-[76px] w-full max-w-[1480px] items-center justify-between gap-4 px-5 sm:px-8 lg:px-12">
             <div className="flex min-w-0 items-center gap-3">
               <button ref={openNavRef} type="button" disabled={!hydrated} className="rounded-xl border border-[var(--border)] bg-white/[.035] p-2.5 text-slate-300 hover:bg-white/[.07] disabled:cursor-wait disabled:opacity-60 lg:hidden" onClick={() => setMobileNav(true)} aria-label={t('shell.openNav')}><Menu aria-hidden="true" /></button>
-              <div className="min-w-0"><p className="truncate text-[11px] font-medium uppercase tracking-[.18em] text-slate-500">{t('shell.workspace')}</p><p className="mt-1 truncate text-sm font-semibold text-slate-100">{active.label[locale]}</p></div>
+              <div className="min-w-0"><p className="truncate text-[11px] font-medium uppercase tracking-[.18em] text-slate-400">{t('shell.workspace')}</p><p className="mt-1 truncate text-sm font-semibold text-slate-100">{active.label[locale]}</p></div>
             </div>
             <div className="flex shrink-0 items-center gap-2 sm:gap-3">
               <div className="flex items-center rounded-lg border border-[var(--border)] bg-white/[.03] p-0.5" aria-label={t('shell.language')}>
-                {(['ru', 'en'] as const).map((item) => <button key={item} disabled={!hydrated} aria-pressed={locale === item} onClick={() => setLocale(item)} className={`rounded-md px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[.12em] disabled:cursor-wait disabled:opacity-60 ${locale === item ? 'bg-white/[.1] text-slate-100' : 'text-slate-500 hover:text-slate-300'}`}>{item}</button>)}
+                {(['ru', 'en'] as const).map((item) => <button key={item} disabled={!hydrated} aria-pressed={locale === item} onClick={() => setLocale(item)} className={`rounded-md px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[.12em] disabled:cursor-wait disabled:opacity-60 ${locale === item ? 'bg-white/[.1] text-slate-100' : 'text-slate-400 hover:text-slate-200'}`}>{item}</button>)}
               </div>
               <button onClick={() => void reload()} disabled={refreshing} className="inline-flex size-9 items-center justify-center rounded-lg border border-[var(--border)] bg-white/[.03] text-slate-400 hover:bg-white/[.07] hover:text-slate-100 disabled:cursor-wait disabled:opacity-60" aria-label={t('shell.refresh')} title={t('shell.refresh')}><RefreshCw aria-hidden="true" size={15} className={refreshing ? 'animate-spin' : ''} /></button>
               <div className="hidden items-center gap-2 rounded-full border border-[var(--border)] bg-white/[.03] px-3 py-2 text-[10px] font-semibold uppercase tracking-[.13em] text-slate-400 sm:flex"><span className={`size-1.5 rounded-full ${apiStatus === 'healthy' ? 'bg-emerald-300' : apiStatus === 'checking' ? 'bg-amber-300' : 'bg-slate-500'}`} />{apiStatus === 'healthy' ? t('shell.api.healthy') : apiStatus === 'checking' ? t('shell.api.checking') : t('shell.api.unavailable')}</div>
@@ -268,7 +268,7 @@ function MarketingFrame({
           </nav>
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="hidden items-center rounded-lg border border-[var(--border)] bg-white/[.03] p-0.5 sm:flex" aria-label={t('shell.language')}>
-              {(['ru', 'en'] as const).map((item) => <button key={item} disabled={!hydrated} aria-pressed={locale === item} onClick={() => setLocale(item)} className={`rounded-md px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[.12em] disabled:cursor-wait disabled:opacity-60 ${locale === item ? 'bg-white/[.1] text-slate-100' : 'text-slate-500 hover:text-slate-300'}`}>{item}</button>)}
+              {(['ru', 'en'] as const).map((item) => <button key={item} disabled={!hydrated} aria-pressed={locale === item} onClick={() => setLocale(item)} className={`rounded-md px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[.12em] disabled:cursor-wait disabled:opacity-60 ${locale === item ? 'bg-white/[.1] text-slate-100' : 'text-slate-400 hover:text-slate-200'}`}>{item}</button>)}
             </div>
             <a href="#contact" className="interactive hidden items-center gap-2 rounded-xl bg-emerald-300 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-[0_14px_36px_-20px_rgba(69,230,168,.8)] hover:-translate-y-0.5 hover:bg-emerald-200 sm:inline-flex">
               {c.contact}
@@ -294,7 +294,7 @@ function MarketingFrame({
             </nav>
             <div className="mt-6 flex items-center justify-between gap-3 border-t border-[var(--border)] pt-5">
               <div className="flex items-center rounded-lg border border-[var(--border)] bg-white/[.03] p-0.5" aria-label={t('shell.language')}>
-                {(['ru', 'en'] as const).map((item) => <button key={item} aria-pressed={locale === item} onClick={() => setLocale(item)} className={`rounded-md px-3 py-2 text-[10px] font-bold uppercase tracking-[.12em] ${locale === item ? 'bg-white/[.1] text-slate-100' : 'text-slate-500'}`}>{item}</button>)}
+                {(['ru', 'en'] as const).map((item) => <button key={item} aria-pressed={locale === item} onClick={() => setLocale(item)} className={`rounded-md px-3 py-2 text-[10px] font-bold uppercase tracking-[.12em] ${locale === item ? 'bg-white/[.1] text-slate-100' : 'text-slate-400'}`}>{item}</button>)}
               </div>
               <a href="#contact" onClick={() => setMenuOpen(false)} className="inline-flex items-center gap-2 rounded-xl bg-emerald-300 px-4 py-3 text-sm font-semibold text-slate-950">{c.contact}<ArrowRight aria-hidden="true" size={15} /></a>
             </div>
@@ -306,7 +306,7 @@ function MarketingFrame({
         <div className="showcase-page mx-auto w-full max-w-[1400px] px-5 pb-16 pt-8 sm:px-8 sm:pt-12 lg:px-12 lg:pb-24">{children}</div>
       </main>
       <footer className="border-t border-[var(--border)]">
-        <div className="mx-auto flex max-w-[1400px] flex-col gap-4 px-5 py-8 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-12">
+        <div className="mx-auto flex max-w-[1400px] flex-col gap-4 px-5 py-8 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-12">
           <span>© 2026 Teachly</span>
           <span>{c.footer}</span>
         </div>
