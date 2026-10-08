@@ -193,7 +193,7 @@ export function IntegrationsPage() {
         </div>
       </SectionCard>
 
-      <p className="px-1 text-sm leading-6 text-slate-500">
+      <p className="px-1 text-sm leading-6 text-slate-400">
         {t("integrations.docsNote")}
       </p>
 
