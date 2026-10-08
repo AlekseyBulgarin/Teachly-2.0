@@ -4,6 +4,7 @@ const routes = [
   "/ecosystem",
   "/platform",
   "/learning",
+  "/concept-loom",
   "/tasks",
   "/variants",
   "/theory",
@@ -135,6 +136,28 @@ test("AI demo explains the provider-ready state without inventing a live respons
   await page.goto("/ai");
   await expect(page.getByText(/Готово к подключению ключа|Ready for an API key/i)).toBeVisible();
   await expect(page.getByRole("button", { name: /Получить объяснение|Get an explanation/i })).toBeDisabled();
+});
+
+test("Concept Loom demo keeps its boundary honest and demonstrates a routed checkpoint", async ({ page }) => {
+  await page.goto("/concept-loom");
+  await expect(page.getByText("ДЕМО", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText(/результат не сохраняется, AI не вызывается/i)).toBeVisible();
+
+  await page.getByRole("button", { name: /Корпоративное обучение/i }).click();
+  await page.getByRole("button", { name: "Начало", exact: true }).click();
+  await expect(page.getByText(/не распознаёт персональные данные/i)).toBeVisible();
+  await page.getByRole("button", { name: /утверждённый защищённый канал/i }).click();
+  await page.getByRole("button", { name: "Показать следующий шаг" }).click();
+  await expect(page.getByRole("status")).toContainText(/перенос в новой ситуации/i);
+
+  await expect(page.getByRole("link", { name: "Открыть исходный проект" })).toHaveAttribute(
+    "href",
+    "https://github.com/Zproger/ConceptLoom",
+  );
+
+  await page.getByRole("button", { name: /^en$/i }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("short route to understanding");
+  await expect(page.getByText(/nothing is persisted, no AI is called/i)).toBeVisible();
 });
 
 test("desktop sidebar does not overlap content", async ({ page }, testInfo) => {

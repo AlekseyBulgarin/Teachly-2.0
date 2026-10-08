@@ -6,6 +6,7 @@ module.exports = {
       startServerReadyTimeout: 120000,
       url: [
         'http://127.0.0.1:3102/ecosystem',
+        'http://127.0.0.1:3102/concept-loom',
         'http://127.0.0.1:3102/teacher',
         'http://127.0.0.1:3102/integrations',
       ],

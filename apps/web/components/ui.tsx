@@ -6,9 +6,10 @@ import type { Locale } from '@/lib/i18n';
 export function StatusBadge({ status, locale }: { status: 'LIVE' | 'COMING NEXT' | 'PLANNED' | string; locale: Locale }) {
   const normalized = status.toUpperCase();
   const live = normalized === 'LIVE' || normalized === 'APPROVED' || normalized === 'ALLOWED' || normalized === 'ACTIVE';
+  const demo = normalized === 'DEMO';
   const next = normalized === 'COMING NEXT' || normalized === 'REVIEW' || normalized === 'NOT_REVIEWED';
-  const text = normalized === 'LIVE' ? 'LIVE' : normalized === 'COMING NEXT' ? (locale === 'ru' ? 'СКОРО' : 'COMING NEXT') : normalized === 'PLANNED' ? (locale === 'ru' ? 'В ПЛАНАХ' : 'PLANNED') : status.replaceAll('_', ' ');
-  return <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[.14em] ${live ? 'border-emerald-300/25 bg-emerald-300/10 text-emerald-200' : next ? 'border-amber-300/25 bg-amber-300/10 text-amber-200' : 'border-white/10 bg-white/[.05] text-slate-400'}`}><span className={`size-1.5 rounded-full ${live ? 'bg-emerald-300' : next ? 'bg-amber-300' : 'bg-slate-500'}`} />{text}</span>;
+  const text = normalized === 'LIVE' ? 'LIVE' : normalized === 'DEMO' ? (locale === 'ru' ? 'ДЕМО' : 'DEMO') : normalized === 'COMING NEXT' ? (locale === 'ru' ? 'СКОРО' : 'COMING NEXT') : normalized === 'PLANNED' ? (locale === 'ru' ? 'В ПЛАНАХ' : 'PLANNED') : status.replaceAll('_', ' ');
+  return <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[.14em] ${live ? 'border-emerald-300/25 bg-emerald-300/10 text-emerald-200' : demo ? 'border-cyan-300/25 bg-cyan-300/10 text-cyan-200' : next ? 'border-amber-300/25 bg-amber-300/10 text-amber-200' : 'border-white/10 bg-white/[.05] text-slate-400'}`}><span className={`size-1.5 rounded-full ${live ? 'bg-emerald-300' : demo ? 'bg-cyan-300' : next ? 'bg-amber-300' : 'bg-slate-500'}`} />{text}</span>;
 }
 
 export function PageHeader({ eyebrow, title, description, action }: { eyebrow: string; title: string; description: string; action?: ReactNode }) {

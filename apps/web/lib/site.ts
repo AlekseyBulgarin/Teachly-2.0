@@ -5,6 +5,7 @@ export const siteUrl = new URL(process.env.TEACHLY_SITE_URL ?? 'https://teachly-
 export const showcaseRoutes = [
   '/ecosystem', '/platform', '/tasks', '/variants', '/theory', '/trainer', '/whiteboard',
   '/learning', '/ai', '/student-profile', '/progress', '/teacher', '/analytics', '/knowledge', '/integrations',
+  '/concept-loom',
 ] as const;
 
 export function showcaseMetadata(title: string, description: string, path: string): Metadata {

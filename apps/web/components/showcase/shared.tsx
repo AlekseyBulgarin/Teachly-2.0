@@ -154,6 +154,11 @@ const nextStep = {
       "Контекст обучения становится основой для понятной AI-помощи.",
       "Открыть образовательный AI",
     ],
+    "concept-loom": [
+      "Перейти к преподавательскому сценарию",
+      "Карта понимания превращает ответы и пробелы в понятный следующий шаг для ученика и преподавателя.",
+      "Открыть раздел преподавателя",
+    ],
     ai: [
       "Посмотреть профиль ученика",
       "AI-сценарий использует ту же учебную историю, что и другие модули Teachly.",
@@ -190,6 +195,11 @@ const nextStep = {
       "Explore the next module",
       "Learning context becomes the foundation for clear AI assistance.",
       "Open educational AI",
+    ],
+    "concept-loom": [
+      "Continue to the teacher workflow",
+      "The understanding map turns responses and gaps into a clear next step for learners and teachers.",
+      "Open the teacher view",
     ],
     ai: [
       "Explore the learner profile",

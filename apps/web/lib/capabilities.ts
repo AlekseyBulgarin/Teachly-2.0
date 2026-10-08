@@ -1,6 +1,6 @@
 import type { Locale } from "@/lib/i18n";
 
-export type CapabilityStatus = "LIVE" | "COMING NEXT" | "PLANNED";
+export type CapabilityStatus = "LIVE" | "DEMO" | "COMING NEXT" | "PLANNED";
 export type CapabilityNavGroup =
   | "overview"
   | "learning"
@@ -15,6 +15,7 @@ export type CapabilityKey =
   | "trainer"
   | "whiteboard"
   | "learning"
+  | "concept-loom"
   | "ai"
   | "student-profile"
   | "progress"
@@ -134,6 +135,17 @@ export const capabilityRegistry = {
     dependencies: ["progress"],
     next: "ai",
   },
+  "concept-loom": {
+    key: "concept-loom",
+    path: "/concept-loom",
+    navGroup: "intelligence",
+    label: { ru: "Карта понимания", en: "Understanding map" },
+    detail: { ru: "Цель, пробелы и маршрут", en: "Goals, gaps and route" },
+    productStatus: "PLANNED",
+    demoStatus: "DEMO",
+    dependencies: ["progress", "knowledge"],
+    next: "teacher",
+  },
   ai: {
     key: "ai",
     path: "/ai",
@@ -227,7 +239,7 @@ export const capabilityNavigationGroups = [
   {
     key: "intelligence",
     label: { ru: "Интеллект", en: "Intelligence" },
-    items: ["ai", "student-profile", "progress", "teacher", "analytics"],
+    items: ["concept-loom", "ai", "student-profile", "progress", "teacher", "analytics"],
   },
   {
     key: "connection",
