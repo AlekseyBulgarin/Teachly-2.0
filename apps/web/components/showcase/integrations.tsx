@@ -4,6 +4,8 @@ import {
   AppWindow,
   ArrowRight,
   Check,
+  Braces,
+  Database,
   KeyRound,
   Layers3,
   Mail,
@@ -11,6 +13,7 @@ import {
   Network,
   Phone,
   Plug,
+  ShieldCheck,
   Sparkles,
 } from "lucide-react";
 import { useEcosystem } from "@/lib/ecosystem-context";
@@ -22,6 +25,23 @@ import { IntegrationProof } from "@/components/showcase/demos/integration-proof"
 
 export function IntegrationsPage() {
   const { t, locale } = useEcosystem();
+  const technicalCapabilities = locale === "ru"
+    ? [
+        { title: "API и контракты", detail: "Версионированный /v1, OpenAPI и типизированный клиент для пилотной интеграции.", status: "LIVE", icon: Braces },
+        { title: "Авторизация и scopes", detail: "Workspace API key, ограниченные права и серверное хранение секретов.", status: "LIVE", icon: KeyRound },
+        { title: "Модель данных", detail: "Связи внешних пользователей, учебные события и идемпотентные команды.", status: "LIVE", icon: Database },
+        { title: "Безопасность", detail: "Tenant scope, rate limits, request ID, аудит и наблюдаемость API.", status: "LIVE", icon: ShieldCheck },
+        { title: "Sandbox / demo-контур", detail: "Reference consumer и отдельный demo workspace показывают интеграцию без доступа к секретам.", status: "DEMO", icon: Network },
+        { title: "Webhooks, SDK и embed", detail: "Подключаются только после подтверждения требований реального пилота.", status: "PLANNED", icon: Plug },
+      ]
+    : [
+        { title: "API and contracts", detail: "Versioned /v1, OpenAPI and a typed client for the pilot integration.", status: "LIVE", icon: Braces },
+        { title: "Authentication and scopes", detail: "Workspace API keys, bounded permissions and server-side secret storage.", status: "LIVE", icon: KeyRound },
+        { title: "Data model", detail: "External-user mappings, learning events and idempotent commands.", status: "LIVE", icon: Database },
+        { title: "Security", detail: "Tenant scope, rate limits, request IDs, auditing and API observability.", status: "LIVE", icon: ShieldCheck },
+        { title: "Sandbox / demo environment", detail: "A reference consumer and isolated demo workspace show the integration without exposing secrets.", status: "DEMO", icon: Network },
+        { title: "Webhooks, SDK and embed", detail: "Added only after a real pilot validates the integration requirements.", status: "PLANNED", icon: Plug },
+      ];
   const model = [
     { title: t("integrations.platformLabel"), detail: t("integrations.platformDetail"), icon: AppWindow },
     { title: t("integrations.coreLabel"), detail: t("integrations.coreDetail"), icon: Network },
@@ -54,8 +74,9 @@ export function IntegrationsPage() {
         items={[
           { id: "overview", label: t("integrations.navOverview") },
           { id: "model", label: t("integrations.navModel") },
-          { id: "process", label: t("integrations.navProcess") },
           { id: "proof", label: locale === "ru" ? "API-доступ" : "API access" },
+          { id: "technical", label: locale === "ru" ? "Для разработчиков" : "For developers" },
+          { id: "process", label: t("integrations.navProcess") },
           { id: "contact", label: t("integrations.navContact") },
         ]}
       />
@@ -97,6 +118,35 @@ export function IntegrationsPage() {
           action={<StatusBadge status="LIVE" locale={locale} />}
         >
           <div className="p-5 sm:p-7"><IntegrationProof /></div>
+        </SectionCard>
+      </div>
+
+      <div id="technical" className="scroll-mt-28">
+        <SectionCard
+          title={locale === "ru" ? "Техническая готовность подключения" : "Technical integration readiness"}
+          detail={locale === "ru" ? "Отделяем доступные контракты от возможностей, которые появятся только после проверки реального интеграционного сценария." : "Available contracts are separated from capabilities that will be added only after a real integration workflow is validated."}
+          icon={Braces}
+        >
+          <div className="grid gap-3 p-5 sm:grid-cols-2 sm:p-7 xl:grid-cols-3">
+            {technicalCapabilities.map(({ title, detail, status, icon: Icon }) => (
+              <div key={title} className="card-lift rounded-2xl border border-white/[.07] bg-white/[.025] p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <span className="flex size-10 items-center justify-center rounded-xl bg-emerald-300/[.08] text-emerald-200"><Icon aria-hidden="true" size={18} /></span>
+                  <StatusBadge status={status} locale={locale} />
+                </div>
+                <h3 className="mt-5 font-semibold text-slate-100">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-400">{detail}</p>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-3 border-t border-[var(--border)] px-5 py-5 sm:px-7">
+            <a href="https://github.com/AlekseyBulgarin/Teachly-2.0/blob/main/docs/integrations/quickstart.md" target="_blank" rel="noreferrer" className="interactive inline-flex items-center gap-2 rounded-xl border border-white/[.1] bg-white/[.035] px-4 py-3 text-sm font-semibold text-slate-200 hover:bg-white/[.075]">
+              {locale === "ru" ? "Открыть integration guide" : "Open the integration guide"}<ArrowRight aria-hidden="true" size={15} />
+            </a>
+            <a href="https://teachlyapi-production.up.railway.app/docs" target="_blank" rel="noreferrer" className="interactive inline-flex items-center gap-2 rounded-xl border border-emerald-300/20 bg-emerald-300/[.06] px-4 py-3 text-sm font-semibold text-emerald-100 hover:bg-emerald-300/[.1]">
+              {locale === "ru" ? "Посмотреть OpenAPI" : "View OpenAPI"}<ArrowRight aria-hidden="true" size={15} />
+            </a>
+          </div>
         </SectionCard>
       </div>
 
