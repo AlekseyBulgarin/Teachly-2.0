@@ -29,6 +29,10 @@ test("navigation uses each listed capability once and in its declared group", ()
     group.items.map((key) => ({ group: group.key, key })),
   );
   assert.equal(new Set(listed.map(({ key }) => key)).size, listed.length);
+  assert.deepEqual(
+    listed.map(({ key }) => key).toSorted(),
+    capabilityKeys.toSorted(),
+  );
 
   for (const item of listed) {
     assert.equal(capabilityRegistry[item.key].navGroup, item.group);

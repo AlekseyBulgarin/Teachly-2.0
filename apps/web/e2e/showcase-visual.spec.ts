@@ -1,18 +1,7 @@
 import { expect, test } from "@playwright/test";
+import { showcaseRoutes } from "../lib/site";
 
-const visualRoutes = [
-  "/ecosystem",
-  "/platform",
-  "/learning",
-  "/concept-loom",
-  "/ai",
-  "/teacher",
-  "/knowledge",
-  "/analytics",
-  "/integrations",
-] as const;
-
-for (const route of visualRoutes) {
+for (const route of showcaseRoutes) {
   test(`@visual ${route} visual baseline`, async ({ page }) => {
     test.slow();
     await page.goto(route, { waitUntil: "networkidle" });

@@ -1,25 +1,7 @@
 import { expect, test } from "@playwright/test";
+import { showcaseRoutes } from "../lib/site";
 
-const routes = [
-  "/ecosystem",
-  "/platform",
-  "/learning",
-  "/concept-loom",
-  "/tasks",
-  "/variants",
-  "/theory",
-  "/trainer",
-  "/whiteboard",
-  "/ai",
-  "/student-profile",
-  "/progress",
-  "/teacher",
-  "/knowledge",
-  "/analytics",
-  "/integrations",
-] as const;
-
-for (const route of routes) {
+for (const route of showcaseRoutes) {
   test(`${route} renders without horizontal overflow`, async ({ page }) => {
     await page.goto(route);
     await expect(page.locator("main")).toBeVisible();

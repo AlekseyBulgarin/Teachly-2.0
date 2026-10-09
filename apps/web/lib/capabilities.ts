@@ -239,7 +239,7 @@ export const capabilityNavigationGroups = [
   {
     key: "intelligence",
     label: { ru: "Интеллект", en: "Intelligence" },
-    items: ["concept-loom", "ai", "student-profile", "progress", "teacher", "analytics"],
+    items: ["learning", "concept-loom", "ai", "student-profile", "progress", "teacher", "analytics"],
   },
   {
     key: "connection",
