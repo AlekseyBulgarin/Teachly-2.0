@@ -1697,6 +1697,11 @@ export interface components {
             readonly externalUserId: string;
             readonly idempotencyKey: string;
             readonly learnerQuestion?: string;
+            /**
+             * @default en
+             * @enum {string}
+             */
+            readonly locale: "ru" | "en";
         };
         readonly PartnerRemediationResponseDto: {
             readonly evidenceRefs: readonly string[];
@@ -1885,6 +1890,9 @@ export interface components {
             readonly taskVersionId: string;
         };
         readonly TaskContentDto: {
+            readonly metadata?: {
+                readonly [key: string]: unknown;
+            };
             readonly options?: readonly components["schemas"]["TaskOptionDto"][];
             readonly statement: string;
         };
