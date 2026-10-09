@@ -1,5 +1,7 @@
 # Stage 5 completion audit — Teachly Monitor
 
+> This audit describes the completed self-hostable V1. Production Prometheus storage, backup wiring and alert contacts remain external deployment gates; see [Current delivery status](./current-stage-status.md).
+
 Audited on 2026-10-07 against the approved self-hostable observability scope.
 
 | Area | Delivered evidence | Result |
