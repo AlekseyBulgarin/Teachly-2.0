@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CircleCheck, CircleX, GraduationCap, RefreshCw, Signal, Sparkles } from "lucide-react";
+import { BookOpen, CircleCheck, CircleX, Code2, GraduationCap, RefreshCw, Signal, Sparkles, Target } from "lucide-react";
 import { api, type TrainerSession, type TrainerSessionItem, type TrainerSubmitResponse } from "@/lib/api";
 import { useEcosystem } from "@/lib/ecosystem-context";
+import { demoTracks, localizeTask, type DemoTrack } from "@/lib/demo-learning";
 import { ErrorState } from "@/components/ui";
 
 type Phase = "idle" | "running" | "feedback" | "complete" | "done";
@@ -11,7 +12,8 @@ type FailedAction = "start" | "submit" | "next" | "complete" | null;
 type SubmitRequest = { sessionId: string; itemId: string; optionId: string; idempotencyKey: string };
 
 export function TrainerDemo() {
-  const { t } = useEcosystem();
+  const { locale, t } = useEcosystem();
+  const [track, setTrack] = useState<DemoTrack>('python');
   const [phase, setPhase] = useState<Phase>("idle");
   const [session, setSession] = useState<TrainerSession | null>(null);
   const [answered, setAnswered] = useState<TrainerSessionItem | null>(null);
@@ -19,6 +21,7 @@ export function TrainerDemo() {
   const [picked, setPicked] = useState<string>();
   const [busy, setBusy] = useState(false);
   const [failedAction, setFailedAction] = useState<FailedAction>(null);
+  const [results, setResults] = useState<Array<{ correct: boolean; title: string }>>([]);
   const mountedRef = useRef(true);
   const pendingRef = useRef(false);
   const controllerRef = useRef<AbortController | null>(null);
@@ -55,7 +58,7 @@ export function TrainerDemo() {
     const idempotencyKey = startKeyRef.current ?? crypto.randomUUID();
     startKeyRef.current = idempotencyKey;
     try {
-      const created = await api.trainerStart({ idempotencyKey }, controller.signal);
+      const created = await api.trainerStart({ idempotencyKey, track }, controller.signal);
       const current = await api.trainerCurrent(created.id, controller.signal);
       if (controller.signal.aborted || !mountedRef.current) return;
       startKeyRef.current = undefined;
@@ -64,13 +67,14 @@ export function TrainerDemo() {
       setAnswered(null);
       setFeedback(null);
       setPicked(undefined);
+      setResults([]);
       setPhase("running");
     } catch {
       if (!controller.signal.aborted && mountedRef.current) setFailedAction("start");
     } finally {
       finishRequest(controller);
     }
-  }, [beginRequest, finishRequest]);
+  }, [beginRequest, finishRequest, track]);
 
   const submit = useCallback(async () => {
     const existing = submitRequestRef.current;
@@ -96,13 +100,19 @@ export function TrainerDemo() {
       setAnswered(submittedItem ?? null);
       setFeedback(response);
       setSession(response.session);
+      if (submittedItem) {
+        setResults((current) => [...current, {
+          correct: response.submitted.result.isCorrect,
+          title: localizeTask(submittedItem.task, locale).content.title ?? `${t("demo.trainer.item")} ${submittedItem.position}`,
+        }]);
+      }
       setPhase("feedback");
     } catch {
       if (!controller.signal.aborted && mountedRef.current) setFailedAction("submit");
     } finally {
       finishRequest(controller);
     }
-  }, [answered, beginRequest, finishRequest, picked, session]);
+  }, [answered, beginRequest, finishRequest, locale, picked, session, t]);
 
   const applyCurrent = useCallback((updated: TrainerSession) => {
     setSession(updated);
@@ -155,11 +165,33 @@ export function TrainerDemo() {
   const progress = session?.progress ?? { completed: 0, total: 0 };
   const percent = progress.total ? Math.round((progress.completed / progress.total) * 100) : 0;
   const visible = phase === "feedback" ? answered : session?.current ?? null;
+  const localizedVisible = visible ? localizeTask(visible.task, locale) : null;
+  const correctCount = results.filter((result) => result.correct).length;
+  const selectedTrack = demoTracks.find((item) => item.id === track) ?? demoTracks[0];
 
   if (phase === "idle") {
     return (
       <div className="flex flex-col items-start gap-4" aria-busy={busy}>
         <p className="max-w-2xl text-sm leading-7 text-slate-400">{t("demo.trainer.idle")}</p>
+        <fieldset className="w-full">
+          <legend className="text-[10px] font-bold uppercase tracking-[.16em] text-slate-500">
+            {locale === 'ru' ? 'Выберите маршрут' : 'Choose a track'}
+          </legend>
+          <div className="mt-3 grid gap-3 md:grid-cols-3">
+            {demoTracks.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                aria-pressed={track === item.id}
+                onClick={() => setTrack(item.id)}
+                className={`interactive rounded-2xl border p-4 text-left transition ${track === item.id ? 'border-emerald-300/35 bg-emerald-300/[.08]' : 'border-[var(--border)] bg-white/[.025] hover:border-[var(--border-strong)]'}`}
+              >
+                <span className="block text-sm font-semibold text-slate-100">{item.title[locale]}</span>
+                <span className="mt-1 block text-xs leading-5 text-slate-400">{item.detail[locale]}</span>
+              </button>
+            ))}
+          </div>
+        </fieldset>
         <button
           type="button"
           onClick={() => void start()}
@@ -205,6 +237,11 @@ export function TrainerDemo() {
             <CircleCheck aria-hidden="true" size={17} className="shrink-0 text-emerald-300" />
             {t("demo.trainer.done")}
           </p>
+          <div className="grid w-full gap-3 sm:grid-cols-3">
+            <Summary label={locale === 'ru' ? 'Результат' : 'Result'} value={`${correctCount}/${results.length}`} />
+            <Summary label={locale === 'ru' ? 'Маршрут' : 'Track'} value={selectedTrack.title[locale]} />
+            <Summary label={locale === 'ru' ? 'Следующий шаг' : 'Next step'} value={correctCount === results.length ? (locale === 'ru' ? 'Перенос навыка' : 'Transfer check') : (locale === 'ru' ? 'Повторить ошибки' : 'Review mistakes')} />
+          </div>
           <button
             type="button"
             onClick={() => void start()}
@@ -228,15 +265,19 @@ export function TrainerDemo() {
             {busy ? t("demo.loading") : t("demo.trainer.complete")}
           </button>
         </div>
-      ) : visible ? (
+      ) : visible && localizedVisible ? (
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,.9fr)]">
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 sm:p-6">
             <p className="text-[10px] font-bold uppercase tracking-[.16em] text-slate-500">
               {t("demo.trainer.item")} {visible.position}/{progress.total}
             </p>
-            <p className="mt-3 break-words text-base leading-7 text-slate-100">{visible.task.content.statement}</p>
+            {localizedVisible.content.title && <p className="mt-3 text-xs font-semibold uppercase tracking-[.12em] text-emerald-200">{localizedVisible.content.title}</p>}
+            <p className="mt-2 break-words text-base leading-7 text-slate-100">{localizedVisible.content.statement}</p>
+            {localizedVisible.code && (
+              <pre className="mt-4 overflow-x-auto rounded-xl border border-white/[.08] bg-[#070b12] p-4 text-sm leading-6 text-cyan-100"><code>{localizedVisible.code}</code></pre>
+            )}
             <div className="mt-5 flex flex-col gap-2">
-              {(visible.task.content.options ?? []).map((option) => {
+              {(localizedVisible.content.options ?? []).map((option) => {
                 const active = picked === option.id;
                 return (
                   <button
@@ -281,7 +322,7 @@ export function TrainerDemo() {
             </div>
           </div>
 
-          {phase === "feedback" && feedback && (
+          {phase === "feedback" && feedback ? (
             <div className="flex flex-col gap-4">
               <div className={`rounded-2xl border p-5 ${feedback.submitted.result.isCorrect ? "border-emerald-300/25 bg-emerald-300/[.07]" : "border-amber-300/25 bg-amber-300/[.07]"}`}>
                 <p className="flex items-center gap-2 text-sm font-semibold">
@@ -291,7 +332,11 @@ export function TrainerDemo() {
                     <><CircleX aria-hidden="true" size={17} className="text-amber-300" /><span className="text-amber-100">{t("demo.trainer.incorrect")}</span></>
                   )}
                 </p>
-                <p className="mt-2 font-mono text-[11px] text-slate-500">score: {feedback.submitted.result.score} · {feedback.submitted.result.evaluationRule}</p>
+                <p className="mt-3 text-sm leading-6 text-slate-300">{localizedVisible.explanation}</p>
+                <details className="mt-3 text-xs text-slate-500">
+                  <summary className="cursor-pointer">{locale === 'ru' ? 'Технические детали' : 'Technical details'}</summary>
+                  <p className="mt-2 font-mono">score: {feedback.submitted.result.score} · {feedback.submitted.result.evaluationRule}</p>
+                </details>
               </div>
 
               {!!feedback.theory.length && (
@@ -323,9 +368,30 @@ export function TrainerDemo() {
                 </div>
               )}
             </div>
+          ) : (
+            <div className="flex min-h-64 flex-col justify-between rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 sm:p-6">
+              <div>
+                <span className="flex size-10 items-center justify-center rounded-xl bg-cyan-300/10 text-cyan-200"><Target aria-hidden="true" size={18} /></span>
+                <p className="mt-5 text-base font-semibold text-slate-100">{locale === 'ru' ? 'После ответа появится разбор' : 'Feedback appears after your answer'}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-400">{locale === 'ru' ? 'Teachly покажет объяснение, подходящий материал и сигнал преподавателю — если история уже подтверждает пробел.' : 'Teachly will show an explanation, relevant material and a teacher signal when the history confirms a gap.'}</p>
+              </div>
+              <div className="mt-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                <Hint icon={BookOpen} text={locale === 'ru' ? 'Связанная теория' : 'Linked theory'} />
+                <Hint icon={Signal} text={locale === 'ru' ? 'Учебный сигнал' : 'Learning signal'} />
+                <Hint icon={Code2} text={locale === 'ru' ? 'Понятный разбор' : 'Clear explanation'} />
+              </div>
+            </div>
           )}
         </div>
       ) : null}
     </div>
   );
+}
+
+function Summary({ label, value }: { label: string; value: string }) {
+  return <div className="rounded-xl border border-white/[.08] bg-black/15 p-4"><p className="text-[10px] font-bold uppercase tracking-[.14em] text-slate-500">{label}</p><p className="mt-2 text-sm font-semibold text-slate-100">{value}</p></div>;
+}
+
+function Hint({ icon: Icon, text }: { icon: typeof BookOpen; text: string }) {
+  return <div className="flex items-center gap-2 rounded-xl border border-white/[.07] bg-white/[.025] px-3 py-2.5 text-xs text-slate-400"><Icon aria-hidden="true" size={14} className="text-emerald-300" />{text}</div>;
 }

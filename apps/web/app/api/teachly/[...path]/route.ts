@@ -16,6 +16,11 @@ const whiteboardStateRoute =
 const demoBoardCookie = 'teachly-demo-board';
 const upstreamTimeoutMs = 15_000;
 const remediationUpstreamTimeoutMs = 30_000;
+const showcaseTrackTaskIds = {
+  python: ['00000000-0000-4000-8000-000000000310', '00000000-0000-4000-8000-000000000311', '00000000-0000-4000-8000-000000000312', '00000000-0000-4000-8000-000000000313', '00000000-0000-4000-8000-000000000314'],
+  algorithms: ['00000000-0000-4000-8000-000000000315', '00000000-0000-4000-8000-000000000316', '00000000-0000-4000-8000-000000000317', '00000000-0000-4000-8000-000000000318', '00000000-0000-4000-8000-000000000314'],
+  web: ['00000000-0000-4000-8000-000000000319', '00000000-0000-4000-8000-000000000320', '00000000-0000-4000-8000-000000000321', '00000000-0000-4000-8000-000000000317', '00000000-0000-4000-8000-000000000318'],
+} as const;
 
 const allowedGetRoutes = [
   /^health$/,
@@ -144,6 +149,7 @@ function publicVariant(value: unknown) {
     status: variant.status,
     title: variant.title,
     description: variant.description,
+    metadata: variant.metadata,
     publishedAt: variant.publishedAt,
     items: Array.isArray(variant.items) ? variant.items.map((entry) => {
       const item = asRecord(entry);
@@ -296,20 +302,18 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
         } catch {
           return NextResponse.json({ code: 'INVALID_JSON', message: 'Request body must be valid JSON' }, { status: 400 });
         }
-        const demoLearnerId = process.env.TEACHLY_DEMO_EXTERNAL_LEARNER_ID
-          ?? (process.env.NODE_ENV === 'production' ? null : 'demo-learner-01');
+        const demoLearnerId = process.env.TEACHLY_DEMO_TRAINER_EXTERNAL_LEARNER_ID
+          ?? 'showcase-trainer-visitor';
         if (!demoLearnerId) {
           return NextResponse.json(
             { code: 'DEMO_NOT_CONFIGURED', message: 'The live Teachly demo is not configured' },
             { status: 503 },
           );
         }
-        const configuredTaskIds = process.env.TEACHLY_DEMO_TASK_IDS?.split(',').map((value) => value.trim()).filter(Boolean);
-        const taskIds = configuredTaskIds?.length
-          ? configuredTaskIds
-          : process.env.NODE_ENV === 'production'
-            ? null
-            : ['00000000-0000-4000-8000-000000000007', '00000000-0000-4000-8000-000000000026'];
+        const requestedTrack = typeof input.track === 'string' && input.track in showcaseTrackTaskIds
+          ? input.track as keyof typeof showcaseTrackTaskIds
+          : 'python';
+        const taskIds = [...showcaseTrackTaskIds[requestedTrack]];
         if (!taskIds) {
           return NextResponse.json(
             { code: 'DEMO_NOT_CONFIGURED', message: 'The live Teachly demo is not configured' },
@@ -343,6 +347,7 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
           externalUserId,
           attemptId,
           learnerQuestion: typeof input.learnerQuestion === 'string' ? input.learnerQuestion.slice(0, 1_000) : undefined,
+          locale: input.locale === 'ru' ? 'ru' : 'en',
           idempotencyKey: typeof input.idempotencyKey === 'string' ? input.idempotencyKey.slice(0, 255) : undefined,
         });
       }

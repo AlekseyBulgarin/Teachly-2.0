@@ -337,6 +337,7 @@ export function ConceptLoomPage() {
               return <PipelineStep key={title} index={`0${index + 1}`} title={title} detail={detail} icon={Icon} />;
             })}
           </div>
+          <UnderstandingMap locale={locale} />
         </SectionCard>
       </div>
 
@@ -459,4 +460,52 @@ export function ConceptLoomPage() {
       <EcosystemNextStep locale={locale} module="concept-loom" />
     </div>
   );
+}
+
+function UnderstandingMap({ locale }: { locale: Locale }) {
+  const labels = locale === 'ru'
+    ? {
+        title: 'Что происходит с учебным сигналом', detail: 'Диаграмма показывает полный цикл: от практической цели до следующего действия в Teachly.',
+        nodes: ['Практическая цель', 'Короткая диагностика', 'Граница понимания', 'Минимальный маршрут', 'Одна необходимая связь', 'Закрытая проверка', 'Проверка переноса', 'Progress → Teacher → Analytics'],
+        branches: ['Понял', 'Исправить связь', 'Найден пробел'],
+      }
+    : {
+        title: 'How the learning signal moves', detail: 'The diagram shows the full loop from a practical goal to the next action in Teachly.',
+        nodes: ['Practical goal', 'Short diagnostic', 'Understanding frontier', 'Minimum route', 'One necessary connection', 'Closed check', 'Transfer check', 'Progress → Teacher → Analytics'],
+        branches: ['Secure', 'Repair link', 'Gap found'],
+      };
+  return (
+    <div className="border-t border-[var(--border)] p-5 sm:p-7">
+      <div className="max-w-2xl">
+        <p className="text-[10px] font-bold uppercase tracking-[.16em] text-cyan-200">Concept Loom</p>
+        <h3 className="mt-2 text-xl font-semibold text-slate-50">{labels.title}</h3>
+        <p className="mt-2 text-sm leading-6 text-slate-400">{labels.detail}</p>
+      </div>
+      <div className="mt-6 overflow-x-auto pb-2">
+        <div className="mx-auto flex min-w-[720px] max-w-5xl flex-col items-center">
+          <div className="grid w-full grid-cols-4 gap-3">
+            {labels.nodes.slice(0, 4).map((label, index) => <MapNode key={label} index={index + 1} label={label} tone={index === 2 ? 'cyan' : 'emerald'} />)}
+          </div>
+          <div className="my-3 h-6 w-px bg-gradient-to-b from-emerald-300/70 to-cyan-300/40" />
+          <div className="grid w-full grid-cols-[1fr_1fr] gap-3">
+            <MapNode index={5} label={labels.nodes[4]} tone="emerald" />
+            <MapNode index={6} label={labels.nodes[5]} tone="cyan" />
+          </div>
+          <div className="my-3 h-6 w-px bg-cyan-300/50" />
+          <div className="grid w-4/5 grid-cols-3 gap-3">
+            {labels.branches.map((label, index) => <div key={label} className={`rounded-xl border px-4 py-3 text-center text-xs font-semibold ${index === 0 ? 'border-emerald-300/25 bg-emerald-300/[.07] text-emerald-100' : index === 1 ? 'border-amber-300/25 bg-amber-300/[.07] text-amber-100' : 'border-rose-300/20 bg-rose-300/[.06] text-rose-100'}`}>{label}</div>)}
+          </div>
+          <div className="my-3 h-6 w-px bg-cyan-300/50" />
+          <div className="grid w-full grid-cols-2 gap-3">
+            <MapNode index={7} label={labels.nodes[6]} tone="cyan" />
+            <MapNode index={8} label={labels.nodes[7]} tone="emerald" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MapNode({ index, label, tone }: { index: number; label: string; tone: 'emerald' | 'cyan' }) {
+  return <div className={`rounded-2xl border p-4 text-center ${tone === 'cyan' ? 'border-cyan-300/20 bg-cyan-300/[.055]' : 'border-emerald-300/20 bg-emerald-300/[.055]'}`}><span className="font-mono text-[10px] text-slate-500">0{index}</span><p className="mt-2 text-sm font-semibold text-slate-100">{label}</p></div>;
 }

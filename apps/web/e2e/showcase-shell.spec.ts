@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { showcaseRoutes } from "../lib/site";
+import { mockShowcaseApi, showcaseTask } from "./showcase-api-mock";
 
 for (const route of showcaseRoutes) {
   test(`${route} renders without horizontal overflow`, async ({ page }) => {
@@ -136,10 +137,12 @@ test("AI demo renders a successful provider response", async ({ page }) => {
     contentType: "application/json",
     body: JSON.stringify({ configured: true, provider: "openai", model: "gpt-4o-mini", apiMode: "responses" }),
   }));
-  await page.route("**/api/teachly/v1/remediations", (route) => route.fulfill({
-    status: 201,
-    contentType: "application/json",
-    body: JSON.stringify({
+  await page.route("**/api/teachly/v1/remediations", (route) => {
+    expect(route.request().postDataJSON()).toMatchObject({ locale: 'ru' });
+    return route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({
       requestId: "showcase-test",
       remediation: {
         summary: "Проверь знак перед вторым слагаемым.",
@@ -151,8 +154,9 @@ test("AI demo renders a successful provider response", async ({ page }) => {
       },
       evidenceRefs: ["attempt:test"],
       knowledgeRefs: ["knowledge:test"],
-    }),
-  }));
+      }),
+    });
+  });
 
   await page.goto("/ai");
   await expect(page.getByText(/Провайдер настроен|Provider configured/i)).toBeVisible();
@@ -165,6 +169,8 @@ test("Concept Loom demo keeps its boundary honest and demonstrates a routed chec
   await page.goto("/concept-loom");
   await expect(page.getByText("ДЕМО", { exact: true }).first()).toBeVisible();
   await expect(page.getByText(/результат не сохраняется, AI не вызывается/i)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Что происходит с учебным сигналом" })).toBeVisible();
+  await expect(page.getByText("Progress → Teacher → Analytics", { exact: true })).toBeVisible();
 
   await page.getByRole("button", { name: /Корпоративное обучение/i }).click();
   await page.getByRole("button", { name: "Начало", exact: true }).click();
@@ -181,6 +187,23 @@ test("Concept Loom demo keeps its boundary honest and demonstrates a routed chec
   await page.getByRole("button", { name: /^en$/i }).click();
   await expect(page.getByRole("heading", { level: 1 })).toContainText("short route to understanding");
   await expect(page.getByText(/nothing is persisted, no AI is called/i)).toBeVisible();
+});
+
+test("Trainer offers a five-task programming track with localized code content", async ({ page }) => {
+  await mockShowcaseApi(page);
+  await page.unroute("**/api/teachly/v1/trainer/sessions");
+  await page.route("**/api/teachly/v1/trainer/sessions", async (route) => {
+    const request = route.request();
+    if (request.method() !== 'POST') return route.fallback();
+    expect(request.postDataJSON()).toMatchObject({ track: 'python' });
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ id: '00000000-0000-4000-8000-000000000999', status: 'active', progress: { completed: 0, total: 5 }, current: null, latestResult: null, canComplete: false, idempotentReplay: false }) });
+  });
+  await page.route("**/api/teachly/v1/trainer/sessions/*/current", (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ id: '00000000-0000-4000-8000-000000000999', status: 'active', progress: { completed: 0, total: 5 }, current: { id: '00000000-0000-4000-8000-000000000998', position: 1, status: 'started', task: showcaseTask, result: null }, latestResult: null, canComplete: false, idempotentReplay: false }) }));
+  await page.goto('/trainer');
+  await page.getByRole('button', { name: /Начать тренажёр/i }).click();
+  await expect(page.getByText('Прогресс 0/5')).toBeVisible();
+  await expect(page.getByText('x = 5')).toBeVisible();
+  await expect(page.getByText('После ответа появится разбор')).toBeVisible();
 });
 
 test("desktop sidebar does not overlap content", async ({ page }, testInfo) => {
