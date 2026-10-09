@@ -1,3 +1,7 @@
 import { CapabilityPage } from '@/components/showcase/capabilities';
 import { TrainerDemo } from '@/components/showcase/demos/trainer-demo';
+import { metadataForShowcaseRoute } from '@/lib/site';
+
+export const metadata = metadataForShowcaseRoute('/trainer');
+
 export default function Page() { return <CapabilityPage capability="trainer" demo={<TrainerDemo />} />; }

@@ -1,11 +1,7 @@
 import { IntegrationsPage } from '@/components/showcase/integrations';
-import { showcaseMetadata } from '@/lib/site';
+import { metadataForShowcaseRoute } from '@/lib/site';
 
-export const metadata = showcaseMetadata(
-  'Интеграция Teachly',
-  'Подключите образовательные модули Teachly к существующей платформе через стабильный API.',
-  '/integrations',
-);
+export const metadata = metadataForShowcaseRoute('/integrations');
 
 export default function Page() {
   return <IntegrationsPage />;
