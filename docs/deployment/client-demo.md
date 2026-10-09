@@ -22,6 +22,7 @@ Web server-only:
 - `TEACHLY_DEMO_ATTEMPT_ID`
 - `TEACHLY_DEMO_TASK_IDS`
 - `TEACHLY_SITE_URL`
+- `GOOGLE_SITE_VERIFICATION` (optional until the final production domain is verified in Search Console)
 
 API server-only:
 

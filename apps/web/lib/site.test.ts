@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { serializeJsonLd, structuredDataForSite } from './seo';
 import { metadataForShowcaseRoute, showcaseMetadataCatalog, showcaseRoutes, siteUrl } from './site';
 
 test('every Showcase route has unique complete metadata', () => {
@@ -15,12 +16,26 @@ test('every Showcase route has unique complete metadata', () => {
     titles.add(definition.title);
 
     const metadata = metadataForShowcaseRoute(route);
-    assert.equal(metadata.title, definition.title);
+    if (route === '/ecosystem') assert.deepEqual(metadata.title, { absolute: definition.title });
+    else assert.equal(metadata.title, definition.title);
     assert.equal(metadata.description, definition.description);
     assert.equal(metadata.alternates?.canonical, route);
     assert.equal(metadata.openGraph?.url, route);
     assert.equal(metadata.twitter?.title, definition.title);
   }
+});
+
+test('brand structured data uses the canonical origin and safe JSON-LD serialization', () => {
+  const canonicalOrigin = new URL('https://teachly.example');
+  const { website, organization } = structuredDataForSite(canonicalOrigin);
+
+  assert.equal(website.name, 'Teachly Ecosystem');
+  assert.deepEqual(website.alternateName, ['Teachly', 'Teachly educational ecosystem']);
+  assert.equal(website.url, 'https://teachly.example/');
+  assert.equal(organization.name, 'Teachly');
+  assert.equal(organization.url, website.url);
+  assert.equal(website.publisher['@id'], organization['@id']);
+  assert.equal(serializeJsonLd({ value: '</script>' }), '{"value":"\\u003c/script>"}');
 });
 
 test('sitemap route sources resolve to absolute same-origin URLs', () => {
