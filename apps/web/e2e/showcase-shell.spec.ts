@@ -1,25 +1,7 @@
 import { expect, test } from "@playwright/test";
+import { showcaseRoutes } from "../lib/site";
 
-const routes = [
-  "/ecosystem",
-  "/platform",
-  "/learning",
-  "/concept-loom",
-  "/tasks",
-  "/variants",
-  "/theory",
-  "/trainer",
-  "/whiteboard",
-  "/ai",
-  "/student-profile",
-  "/progress",
-  "/teacher",
-  "/knowledge",
-  "/analytics",
-  "/integrations",
-] as const;
-
-for (const route of routes) {
+for (const route of showcaseRoutes) {
   test(`${route} renders without horizontal overflow`, async ({ page }) => {
     await page.goto(route);
     await expect(page.locator("main")).toBeVisible();
@@ -136,6 +118,47 @@ test("AI demo explains the provider-ready state without inventing a live respons
   await page.goto("/ai");
   await expect(page.getByText(/Готово к подключению ключа|Ready for an API key/i)).toBeVisible();
   await expect(page.getByRole("button", { name: /Получить объяснение|Get an explanation/i })).toBeDisabled();
+});
+
+test("Learning and Knowledge keep their dedicated route identity", async ({ page }) => {
+  await page.goto("/learning");
+  await expect(page).toHaveURL(/\/learning$/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(/прогресс ученика/i);
+
+  await page.goto("/knowledge");
+  await expect(page).toHaveURL(/\/knowledge$/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(/AI работает с материал/i);
+});
+
+test("AI demo renders a successful provider response", async ({ page }) => {
+  await page.route("**/api/teachly/v1/ai/status", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({ configured: true, provider: "openai", model: "gpt-4o-mini", apiMode: "responses" }),
+  }));
+  await page.route("**/api/teachly/v1/remediations", (route) => route.fulfill({
+    status: 201,
+    contentType: "application/json",
+    body: JSON.stringify({
+      requestId: "showcase-test",
+      remediation: {
+        summary: "Проверь знак перед вторым слагаемым.",
+        explanation: "При переносе слагаемого знак должен измениться.",
+        hint: "Запиши промежуточный шаг отдельно.",
+        likelyGap: "Линейные уравнения",
+        confidence: 0.91,
+        abstained: false,
+      },
+      evidenceRefs: ["attempt:test"],
+      knowledgeRefs: ["knowledge:test"],
+    }),
+  }));
+
+  await page.goto("/ai");
+  await expect(page.getByText(/Провайдер подключён|Provider connected/i)).toBeVisible();
+  await page.getByRole("button", { name: /Получить объяснение|Get an explanation/i }).click();
+  await expect(page.getByText("Проверь знак перед вторым слагаемым.")).toBeVisible();
+  await expect(page.getByText("91%")).toBeVisible();
 });
 
 test("Concept Loom demo keeps its boundary honest and demonstrates a routed checkpoint", async ({ page }) => {

@@ -1,5 +1,7 @@
 # Stage 4 completion audit
 
+> Historical completion snapshot from 2026-10-07. The AI provider was subsequently connected in production; the current Showcase/runtime status and remaining deployment configuration are tracked in [Current delivery status](./current-stage-status.md).
+
 Audited on 2026-10-07 against the agreed “ideal showcase” scope.
 
 | Area | Delivered evidence | Result |

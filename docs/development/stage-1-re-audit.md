@@ -1,5 +1,7 @@
 # Stage 1 showcase re-audit
 
+> Historical snapshot from 2026-10-05. Later stages resolved the listed Variants, Analytics, SEO, locale and visual-regression gaps. Use [Current delivery status](./current-stage-status.md) for the active position.
+
 Checked against the agreed “ideal showcase” scope on 2026-10-05.
 
 | Area | Current evidence | Status |

@@ -1,11 +1,7 @@
 import { OverviewPage } from '@/components/showcase/overview';
-import { showcaseMetadata } from '@/lib/site';
+import { metadataForShowcaseRoute } from '@/lib/site';
 
-export const metadata = showcaseMetadata(
-  'Экосистема образовательных модулей',
-  'Teachly добавляет задания, AI-помощь, учебную аналитику и инструменты преподавателя в существующий образовательный продукт.',
-  '/ecosystem',
-);
+export const metadata = metadataForShowcaseRoute('/ecosystem');
 
 export default function Page() {
   return <OverviewPage />;

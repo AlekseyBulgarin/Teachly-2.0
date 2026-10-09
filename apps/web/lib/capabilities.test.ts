@@ -29,6 +29,10 @@ test("navigation uses each listed capability once and in its declared group", ()
     group.items.map((key) => ({ group: group.key, key })),
   );
   assert.equal(new Set(listed.map(({ key }) => key)).size, listed.length);
+  assert.deepEqual(
+    listed.map(({ key }) => key).toSorted(),
+    capabilityKeys.toSorted(),
+  );
 
   for (const item of listed) {
     assert.equal(capabilityRegistry[item.key].navGroup, item.group);
@@ -43,8 +47,10 @@ test("live smoke routes come only from truthful live demo statuses", () => {
       .map((key) => capabilityRegistry[key].path),
   );
   const liveRoutes = new Set<string>(liveShowcaseRoutes);
-  assert.ok(!liveRoutes.has("/ai"));
+  assert.ok(liveRoutes.has("/ai"));
   assert.ok(!liveRoutes.has("/concept-loom"));
+  assert.ok(liveRoutes.has("/learning"));
+  assert.ok(liveRoutes.has("/knowledge"));
   assert.ok(liveRoutes.has("/variants"));
   assert.ok(liveRoutes.has("/teacher"));
   assert.ok(liveRoutes.has("/analytics"));

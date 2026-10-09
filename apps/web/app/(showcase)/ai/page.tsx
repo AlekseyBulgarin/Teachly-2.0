@@ -1,11 +1,7 @@
 import { AiPage } from '@/components/showcase/ai';
-import { showcaseMetadata } from '@/lib/site';
+import { metadataForShowcaseRoute } from '@/lib/site';
 
-export const metadata = showcaseMetadata(
-  'Образовательный AI',
-  'Контекстная AI-помощь ученику на основе задания, результата и проверенных учебных материалов.',
-  '/ai',
-);
+export const metadata = metadataForShowcaseRoute('/ai');
 
 export default function Page() {
   return <AiPage />;

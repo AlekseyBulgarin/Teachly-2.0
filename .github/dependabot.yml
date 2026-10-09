@@ -7,10 +7,20 @@ updates:
       day: monday
     open-pull-requests-limit: 5
     groups:
-      production-dependencies:
+      production-minor-and-patch:
+        patterns:
+          - "*"
         dependency-type: production
-      development-dependencies:
+        update-types:
+          - minor
+          - patch
+      development-minor-and-patch:
+        patterns:
+          - "*"
         dependency-type: development
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: github-actions
     directory: /
     schedule:

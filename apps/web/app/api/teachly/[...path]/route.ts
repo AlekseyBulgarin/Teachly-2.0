@@ -10,6 +10,7 @@ const whiteboardCreateRoute = /^v1\/whiteboards$/;
 const variantsRoute = /^v1\/assessment\/variants$/;
 const aiStatusRoute = /^v1\/ai\/status$/;
 const remediationRoute = /^v1\/remediations$/;
+const knowledgeStatusRoute = /^v1\/knowledge\/status$/;
 const whiteboardStateRoute =
   /^v1\/whiteboards\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\/state$/i;
 const demoBoardCookie = 'teachly-demo-board';
@@ -20,6 +21,7 @@ const allowedGetRoutes = [
   /^v1\/assessment\/tasks$/,
   variantsRoute,
   aiStatusRoute,
+  knowledgeStatusRoute,
   /^v1\/integration$/,
   /^v1\/theory\/materials$/,
   /^v1\/trainer\/sessions\/[0-9a-f-]+$/i,
@@ -155,6 +157,26 @@ function publicVariant(value: unknown) {
   };
 }
 
+function publicKnowledgeStatus(value: unknown) {
+  const item = asRecord(value);
+  return {
+    sourceId: item.sourceId,
+    sourceName: item.sourceName,
+    sourceType: item.sourceType,
+    sourceStatus: item.sourceStatus,
+    sourceLicenseStatus: item.sourceLicenseStatus,
+    documentId: item.documentId,
+    documentTitle: item.documentTitle,
+    documentStatus: item.documentStatus,
+    versionId: item.versionId,
+    version: item.version,
+    versionStatus: item.versionStatus,
+    licenseStatus: item.licenseStatus,
+    externalAiPermission: item.externalAiPermission,
+    approvedAt: item.approvedAt,
+  };
+}
+
 function sanitizeResponse(path: string, value: unknown): unknown {
   if (whiteboardCreateRoute.test(path)) {
     return publicWhiteboardCreate(value);
@@ -164,6 +186,9 @@ function sanitizeResponse(path: string, value: unknown): unknown {
   }
   if (variantsRoute.test(path)) {
     return Array.isArray(value) ? value.map(publicVariant) : [];
+  }
+  if (knowledgeStatusRoute.test(path)) {
+    return Array.isArray(value) ? value.map(publicKnowledgeStatus) : [];
   }
   if (/^v1\/trainer\/sessions\/[0-9a-f-]+\/submissions$/i.test(path)) {
     const response = asRecord(value);
@@ -349,7 +374,7 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
       });
       return result;
     }
-    if (joinedPath === 'v1/theory/materials' || variantsRoute.test(joinedPath) || joinedPath.startsWith('v1/trainer/sessions')) {
+    if (joinedPath === 'v1/theory/materials' || variantsRoute.test(joinedPath) || knowledgeStatusRoute.test(joinedPath) || joinedPath.startsWith('v1/trainer/sessions')) {
       return NextResponse.json(sanitizeResponse(joinedPath, await response.json()), { status: response.status });
     }
     return new NextResponse(response.body, {
