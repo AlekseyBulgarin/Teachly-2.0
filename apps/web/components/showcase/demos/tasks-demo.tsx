@@ -7,9 +7,11 @@ import { api, type PublishedTask } from "@/lib/api";
 import { useEcosystem } from "@/lib/ecosystem-context";
 import { EmptyState, ErrorState } from "@/components/ui";
 import { useDemoData } from "@/components/showcase/demos/use-demo-data";
+import { demoTracks, localizeTask, type DemoTrack } from "@/lib/demo-learning";
 
 export function TasksDemo() {
-  const { t } = useEcosystem();
+  const { locale, t } = useEcosystem();
+  const [track, setTrack] = useState<DemoTrack>('python');
   const [selectedId, setSelectedId] = useState<string>();
   const [picked, setPicked] = useState<string>();
   const loader = useCallback((signal: AbortSignal) => api.publishedTasks(signal), []);
@@ -20,19 +22,25 @@ export function TasksDemo() {
     setPicked(undefined);
   }, [tasks]);
 
-  const selected = tasks.find((row) => row.id === selectedId) ?? tasks[0];
+  const localizedTasks = tasks.map((task) => localizeTask(task, locale)).filter((task) => task.showcase);
+  const filteredTasks = localizedTasks.filter((task) => task.track === track);
+  const selected = filteredTasks.find((row) => row.id === selectedId) ?? filteredTasks[0];
 
   if (loading) return <p className="text-sm text-slate-500">{t("demo.loading")}</p>;
   if (failed) return <ErrorState message={t("demo.error")} retry={retry} retryLabel={t("shell.retry")} />;
-  if (!tasks.length) return <EmptyState text={t("common.noData")} />;
+  if (!localizedTasks.length) return <EmptyState text={t("common.noData")} />;
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)]">
+    <div className="flex flex-col gap-5">
+      <div className="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label={locale === 'ru' ? 'Учебные маршруты' : 'Learning tracks'}>
+        {demoTracks.map((item) => <button key={item.id} type="button" role="tab" aria-selected={track === item.id} onClick={() => { setTrack(item.id); setSelectedId(undefined); setPicked(undefined); }} className={`shrink-0 rounded-full border px-3.5 py-2 text-xs font-semibold ${track === item.id ? 'border-emerald-300/35 bg-emerald-300/10 text-emerald-100' : 'border-[var(--border)] bg-white/[.025] text-slate-400'}`}>{item.title[locale]}</button>)}
+      </div>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)]">
       <div className="flex flex-col gap-2">
         <p className="text-[10px] font-bold uppercase tracking-[.16em] text-slate-500">
           {t("demo.tasks.title")}
         </p>
-        {tasks.map((row) => {
+        {filteredTasks.map((row) => {
           const active = row.id === selected?.id;
           return (
             <button
@@ -49,7 +57,8 @@ export function TasksDemo() {
                   : "border-[var(--border)] bg-white/[.025] text-slate-400 hover:border-[var(--border-strong)] hover:text-slate-200"
               }`}
             >
-              <span className="line-clamp-2 break-words">{row.content.statement}</span>
+              <span className="block text-xs font-semibold text-emerald-100">{row.content.title}</span>
+              <span className="mt-1 line-clamp-2 break-words">{row.content.statement}</span>
             </button>
           );
         })}
@@ -70,6 +79,7 @@ export function TasksDemo() {
           <p className="mt-3 break-words text-base leading-7 text-slate-100">
             {selected.content.statement}
           </p>
+          {selected.code && <pre className="mt-4 overflow-x-auto rounded-xl border border-white/[.08] bg-[#070b12] p-4 text-sm leading-6 text-cyan-100"><code>{selected.code}</code></pre>}
           <p className="mt-5 text-[10px] font-bold uppercase tracking-[.16em] text-slate-500">
             {t("demo.tasks.options")}
           </p>
@@ -115,6 +125,7 @@ export function TasksDemo() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

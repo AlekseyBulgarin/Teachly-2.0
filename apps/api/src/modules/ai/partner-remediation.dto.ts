@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
+import { IsIn, IsOptional, IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
 import type { AiExecutionResult } from './ai.types';
 
 export class PartnerRemediationRequestDto {
@@ -18,6 +18,11 @@ export class PartnerRemediationRequestDto {
   @IsString()
   @MaxLength(1_000)
   learnerQuestion?: string;
+
+  @ApiPropertyOptional({ enum: ['ru', 'en'], default: 'en' })
+  @IsOptional()
+  @IsIn(['ru', 'en'])
+  locale?: 'ru' | 'en';
 
   @ApiProperty({ minLength: 1, maxLength: 255 })
   @IsString()

@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import type { PublishedTaskContext, PublicTaskVersion, TaskOption } from './education.types';
 
 export class TaskOptionDto {
@@ -19,6 +19,9 @@ export class TaskContentDto {
 
   @ApiProperty({ type: [TaskOptionDto], required: false })
   options?: TaskOptionDto[];
+
+  @ApiPropertyOptional({ type: Object, additionalProperties: true })
+  metadata?: Record<string, unknown>;
 }
 
 export class PublicTaskVersionDto {

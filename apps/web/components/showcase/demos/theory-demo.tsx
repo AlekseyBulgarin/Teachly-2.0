@@ -7,6 +7,14 @@ import { api, type PublishedTask, type TheoryBlock, type TheoryMaterial } from "
 import { useEcosystem } from "@/lib/ecosystem-context";
 import { EmptyState, ErrorState } from "@/components/ui";
 import { useDemoData } from "@/components/showcase/demos/use-demo-data";
+import { localizeTask } from "@/lib/demo-learning";
+
+const englishTheory: Record<string, { title: string; description: string; category: string; blocks: TheoryBlock[] }> = {
+  'Как Python выполняет выражения': { title: 'How Python evaluates expressions', description: 'Variables, types and evaluation order through short examples.', category: 'Python', blocks: [{ type: 'heading', text: 'A value comes before an operation' }, { type: 'paragraph', text: 'A variable stores a value. An operation uses its type, so the string “5” and the number 5 behave differently.' }, { type: 'example', text: 'int("5") + 1 returns 6 because the string is converted to a number first.' }] },
+  'Один проход по данным': { title: 'One pass through the data', description: 'Reasoning about linear algorithms without unnecessary theory.', category: 'Algorithms', blocks: [{ type: 'heading', text: 'Keep the best result so far' }, { type: 'paragraph', text: 'To find the maximum, compare every new item with the current maximum.' }, { type: 'formula', latex: 'T(n) = O(n)' }] },
+  'Как находить ошибку на единицу': { title: 'How to find an off-by-one error', description: 'Range boundaries and collection indices.', category: 'Debugging', blocks: [{ type: 'heading', text: 'Check the final index' }, { type: 'paragraph', text: 'When a list has length n, valid indices run from 0 to n - 1.' }, { type: 'callout', text: 'Before running a loop, name its first and final counter values.' }] },
+  'Что происходит между клиентом и API': { title: 'What happens between a client and an API', description: 'The request, HTTP status and JSON response parsing.', category: 'Web', blocks: [{ type: 'heading', text: 'Three steps in one request' }, { type: 'list', items: ['The client sends an HTTP request.', 'The server returns a status and body.', 'The client parses JSON and updates the interface.'] }, { type: 'callout', text: 'The client displays the outcome, while business rules and access control stay on the server.' }] },
+};
 
 function Block({ block, unsupported }: { block: TheoryBlock; unsupported: string }) {
   if (block.type === "heading" && typeof block.text === "string") return <p className="mt-5 text-base font-semibold text-emerald-100 first:mt-0">{block.text}</p>;
@@ -47,7 +55,7 @@ function Block({ block, unsupported }: { block: TheoryBlock; unsupported: string
 }
 
 export function TheoryDemo() {
-  const { t } = useEcosystem();
+  const { locale, t } = useEcosystem();
   const [activeId, setActiveId] = useState<string>();
   const loader = useCallback(async (signal: AbortSignal) => {
     const [materialsResult, tasksResult] = await Promise.allSettled([api.theoryMaterials(signal), api.publishedTasks(signal)]);
@@ -67,13 +75,18 @@ export function TheoryDemo() {
 
   const active = materials.find((item) => item.id === activeId) ?? materials[0];
   const linkedTasks = useMemo(
-    () => (active ? tasks.filter((row) => active.taskIds.includes(row.taskId)) : []),
-    [active, tasks],
+    () => (active ? tasks.filter((row) => active.taskIds.includes(row.taskId)).map((task) => localizeTask(task, locale)) : []),
+    [active, locale, tasks],
   );
 
   if (loading) return <p className="text-sm text-slate-500">{t("demo.loading")}</p>;
   if (failed) return <ErrorState message={t("demo.error")} retry={retry} retryLabel={t("shell.retry")} />;
   if (!active) return <EmptyState text={t("common.noData")} />;
+  const translated = locale === 'en' ? englishTheory[active.title] : undefined;
+  const activeTitle = translated?.title ?? active.title;
+  const activeDescription = translated?.description ?? active.description;
+  const activeCategory = translated?.category ?? active.category;
+  const activeBlocks = translated?.blocks ?? active.version.content.blocks;
 
   const chips = [
     active.curriculum.subjectId ? t("demo.theory.subjectLinked") : null,
@@ -100,7 +113,7 @@ export function TheoryDemo() {
                     : "border-[var(--border)] bg-white/[.025] text-slate-400 hover:text-slate-200"
                 }`}
               >
-                {item.title}
+                {locale === 'en' ? englishTheory[item.title]?.title ?? item.title : item.title}
               </button>
             );
           })}
@@ -114,19 +127,19 @@ export function TheoryDemo() {
               <BookOpen aria-hidden="true" size={11} />
               {t("demo.theory.title")}
             </span>
-            {active.category && (
+            {activeCategory && (
               <span className="rounded-full border border-white/10 bg-white/[.055] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[.1em] text-slate-400">
-                {active.category}
+                {activeCategory}
               </span>
             )}
             <span className="rounded-full border border-white/10 bg-white/[.055] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[.1em] text-slate-500">
               {t("demo.theory.version")} {active.version.version}
             </span>
           </div>
-          <h3 className="mt-4 break-words text-lg font-semibold text-slate-50">{active.title}</h3>
-          {active.description && <p className="mt-2 break-words text-sm leading-6 text-slate-400">{active.description}</p>}
+          <h3 className="mt-4 break-words text-lg font-semibold text-slate-50">{activeTitle}</h3>
+          {activeDescription && <p className="mt-2 break-words text-sm leading-6 text-slate-400">{activeDescription}</p>}
           <div className="mt-5 border-t border-[var(--border)] pt-4">
-            {active.version.content.blocks.map((block, index) => (
+            {activeBlocks.map((block, index) => (
               <Block key={`${block.type}-${index}`} block={block} unsupported={t("demo.theory.unsupportedBlock")} />
             ))}
           </div>

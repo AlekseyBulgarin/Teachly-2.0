@@ -16,7 +16,7 @@ export type PublishedTaskVersion = {
     title?: string;
     blocks?: Array<Record<string, unknown>>;
     attachments?: Array<{ reference: string; label?: string }>;
-    metadata?: Record<string, string | number | boolean>;
+    metadata?: Record<string, unknown>;
   };
   evaluationRule: string;
   publishedAt: Date;
@@ -30,7 +30,7 @@ export type PublicTaskVersion = Omit<PublishedTaskVersion, 'content'> & {
     title?: string;
     blocks?: Array<Record<string, unknown>>;
     attachments?: Array<{ reference: string; label?: string }>;
-    metadata?: Record<string, string | number | boolean>;
+    metadata?: Record<string, unknown>;
   };
 };
 

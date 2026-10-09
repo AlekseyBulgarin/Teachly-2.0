@@ -1,9 +1,11 @@
 import { expect, test } from "@playwright/test";
 import { showcaseRoutes } from "../lib/site";
+import { mockShowcaseApi } from "./showcase-api-mock";
 
 for (const route of showcaseRoutes) {
   test(`@visual ${route} visual baseline`, async ({ page }) => {
     test.slow();
+    await mockShowcaseApi(page);
     await page.goto(route, { waitUntil: "networkidle" });
     await expect(page.locator("main")).toBeVisible();
     const sections = page.locator(".section-reveal");

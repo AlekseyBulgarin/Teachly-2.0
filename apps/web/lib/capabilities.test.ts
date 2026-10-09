@@ -52,6 +52,8 @@ test("live smoke routes come only from truthful live demo statuses", () => {
   assert.ok(liveRoutes.has("/learning"));
   assert.ok(liveRoutes.has("/knowledge"));
   assert.ok(liveRoutes.has("/variants"));
-  assert.ok(liveRoutes.has("/teacher"));
-  assert.ok(liveRoutes.has("/analytics"));
+  assert.ok(!liveRoutes.has("/teacher"));
+  assert.ok(!liveRoutes.has("/analytics"));
+  assert.equal(capabilityRegistry.teacher.demoStatus, "DEMO");
+  assert.equal(capabilityRegistry.analytics.demoStatus, "DEMO");
 });

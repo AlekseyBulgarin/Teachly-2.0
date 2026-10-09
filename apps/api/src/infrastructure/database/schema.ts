@@ -334,7 +334,7 @@ export const taskVersions = pgTable(
     content: jsonb('content').$type<{
       statement: string; options: Array<{ id: string; label: string }>; correctOptionId?: string;
       title?: string; blocks?: Array<Record<string, unknown>>; attachments?: Array<{ reference: string; label?: string }>;
-      metadata?: Record<string, string | number | boolean>;
+      metadata?: Record<string, unknown>;
     }>().notNull(),
     answerSchema: jsonb('answer_schema').$type<{ type: string; required?: boolean; answer?: unknown }>().notNull(),
     evaluationRule: text('evaluation_rule').notNull(),

@@ -69,6 +69,7 @@ export function AiRemediationDemo() {
       const response = await api.remediation({
         learnerQuestion: question.trim() || copy.placeholder,
         idempotencyKey: `showcase-${crypto.randomUUID()}`,
+        locale,
       }, controller.signal);
       setResult(response);
     } catch {

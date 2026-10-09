@@ -6,12 +6,14 @@ import { api, type PublishedVariant } from "@/lib/api";
 import { useEcosystem } from "@/lib/ecosystem-context";
 import { EmptyState, ErrorState } from "@/components/ui";
 import { useDemoData } from "@/components/showcase/demos/use-demo-data";
+import { demoTracks, type DemoTrack } from "@/lib/demo-learning";
 
 export function VariantsDemo() {
   const { locale, t } = useEcosystem();
   const [selectedId, setSelectedId] = useState<string>();
   const loader = useCallback((signal: AbortSignal) => api.publishedVariants(signal), []);
-  const { data: variants = [], loading, failed, retry } = useDemoData<PublishedVariant[]>(loader);
+  const { data: allVariants = [], loading, failed, retry } = useDemoData<PublishedVariant[]>(loader);
+  const variants = allVariants.filter((variant) => variant.metadata?.audience === 'showcase');
 
   useEffect(() => {
     setSelectedId((current) => variants.some((variant) => variant.id === current) ? current : variants[0]?.id);
@@ -43,6 +45,9 @@ export function VariantsDemo() {
         section: "Section",
         proof: "Composition and order come from the live API. The Showcase does not calculate them locally.",
       };
+  const selectedTrack = typeof selected.metadata?.track === 'string' ? selected.metadata.track as DemoTrack : null;
+  const localizedTitle = selectedTrack ? demoTracks.find((track) => track.id === selectedTrack)?.title[locale] : selected.title;
+  const localizedDescription = selectedTrack ? demoTracks.find((track) => track.id === selectedTrack)?.detail[locale] : selected.description;
 
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(0,.8fr)_minmax(0,1.2fr)]">
@@ -58,7 +63,7 @@ export function VariantsDemo() {
               aria-pressed={active}
               className={`interactive rounded-xl border px-4 py-3 text-left transition ${active ? "border-emerald-300/30 bg-emerald-300/10" : "border-[var(--border)] bg-white/[.025] hover:border-[var(--border-strong)]"}`}
             >
-              <span className="block text-sm font-semibold text-slate-100">{variant.title ?? `Variant ${variant.version}`}</span>
+              <span className="block text-sm font-semibold text-slate-100">{typeof variant.metadata?.track === 'string' ? demoTracks.find((track) => track.id === variant.metadata?.track)?.title[locale] ?? variant.title : variant.title ?? `Variant ${variant.version}`}</span>
               <span className="mt-1 block text-xs text-slate-500">{copy.version} {variant.version} · {variant.items.length} {copy.tasks}</span>
             </button>
           );
@@ -68,8 +73,8 @@ export function VariantsDemo() {
       <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-lg font-semibold text-slate-50">{selected.title}</p>
-            {selected.description && <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">{selected.description}</p>}
+            <p className="text-lg font-semibold text-slate-50">{localizedTitle}</p>
+            {localizedDescription && <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">{localizedDescription}</p>}
           </div>
           <span className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[.12em] text-emerald-200">{selected.status}</span>
         </div>

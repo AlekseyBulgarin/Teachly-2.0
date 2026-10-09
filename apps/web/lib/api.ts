@@ -24,6 +24,7 @@ export type PublishedVariant = {
   status: string;
   title: string | null;
   description: string | null;
+  metadata?: Record<string, unknown>;
   publishedAt: string | null;
   items: Array<{ id: string; position: number; required: boolean; resolutionStatus: string; section: string | null }>;
 };
@@ -117,7 +118,7 @@ export type PublicTaskVersion = {
   version: number;
   taskType: string;
   status: string;
-  content: { statement: string; title?: string; options?: Array<{ id: string; label: string }> };
+  content: { statement: string; title?: string; options?: Array<{ id: string; label: string }>; metadata?: Record<string, unknown> };
   evaluationRule: string;
   publishedAt: string | null;
   createdAt: string;
@@ -210,11 +211,11 @@ export const api = {
   knowledge: (signal?: AbortSignal) => request<KnowledgeStatus[]>('v1/knowledge/status', { signal }),
   aiTraces: () => request<AiTrace[]>('v1/ai-requests'),
   aiStatus: (signal?: AbortSignal) => request<AiProviderStatus>('v1/ai/status', { signal }),
-  remediation: (body: { learnerQuestion?: string; idempotencyKey: string }, signal?: AbortSignal) => request<RemediationResponse>('v1/remediations', { method: 'POST', body: JSON.stringify(body), headers: { 'x-request-id': crypto.randomUUID() }, signal }),
+  remediation: (body: { learnerQuestion?: string; idempotencyKey: string; locale: 'ru' | 'en' }, signal?: AbortSignal) => request<RemediationResponse>('v1/remediations', { method: 'POST', body: JSON.stringify(body), headers: { 'x-request-id': crypto.randomUUID() }, signal }),
   publishedTasks: (signal?: AbortSignal) => request<PublishedTask[]>('v1/assessment/tasks', { signal }),
   publishedVariants: (signal?: AbortSignal) => request<PublishedVariant[]>('v1/assessment/variants', { signal }),
   theoryMaterials: (signal?: AbortSignal) => request<TheoryMaterial[]>('v1/theory/materials', { signal }),
-  trainerStart: (body: { idempotencyKey: string }, signal?: AbortSignal) => request<TrainerSession>('v1/trainer/sessions', { method: 'POST', body: JSON.stringify(body), signal }),
+  trainerStart: (body: { idempotencyKey: string; track: 'python' | 'algorithms' | 'web' }, signal?: AbortSignal) => request<TrainerSession>('v1/trainer/sessions', { method: 'POST', body: JSON.stringify(body), signal }),
   trainerCurrent: (sessionId: string, signal?: AbortSignal) => request<TrainerSession>(`v1/trainer/sessions/${sessionId}/current`, { signal }),
   trainerSubmit: (sessionId: string, body: { itemId: string; idempotencyKey: string; answer: { optionId: string } }, signal?: AbortSignal) => request<TrainerSubmitResponse>(`v1/trainer/sessions/${sessionId}/submissions`, { method: 'POST', body: JSON.stringify(body), signal }),
   trainerNext: (sessionId: string, signal?: AbortSignal) => request<TrainerSession>(`v1/trainer/sessions/${sessionId}/next`, { method: 'POST', body: '{}', signal }),

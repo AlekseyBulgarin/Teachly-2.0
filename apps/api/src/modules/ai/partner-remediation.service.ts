@@ -27,7 +27,14 @@ export class PartnerRemediationService {
         learnerId: externalUser.learnerId,
         attemptId: input.attemptId,
         capability: 'grounded_remediation',
-        learnerRequest: input.learnerQuestion?.trim() || 'Explain this incorrect attempt and provide a grounded hint.',
+        learnerRequest: [
+          input.locale === 'ru'
+            ? 'Ответь на русском языке. Все поля учебной помощи должны быть написаны по-русски.'
+            : 'Respond in English. Write every learning-aid field in English.',
+          input.learnerQuestion?.trim() || (input.locale === 'ru'
+            ? 'Объясни ошибочную попытку и дай подсказку, опираясь только на разрешённый контекст.'
+            : 'Explain this incorrect attempt and provide a grounded hint.'),
+        ].join('\n'),
         idempotencyKey: `${context.integrationId}:${input.idempotencyKey}`,
       });
       await this.audit.record(null, 'partner_remediation_succeeded', 'ai_request', result.requestId, {

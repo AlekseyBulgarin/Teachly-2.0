@@ -6,6 +6,12 @@ import { SKILL_EVIDENCE_RULE } from '../../modules/learning/learning.rules';
 import { DatabaseService } from './database';
 import { apiKeyPrefix, hashApiKey } from '../../modules/integrations/api-key.crypto';
 import {
+  demoLearningIds,
+  demoLearningTasks,
+  demoLearningVariants,
+  demoTheoryFixtures,
+} from './demo-learning-fixtures';
+import {
   apiKeys, assignments, courses, externalIdentities, externalUsers,
   integrations, knowledgeChunks, knowledgeDocumentVersions, knowledgeDocuments,
   knowledgeRawImports, knowledgeSources, learningEvents, memberships, organizations,
@@ -336,6 +342,186 @@ export async function seedDevelopmentFixtures(
         createdAt: theory.publishedAt,
       }).onConflictDoNothing();
     }
+
+    await tx.insert(users).values({
+      id: demoLearningIds.trainerStudent,
+      type: 'student',
+      displayName: 'Showcase Trainer Visitor',
+    }).onConflictDoUpdate({
+      target: users.id,
+      set: { displayName: 'Showcase Trainer Visitor' },
+    });
+    await tx.insert(teacherStudentRelationships).values({
+      teacherId: fixtureIds.teacher,
+      studentId: demoLearningIds.trainerStudent,
+    }).onConflictDoNothing();
+    await tx.insert(externalUsers).values({
+      id: demoLearningIds.trainerExternalUser,
+      organizationId: fixtureIds.organization,
+      workspaceId: fixtureIds.workspace,
+      integrationId: fixtureIds.integration,
+      learnerId: demoLearningIds.trainerStudent,
+      externalUserId: 'showcase-trainer-visitor',
+    }).onConflictDoUpdate({
+      target: externalUsers.id,
+      set: { status: 'active', externalUserId: 'showcase-trainer-visitor' },
+    });
+
+    const demoSkills = [
+      { id: demoLearningIds.skills.python, name: 'Основы Python' },
+      { id: demoLearningIds.skills.algorithms, name: 'Алгоритмы и отладка' },
+      { id: demoLearningIds.skills.web, name: 'Клиент, HTTP и API' },
+    ];
+    for (const skill of demoSkills) {
+      await tx.insert(skills).values({ ...skill, topicId: fixtureIds.topic }).onConflictDoUpdate({
+        target: skills.id,
+        set: { name: skill.name, topicId: fixtureIds.topic },
+      });
+    }
+    for (const task of demoLearningTasks) {
+      await tx.insert(tasks).values({
+        id: task.taskId,
+        workspaceId: fixtureIds.workspace,
+        subjectId: fixtureIds.subject,
+        courseId: fixtureIds.course,
+        topicId: fixtureIds.topic,
+        skillId: task.skillId,
+        sourceKind: 'internal_fixture',
+      }).onConflictDoUpdate({
+        target: tasks.id,
+        set: { skillId: task.skillId, topicId: fixtureIds.topic, courseId: fixtureIds.course, subjectId: fixtureIds.subject },
+      });
+      await tx.insert(taskVersions).values({
+        id: task.versionId,
+        taskId: task.taskId,
+        workspaceId: fixtureIds.workspace,
+        version: 1,
+        taskType: 'single-choice',
+        status: 'published',
+        content: {
+          title: task.ru.title,
+          statement: task.ru.statement,
+          options: task.ru.options,
+          correctOptionId: task.correctOptionId,
+          metadata: {
+            showcase: true,
+            track: task.track,
+            code: task.code,
+            explanation: task.ru.explanation,
+            translations: { ru: task.ru, en: task.en },
+          },
+        },
+        answerSchema: { type: 'single-choice', required: true },
+        evaluationRule: 'single-choice.v1',
+        provenance: {
+          sourceKind: 'internal_fixture',
+          sourceIdentifier: `teachly-showcase-${task.track}-${task.taskId.slice(-3)}`,
+          licenseStatus: 'development_only',
+          fixtureVersion: 'showcase-learning-v1',
+        },
+        publishedAt: new Date('2026-10-09T08:00:00.000Z'),
+      }).onConflictDoNothing();
+    }
+
+    for (const [variantIndex, variant] of demoLearningVariants.entries()) {
+      await tx.insert(variants).values({
+        id: variant.variantId,
+        organizationId: fixtureIds.organization,
+        workspaceId: fixtureIds.workspace,
+        sourceKind: 'internal_fixture',
+      }).onConflictDoNothing();
+      const [storedVariantVersion] = await tx.select({ id: variantVersions.id })
+        .from(variantVersions)
+        .where(eq(variantVersions.id, variant.versionId))
+        .limit(1);
+      if (storedVariantVersion) continue;
+      await tx.insert(variantVersions).values({
+        id: variant.versionId,
+        variantId: variant.variantId,
+        workspaceId: fixtureIds.workspace,
+        version: 1,
+        status: 'draft',
+        title: variant.title,
+        description: variant.description,
+        metadata: { audience: 'showcase', estimatedMinutes: 8, track: variant.track },
+        provenance: { sourceKind: 'internal_fixture', fixtureVersion: 'showcase-learning-v1' },
+        createdAt: new Date('2026-10-09T08:00:00.000Z'),
+      });
+      for (const [itemIndex, taskId] of variant.taskIds.entries()) {
+        const task = demoLearningTasks.find((candidate) => candidate.taskId === taskId);
+        if (!task) throw new Error(`Showcase variant references missing task ${taskId}`);
+        await tx.insert(variantItems).values({
+          id: id(370 + variantIndex * 5 + itemIndex),
+          variantVersionId: variant.versionId,
+          workspaceId: fixtureIds.workspace,
+          position: itemIndex,
+          taskVersionId: task.versionId,
+          required: true,
+          resolutionStatus: 'resolved',
+          section: itemIndex < 2 ? 'Основа' : itemIndex < 4 ? 'Применение' : 'Перенос',
+          metadata: { track: variant.track },
+        });
+      }
+      await tx.update(variantVersions).set({
+        status: 'published',
+        publishedAt: new Date('2026-10-09T08:00:00.000Z'),
+      }).where(eq(variantVersions.id, variant.versionId));
+    }
+
+    for (const theory of demoTheoryFixtures) {
+      const metadata = {
+        title: theory.title,
+        description: theory.description,
+        category: theory.category,
+        subjectId: fixtureIds.subject,
+        courseId: fixtureIds.course,
+        topicId: fixtureIds.topic,
+        skillId: theory.skillId,
+        taskIds: [theory.taskId],
+      };
+      await tx.insert(theoryMaterials).values({
+        id: theory.materialId,
+        organizationId: fixtureIds.organization,
+        workspaceId: fixtureIds.workspace,
+        title: theory.title,
+        description: theory.description,
+        category: theory.category,
+        subjectId: fixtureIds.subject,
+        courseId: fixtureIds.course,
+        topicId: fixtureIds.topic,
+        skillId: theory.skillId,
+        status: 'published',
+        createdByUserId: fixtureIds.teacher,
+        createdAt: new Date('2026-10-09T08:00:00.000Z'),
+        updatedAt: new Date('2026-10-09T08:00:00.000Z'),
+      }).onConflictDoUpdate({
+        target: theoryMaterials.id,
+        set: { title: theory.title, description: theory.description, category: theory.category, status: 'published', skillId: theory.skillId },
+      });
+      await tx.insert(theoryVersions).values({
+        id: theory.versionId,
+        materialId: theory.materialId,
+        workspaceId: fixtureIds.workspace,
+        version: 1,
+        status: 'published',
+        content: { blocks: [...theory.blocks] },
+        metadata,
+        createdByUserId: fixtureIds.teacher,
+        publishedByUserId: fixtureIds.teacher,
+        publishedByPrincipal: 'seed:showcase',
+        publishedAt: new Date('2026-10-09T08:00:00.000Z'),
+        createdAt: new Date('2026-10-09T08:00:00.000Z'),
+        updatedAt: new Date('2026-10-09T08:00:00.000Z'),
+      }).onConflictDoNothing();
+      await tx.insert(theoryMaterialTasks).values({
+        id: theory.linkId,
+        materialId: theory.materialId,
+        workspaceId: fixtureIds.workspace,
+        taskId: theory.taskId,
+        createdAt: new Date('2026-10-09T08:00:00.000Z'),
+      }).onConflictDoNothing();
+    }
+
     await tx.insert(assignments).values({
       id: fixtureIds.assignment,
       workspaceId: fixtureIds.workspace,

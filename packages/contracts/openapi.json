@@ -2019,6 +2019,14 @@
           "learnerQuestion": {
             "maxLength": 1000,
             "type": "string"
+          },
+          "locale": {
+            "default": "en",
+            "enum": [
+              "ru",
+              "en"
+            ],
+            "type": "string"
           }
         },
         "required": [
@@ -2684,6 +2692,10 @@
       },
       "TaskContentDto": {
         "properties": {
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object"
+          },
           "options": {
             "items": {
               "$ref": "#/components/schemas/TaskOptionDto"
