@@ -116,7 +116,7 @@ test("AI demo explains the provider-ready state without inventing a live respons
     body: JSON.stringify({ configured: false, provider: "disabled", model: null, apiMode: null }),
   }));
   await page.goto("/ai");
-  await expect(page.getByText(/Готово к подключению ключа|Ready for an API key/i)).toBeVisible();
+  await expect(page.getByText(/Готово к активации провайдера|Ready for provider activation/i)).toBeVisible();
   await expect(page.getByRole("button", { name: /Получить объяснение|Get an explanation/i })).toBeDisabled();
 });
 
@@ -155,7 +155,7 @@ test("AI demo renders a successful provider response", async ({ page }) => {
   }));
 
   await page.goto("/ai");
-  await expect(page.getByText(/Провайдер подключён|Provider connected/i)).toBeVisible();
+  await expect(page.getByText(/Провайдер настроен|Provider configured/i)).toBeVisible();
   await page.getByRole("button", { name: /Получить объяснение|Get an explanation/i }).click();
   await expect(page.getByText("Проверь знак перед вторым слагаемым.")).toBeVisible();
   await expect(page.getByText("91%")).toBeVisible();

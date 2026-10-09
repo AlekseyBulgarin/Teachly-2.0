@@ -19,9 +19,9 @@ export function AiRemediationDemo() {
 
   const copy = locale === "ru"
     ? {
-        ready: "Провайдер подключён",
-        connect: "Готово к подключению ключа",
-        connectDetail: "AI-контур уже собран. Добавьте ключ и выберите провайдера в настройках сервера — интерфейс и API менять не нужно.",
+        ready: "Провайдер настроен",
+        connect: "Готово к активации провайдера",
+        connectDetail: "AI-контур уже собран. Добавьте действующий ключ с доступным API-биллингом и выберите провайдера на сервере — интерфейс и API менять не нужно.",
         provider: "Провайдер",
         model: "Модель",
         mode: "Режим API",
@@ -38,9 +38,9 @@ export function AiRemediationDemo() {
         confidence: "Уверенность",
       }
     : {
-        ready: "Provider connected",
-        connect: "Ready for an API key",
-        connectDetail: "The AI boundary is already in place. Add a key and choose the provider in server settings — no UI or API changes are required.",
+        ready: "Provider configured",
+        connect: "Ready for provider activation",
+        connectDetail: "The AI boundary is already in place. Add an active key with API billing and choose the provider on the server — no UI or API changes are required.",
         provider: "Provider",
         model: "Model",
         mode: "API mode",
@@ -87,7 +87,7 @@ export function AiRemediationDemo() {
         title={t("ai.context")}
         detail={status.configured ? copy.ready : copy.connect}
         icon={ShieldCheck}
-        action={<StatusBadge status={status.configured ? "LIVE" : "READY TO CONNECT"} locale={locale} />}
+        action={<StatusBadge status={status.configured ? "CONFIGURED" : "READY TO CONNECT"} locale={locale} />}
       >
         <div className="p-5 sm:p-7">
           <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
