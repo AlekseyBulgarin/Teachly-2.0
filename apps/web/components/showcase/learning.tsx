@@ -3,16 +3,18 @@
 import { Activity, ArrowRight, CheckCircle2, CircleDot, Gauge, Target, UsersRound, Workflow } from 'lucide-react';
 import { useEcosystem } from '@/lib/ecosystem-context';
 import { capabilityRegistry } from '@/lib/capabilities';
-import { Fact, IconCard, PageHeader, SectionCard, StatusBadge } from '@/components/ui';
+import { IconCard, PageHeader, SectionCard, StatusBadge } from '@/components/ui';
+import { ProgressDemo } from '@/components/showcase/demos/progress-demo';
 import { EcosystemNextStep, PipelineStep } from '@/components/showcase/shared';
 
 export function LearningPage() {
-  const { t, locale, learners, selected, selectedAttempt, selectLearner } = useEcosystem();
-  const state = selected?.state;
+  const { t, locale } = useEcosystem();
   return <div className="flex flex-col gap-12 lg:gap-16">
     <PageHeader eyebrow={t('learning.eyebrow')} title={t('learning.title')} description={t('learning.description')} action={<StatusBadge status={capabilityRegistry.learning.demoStatus} locale={locale} />} />
     <SectionCard title={t('learning.flowTitle')} icon={Workflow}><div className="grid gap-3 p-5 sm:p-7 lg:grid-cols-4"><PipelineStep index="01" title={t('learning.step1')} detail={t('learning.step1Detail')} icon={Activity} /><PipelineStep index="02" title={t('learning.step2')} detail={t('learning.step2Detail')} icon={CircleDot} /><PipelineStep index="03" title={t('learning.step3')} detail={t('learning.step3Detail')} icon={Gauge} /><PipelineStep index="04" title={t('learning.step4')} detail={t('learning.step4Detail')} icon={ArrowRight} last /></div></SectionCard>
-    <div className="grid gap-6 xl:grid-cols-[.75fr_1.25fr]"><SectionCard title={t('learning.liveTitle')} detail={t('learning.liveDetail')} icon={UsersRound}><div className="flex flex-col gap-1 p-3">{learners.length ? learners.map((item) => <button key={item.student.id} onClick={() => selectLearner(item.student.id)} className={`flex items-center gap-3 rounded-2xl p-4 text-left transition ${selected?.student.id === item.student.id ? 'bg-emerald-300/[.1]' : 'hover:bg-white/[.04]'}`}><span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/[.08] text-sm font-semibold text-slate-200">{item.student.displayName.slice(0, 1)}</span><span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium text-slate-200">{item.student.displayName}</span><span className="mt-1 block text-xs text-slate-500">{item.results.length} {locale === 'ru' ? 'попыток' : 'attempts'}</span></span>{item.state && <CircleDot aria-label={t('learning.state')} size={14} className="text-amber-300" />}</button>) : <p className="p-5 text-sm text-slate-500">{t('common.noData')}</p>}</div></SectionCard><SectionCard title={t('learning.state')} detail={t('learning.liveDetail')} icon={Gauge}><div className="grid gap-3 p-5 sm:grid-cols-2 sm:p-7">{selectedAttempt ? <><Fact label={t('learning.learner')} value={selected?.student.displayName ?? '—'} /><Fact label={t('learning.outcome')} value={selectedAttempt.result.outcome} /><Fact label={t('learning.evidence')} value={String(state?.evidenceCount ?? 0)} /><Fact label={t('learning.state')} value={state?.status?.replaceAll('_', ' ') ?? t('learning.stateFallback')} /></> : <p className="col-span-full text-sm leading-6 text-slate-500">{t('learning.stateFallback')}</p>}</div>{state && <p className="border-t border-[var(--border)] px-5 py-4 text-sm leading-6 text-slate-400 sm:px-7">{state.explanation.reason}</p>}</SectionCard></div>
+    <SectionCard title={t('learning.liveTitle')} detail={t('learning.liveDetail')} icon={UsersRound} action={<StatusBadge status="LIVE" locale={locale} />}>
+      <div className="p-5 sm:p-7"><ProgressDemo /></div>
+    </SectionCard>
     <section className="grid gap-8 lg:grid-cols-[.7fr_1.3fr] lg:items-start"><div><p className="text-[11px] font-bold uppercase tracking-[.22em] text-emerald-300">{t('learning.valueTitle')}</p><h2 className="mt-4 text-3xl font-semibold tracking-[-.035em] text-slate-50">{t('learning.valueTitle')}</h2></div><div className="grid gap-4 md:grid-cols-3"><IconCard icon={Target} title={t('learning.value1')} detail="" /><IconCard icon={CheckCircle2} title={t('learning.value2')} detail="" /><IconCard icon={UsersRound} title={t('learning.value3')} detail="" /></div></section>
     <EcosystemNextStep locale={locale} module="learning" />
   </div>;

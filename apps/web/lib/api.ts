@@ -207,7 +207,7 @@ export const api = {
   learningState: (studentId: string, skillId: string) => request<LearningState>(`students/${studentId}/learning-state?skillId=${skillId}`),
   externalUsers: () => request<ExternalUser[]>('v1/external-users'),
   integration: () => request<Integration>('v1/integration'),
-  knowledge: () => request<KnowledgeStatus[]>('v1/knowledge/status'),
+  knowledge: (signal?: AbortSignal) => request<KnowledgeStatus[]>('v1/knowledge/status', { signal }),
   aiTraces: () => request<AiTrace[]>('v1/ai-requests'),
   aiStatus: (signal?: AbortSignal) => request<AiProviderStatus>('v1/ai/status', { signal }),
   remediation: (body: { learnerQuestion?: string; idempotencyKey: string }, signal?: AbortSignal) => request<RemediationResponse>('v1/remediations', { method: 'POST', body: JSON.stringify(body), headers: { 'x-request-id': crypto.randomUUID() }, signal }),

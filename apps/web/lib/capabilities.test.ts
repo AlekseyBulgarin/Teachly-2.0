@@ -43,8 +43,10 @@ test("live smoke routes come only from truthful live demo statuses", () => {
       .map((key) => capabilityRegistry[key].path),
   );
   const liveRoutes = new Set<string>(liveShowcaseRoutes);
-  assert.ok(!liveRoutes.has("/ai"));
+  assert.ok(liveRoutes.has("/ai"));
   assert.ok(!liveRoutes.has("/concept-loom"));
+  assert.ok(liveRoutes.has("/learning"));
+  assert.ok(liveRoutes.has("/knowledge"));
   assert.ok(liveRoutes.has("/variants"));
   assert.ok(liveRoutes.has("/teacher"));
   assert.ok(liveRoutes.has("/analytics"));

@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import { KnowledgePage } from '@/components/showcase/knowledge';
 
 export default function Page() {
-  redirect('/theory');
+  return <KnowledgePage />;
 }

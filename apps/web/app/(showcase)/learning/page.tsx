@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import { LearningPage } from '@/components/showcase/learning';
 
 export default function Page() {
-  redirect('/progress');
+  return <LearningPage />;
 }
