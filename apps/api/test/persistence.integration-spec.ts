@@ -1,6 +1,7 @@
 import { and, desc, eq, sql } from 'drizzle-orm';
 import { DatabaseService } from '../src/infrastructure/database/database';
 import { fixtureIds, seedDevelopmentFixtures } from '../src/infrastructure/database/seed';
+import { demoLearningTasks, demoTheoryFixtures } from '../src/infrastructure/database/demo-learning-fixtures';
 import { applyMigrations } from '../src/infrastructure/database/migrate';
 import { apiKeys, assignments, attempts, auditEvents, externalIdentities, learningEvents, results, skillEvidence, submissions, taskVersions, tasks, teacherStudentRelationships, theoryMaterials, theoryMaterialTasks, theoryVersions, trainerSessionItems, trainerSessions, users } from '../src/infrastructure/database/schema';
 import { AttemptsService } from '../src/modules/attempts/attempts.service';
@@ -47,16 +48,17 @@ describe('Phase 2 PostgreSQL invariants', () => {
     await database.db.update(apiKeys).set({ status: 'revoked', revokedAt: new Date() })
       .where(eq(apiKeys.id, fixtureIds.apiKey));
     await seedDevelopmentFixtures(database);
-    expect((await database.db.select({ count: sql<number>`count(*)::int` }).from(users))[0]?.count).toBe(2);
-    expect((await database.db.select({ count: sql<number>`count(*)::int` }).from(tasks))[0]?.count).toBe(2);
-    expect((await database.db.select({ count: sql<number>`count(*)::int` }).from(taskVersions))[0]?.count).toBe(2);
-    expect((await database.db.select({ count: sql<number>`count(*)::int` }).from(theoryMaterials))[0]?.count).toBe(2);
-    expect((await database.db.select({ count: sql<number>`count(*)::int` }).from(theoryVersions))[0]?.count).toBe(2);
-    expect((await database.db.select({ count: sql<number>`count(*)::int` }).from(theoryMaterialTasks))[0]?.count).toBe(2);
+    expect((await database.db.select({ count: sql<number>`count(*)::int` }).from(users))[0]?.count).toBe(3);
+    expect((await database.db.select({ count: sql<number>`count(*)::int` }).from(tasks))[0]?.count).toBe(2 + demoLearningTasks.length);
+    expect((await database.db.select({ count: sql<number>`count(*)::int` }).from(taskVersions))[0]?.count).toBe(2 + demoLearningTasks.length);
+    expect((await database.db.select({ count: sql<number>`count(*)::int` }).from(theoryMaterials))[0]?.count).toBe(2 + demoTheoryFixtures.length);
+    expect((await database.db.select({ count: sql<number>`count(*)::int` }).from(theoryVersions))[0]?.count).toBe(2 + demoTheoryFixtures.length);
+    expect((await database.db.select({ count: sql<number>`count(*)::int` }).from(theoryMaterialTasks))[0]?.count).toBe(2 + demoTheoryFixtures.length);
     const seededVersions = await database.db.select().from(taskVersions);
     expect(seededVersions.find((row) => row.id === fixtureIds.version)?.content.correctOptionId).toBe('a');
     expect(seededVersions.find((row) => row.id === fixtureIds.secondVersion)?.content.correctOptionId).toBe('b');
-    const seededTheory = await database.db.select().from(theoryVersions);
+    const seededTheory = (await database.db.select().from(theoryVersions))
+      .filter((row) => row.id === fixtureIds.firstTheoryVersion || row.id === fixtureIds.secondTheoryVersion);
     expect(seededTheory.map((row) => row.metadata.taskIds).sort()).toEqual([
       [fixtureIds.secondTask],
       [fixtureIds.task],

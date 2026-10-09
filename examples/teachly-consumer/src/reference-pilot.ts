@@ -108,6 +108,7 @@ export async function runReferencePilot(config: ReferencePilotConfig): Promise<R
             externalUserId: config.externalUserId,
             attemptId: submitted.submitted.attempt.id,
             idempotencyKey: `${runId}:remediation:${submitted.submitted.attempt.id}`,
+            locale: 'en',
             ...(config.learnerQuestion ? { learnerQuestion: config.learnerQuestion } : {}),
           },
         }));

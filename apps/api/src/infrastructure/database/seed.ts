@@ -420,26 +420,7 @@ export async function seedDevelopmentFixtures(
           fixtureVersion: 'showcase-learning-v1',
         },
         publishedAt: new Date('2026-10-09T08:00:00.000Z'),
-      }).onConflictDoUpdate({
-        target: taskVersions.id,
-        set: {
-          status: 'published',
-          content: {
-            title: task.ru.title,
-            statement: task.ru.statement,
-            options: task.ru.options,
-            correctOptionId: task.correctOptionId,
-            metadata: {
-              showcase: true,
-              track: task.track,
-              code: task.code,
-              explanation: task.ru.explanation,
-              translations: { ru: task.ru, en: task.en },
-            },
-          },
-          publishedAt: new Date('2026-10-09T08:00:00.000Z'),
-        },
-      });
+      }).onConflictDoNothing();
     }
 
     for (const [variantIndex, variant] of demoLearningVariants.entries()) {
@@ -449,27 +430,22 @@ export async function seedDevelopmentFixtures(
         workspaceId: fixtureIds.workspace,
         sourceKind: 'internal_fixture',
       }).onConflictDoNothing();
+      const [storedVariantVersion] = await tx.select({ id: variantVersions.id })
+        .from(variantVersions)
+        .where(eq(variantVersions.id, variant.versionId))
+        .limit(1);
+      if (storedVariantVersion) continue;
       await tx.insert(variantVersions).values({
         id: variant.versionId,
         variantId: variant.variantId,
         workspaceId: fixtureIds.workspace,
         version: 1,
-        status: 'published',
+        status: 'draft',
         title: variant.title,
         description: variant.description,
         metadata: { audience: 'showcase', estimatedMinutes: 8, track: variant.track },
         provenance: { sourceKind: 'internal_fixture', fixtureVersion: 'showcase-learning-v1' },
         createdAt: new Date('2026-10-09T08:00:00.000Z'),
-        publishedAt: new Date('2026-10-09T08:00:00.000Z'),
-      }).onConflictDoUpdate({
-        target: variantVersions.id,
-        set: {
-          status: 'published',
-          title: variant.title,
-          description: variant.description,
-          metadata: { audience: 'showcase', estimatedMinutes: 8, track: variant.track },
-          publishedAt: new Date('2026-10-09T08:00:00.000Z'),
-        },
       });
       for (const [itemIndex, taskId] of variant.taskIds.entries()) {
         const task = demoLearningTasks.find((candidate) => candidate.taskId === taskId);
@@ -484,11 +460,12 @@ export async function seedDevelopmentFixtures(
           resolutionStatus: 'resolved',
           section: itemIndex < 2 ? 'Основа' : itemIndex < 4 ? 'Применение' : 'Перенос',
           metadata: { track: variant.track },
-        }).onConflictDoUpdate({
-          target: variantItems.id,
-          set: { position: itemIndex, taskVersionId: task.versionId, resolutionStatus: 'resolved' },
         });
       }
+      await tx.update(variantVersions).set({
+        status: 'published',
+        publishedAt: new Date('2026-10-09T08:00:00.000Z'),
+      }).where(eq(variantVersions.id, variant.versionId));
     }
 
     for (const theory of demoTheoryFixtures) {
@@ -535,10 +512,7 @@ export async function seedDevelopmentFixtures(
         publishedAt: new Date('2026-10-09T08:00:00.000Z'),
         createdAt: new Date('2026-10-09T08:00:00.000Z'),
         updatedAt: new Date('2026-10-09T08:00:00.000Z'),
-      }).onConflictDoUpdate({
-        target: theoryVersions.id,
-        set: { content: { blocks: [...theory.blocks] }, metadata, status: 'published', publishedAt: new Date('2026-10-09T08:00:00.000Z') },
-      });
+      }).onConflictDoNothing();
       await tx.insert(theoryMaterialTasks).values({
         id: theory.linkId,
         materialId: theory.materialId,
