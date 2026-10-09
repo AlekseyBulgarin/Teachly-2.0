@@ -153,7 +153,7 @@ export const capabilityRegistry = {
     label: { ru: "Образовательный AI", en: "Educational AI" },
     detail: { ru: "Помощь по контексту", en: "Contextual assistance" },
     productStatus: "LIVE",
-    demoStatus: "DEMO",
+    demoStatus: "LIVE",
     dependencies: ["theory", "knowledge", "progress"],
     next: "student-profile",
   },
