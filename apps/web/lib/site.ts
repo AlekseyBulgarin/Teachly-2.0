@@ -17,8 +17,8 @@ type ShowcaseMetadataDefinition = {
 
 export const showcaseMetadataCatalog = {
   '/ecosystem': {
-    title: 'Экосистема образовательных модулей',
-    description: 'Teachly добавляет задания, AI-помощь, учебную аналитику и инструменты преподавателя в существующий образовательный продукт.',
+    title: 'Teachly Ecosystem — образовательные модули для бизнеса',
+    description: 'Teachly Ecosystem добавляет задания, AI-помощь, учебную аналитику и инструменты преподавателя в существующий образовательный продукт.',
   },
   '/platform': {
     title: 'Teachly Core для образовательного продукта',
@@ -85,10 +85,10 @@ export const showcaseMetadataCatalog = {
 export function metadataForShowcaseRoute(path: ShowcaseRoute): Metadata {
   const { title, description } = showcaseMetadataCatalog[path];
   return {
-    title,
+    title: path === '/ecosystem' ? { absolute: title } : title,
     description,
     alternates: { canonical: path },
-    openGraph: { title, description, url: path, type: 'website', siteName: 'Teachly' },
+    openGraph: { title, description, url: path, type: 'website', siteName: 'Teachly Ecosystem' },
     twitter: { card: 'summary', title, description },
   };
 }
