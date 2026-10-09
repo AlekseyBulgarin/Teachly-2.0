@@ -116,7 +116,7 @@ test("AI demo explains the provider-ready state without inventing a live respons
     body: JSON.stringify({ configured: false, provider: "disabled", model: null, apiMode: null }),
   }));
   await page.goto("/ai");
-  await expect(page.getByText(/Готово к подключению ключа|Ready for an API key/i)).toBeVisible();
+  await expect(page.getByText(/Готово к активации провайдера|Ready for provider activation/i)).toBeVisible();
   await expect(page.getByRole("button", { name: /Получить объяснение|Get an explanation/i })).toBeDisabled();
 });
 

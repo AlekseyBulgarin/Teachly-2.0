@@ -20,8 +20,8 @@ export function AiRemediationDemo() {
   const copy = locale === "ru"
     ? {
         ready: "Провайдер настроен",
-        connect: "Готово к подключению ключа",
-        connectDetail: "AI-контур уже собран. Добавьте ключ и выберите провайдера в настройках сервера — интерфейс и API менять не нужно.",
+        connect: "Готово к активации провайдера",
+        connectDetail: "AI-контур уже собран. Добавьте действующий ключ с доступным API-биллингом и выберите провайдера на сервере — интерфейс и API менять не нужно.",
         provider: "Провайдер",
         model: "Модель",
         mode: "Режим API",
@@ -39,8 +39,8 @@ export function AiRemediationDemo() {
       }
     : {
         ready: "Provider configured",
-        connect: "Ready for an API key",
-        connectDetail: "The AI boundary is already in place. Add a key and choose the provider in server settings — no UI or API changes are required.",
+        connect: "Ready for provider activation",
+        connectDetail: "The AI boundary is already in place. Add an active key with API billing and choose the provider on the server — no UI or API changes are required.",
         provider: "Provider",
         model: "Model",
         mode: "API mode",
