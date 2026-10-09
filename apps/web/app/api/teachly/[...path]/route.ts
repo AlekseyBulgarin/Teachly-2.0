@@ -15,6 +15,7 @@ const whiteboardStateRoute =
   /^v1\/whiteboards\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\/state$/i;
 const demoBoardCookie = 'teachly-demo-board';
 const upstreamTimeoutMs = 15_000;
+const remediationUpstreamTimeoutMs = 30_000;
 
 const allowedGetRoutes = [
   /^health$/,
@@ -351,7 +352,7 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
       headers,
       body,
       cache: 'no-store',
-      signal: AbortSignal.timeout(upstreamTimeoutMs),
+      signal: AbortSignal.timeout(remediationRoute.test(joinedPath) ? remediationUpstreamTimeoutMs : upstreamTimeoutMs),
     });
     if (!response.ok) {
       return NextResponse.json(
