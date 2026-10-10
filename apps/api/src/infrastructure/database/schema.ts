@@ -567,6 +567,7 @@ export const trainerSessions = pgTable('trainer_sessions', {
   topicId: uuid('topic_id').references(() => topics.id, { onDelete: 'restrict' }),
   skillId: uuid('skill_id').references(() => skills.id, { onDelete: 'restrict' }),
   idempotencyKey: text('idempotency_key').notNull(),
+  requestFingerprint: text('request_fingerprint'),
   status: text('status').default('active').notNull(),
   startedAt: timestamp('started_at', { withTimezone: true }).defaultNow().notNull(),
   completedAt: timestamp('completed_at', { withTimezone: true }),

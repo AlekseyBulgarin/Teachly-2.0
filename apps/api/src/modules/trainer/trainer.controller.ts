@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
 import { ApiCreatedResponse, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiSecurity, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { ApiErrorDto } from '../../common/api.dto';
 import { MachineAuthenticated } from '../../common/machine-auth.decorator';
@@ -53,6 +53,7 @@ export class TrainerController {
   }
 
   @Post('sessions/:sessionId/next')
+  @HttpCode(HttpStatus.OK)
   @RequireIntegrationScopes('trainer:write')
   @ApiOperation({ summary: 'Advance to the next trainer task after the current task is submitted' })
   @ApiOkResponse({ type: TrainerSessionResponseDto })
@@ -61,6 +62,7 @@ export class TrainerController {
   }
 
   @Post('sessions/:sessionId/complete')
+  @HttpCode(HttpStatus.OK)
   @RequireIntegrationScopes('trainer:write')
   @ApiOperation({ summary: 'Complete a trainer session after every session task has been submitted' })
   @ApiOkResponse({ type: TrainerSessionResponseDto })

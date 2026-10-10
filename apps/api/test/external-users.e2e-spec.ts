@@ -5,6 +5,8 @@ import { AppModule } from '../src/app.module';
 import { HttpExceptionFilter } from '../src/common/http-exception.filter';
 import { requestIdMiddleware } from '../src/common/request-id.middleware';
 import { DatabaseService } from '../src/infrastructure/database/database';
+import { externalUsers, users } from '../src/infrastructure/database/schema';
+import { eq } from 'drizzle-orm';
 import { IntegrationsService } from '../src/modules/integrations/integrations.service';
 import { TenancyService } from '../src/modules/tenancy/tenancy.service';
 import { resetTestDatabase, startTestApp, testDatabase } from './postgres-test';
@@ -87,6 +89,24 @@ describe('B2B external users API (PostgreSQL)', () => {
     await request(app.getHttpServer()).get(`/v1/external-users/${created.body.id}`).set(auth).expect(200);
     const otherAuth = { Authorization: `Bearer ${other.key.secret}` };
     await request(app.getHttpServer()).get(`/v1/external-users/${created.body.id}`).set(otherAuth).expect(404);
+  });
+
+  it('serializes concurrent upserts without duplicate learner profiles', async () => {
+    const fixture = await createTenant('Concurrent organization');
+    const auth = { Authorization: `Bearer ${fixture.key.secret}` };
+    const before = await database.db.select({ id: users.id }).from(users);
+
+    const [first, second] = await Promise.all([
+      request(app.getHttpServer()).post('/v1/external-users').set(auth).send({ externalUserId: 'concurrent-learner' }),
+      request(app.getHttpServer()).post('/v1/external-users').set(auth).send({ externalUserId: 'concurrent-learner' }),
+    ]);
+
+    expect(first.status).toBe(201);
+    expect(second.status).toBe(201);
+    expect(first.body.id).toBe(second.body.id);
+    expect(first.body.learnerId).toBe(second.body.learnerId);
+    expect(await database.db.select().from(externalUsers).where(eq(externalUsers.externalUserId, 'concurrent-learner'))).toHaveLength(1);
+    expect(await database.db.select({ id: users.id }).from(users)).toHaveLength(before.length + 1);
   });
 
   it('fails closed on every current machine route without tenant authentication', async () => {

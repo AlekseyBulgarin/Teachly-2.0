@@ -14,6 +14,7 @@ import {
 } from '../../infrastructure/database/schema';
 import { AuditService } from '../audit/audit.service';
 import { CoreAccessService } from '../core/core.access';
+import type { TenantContext } from '../core/core.types';
 import { TenancyService } from '../tenancy/tenancy.service';
 import type { CreateTheoryMaterialDto, TheoryListQueryDto, UpdateTheoryDraftDto } from './theory.dto';
 import type { TheoryAuthContext, TheoryContent, TheoryVersionMetadata } from './theory.types';
@@ -194,6 +195,15 @@ export class TheoryService {
   /** Approved Theory context for future AI integrations. Never returns drafts. */
   async listPublishedContext(auth: TheoryAuthContext, query: TheoryListQueryDto) {
     return this.listPublished(auth, query);
+  }
+
+  async assertPublishedVersion(versionId: string, tenant: TenantContext): Promise<void> {
+    const [version] = await this.database.db.select({ id: theoryVersions.id }).from(theoryVersions).where(and(
+      eq(theoryVersions.id, versionId),
+      eq(theoryVersions.workspaceId, tenant.workspaceId),
+      eq(theoryVersions.status, 'published'),
+    )).limit(1);
+    if (!version) throw new NotFoundException('Published theory version not found');
   }
 
   private requireContent(value: Record<string, unknown>): TheoryContent {

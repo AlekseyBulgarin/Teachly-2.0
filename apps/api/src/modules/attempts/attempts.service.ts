@@ -174,6 +174,20 @@ export class AttemptsService {
     return { attempt: this.toAttemptView(attempt), result: this.toResultView(result), manualReviewStatus: null };
   }
 
+  async findIntegrationResult(resultId: string, context: TenantContext): Promise<ResultView | null> {
+    const [row] = await this.database.db.select({ result: results }).from(results)
+      .innerJoin(attempts, and(
+        eq(attempts.id, results.attemptId),
+        eq(attempts.workspaceId, results.workspaceId),
+      ))
+      .where(and(
+        eq(results.id, resultId),
+        eq(results.workspaceId, context.workspaceId),
+        eq(attempts.integrationId, context.integrationId),
+      )).limit(1);
+    return row ? this.toResultView(row.result) : null;
+  }
+
   async listResultsForTeacher(teacherId: string, studentId: string, context?: TenantContext): Promise<AttemptResult[]> {
     await this.teaching.assertManagesStudent(teacherId, studentId, context);
     const rows = await this.database.db.select({ result: results, attempt: attempts })

@@ -2,11 +2,12 @@ import { Module } from '@nestjs/common';
 import { AuditModule } from '../audit/audit.module';
 import { EducationModule } from '../education/education.module';
 import { IntegrationsModule } from '../integrations/integrations.module';
+import { TheoryModule } from '../theory/theory.module';
 import { WhiteboardController } from './whiteboard.controller';
 import { WhiteboardService } from './whiteboard.service';
 
 @Module({
-  imports: [AuditModule, EducationModule, IntegrationsModule],
+  imports: [AuditModule, EducationModule, IntegrationsModule, TheoryModule],
   controllers: [WhiteboardController],
   providers: [WhiteboardService],
 })

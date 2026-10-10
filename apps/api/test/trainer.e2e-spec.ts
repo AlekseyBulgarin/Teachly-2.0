@@ -102,6 +102,13 @@ describe('Trainer V1 (PostgreSQL)', () => {
     expect(created.body).toMatchObject({ status: 'active', progress: { completed: 0, total: 1 }, idempotentReplay: false });
     const replay = await createSession(auth, 'learner-1', 'trainer-session-1');
     expect(replay.body).toMatchObject({ id: created.body.id, idempotentReplay: true });
+    const conflict = await request(app.getHttpServer()).post('/v1/trainer/sessions').set(auth).send({
+      externalLearnerId: 'learner-1',
+      idempotencyKey: 'trainer-session-1',
+      skillId: fixtureIds.secondSkill,
+      taskIds: [fixtureIds.secondTask],
+    }).expect(409);
+    expect(conflict.body.code).toBe('IDEMPOTENCY_CONFLICT');
 
     const current = await request(app.getHttpServer()).get(`/v1/trainer/sessions/${created.body.id}/current`).set(auth).expect(200);
     expect(current.body.current.task).toMatchObject({ id: fixtureIds.version, status: 'published' });
@@ -129,9 +136,9 @@ describe('Trainer V1 (PostgreSQL)', () => {
       eq(learningEvents.workspaceId, fixtureIds.workspace), eq(learningEvents.sourceId, repeated.body.submitted.result.submissionId),
     ))).toHaveLength(1);
 
-    const next = await request(app.getHttpServer()).post(`/v1/trainer/sessions/${created.body.id}/next`).set(auth).expect(201);
+    const next = await request(app.getHttpServer()).post(`/v1/trainer/sessions/${created.body.id}/next`).set(auth).expect(200);
     expect(next.body).toMatchObject({ current: null, canComplete: true });
-    const completed = await request(app.getHttpServer()).post(`/v1/trainer/sessions/${created.body.id}/complete`).set(auth).expect(201);
+    const completed = await request(app.getHttpServer()).post(`/v1/trainer/sessions/${created.body.id}/complete`).set(auth).expect(200);
     expect(completed.body).toMatchObject({ status: 'completed', canComplete: true });
     await request(app.getHttpServer()).post(`/v1/trainer/sessions/${created.body.id}/next`).set(auth).expect(409);
     await request(app.getHttpServer()).post(`/v1/trainer/sessions/${created.body.id}/submissions`).set(auth)
