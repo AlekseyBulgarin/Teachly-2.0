@@ -1,0 +1,1 @@
+ALTER TABLE "trainer_sessions" ADD COLUMN "request_fingerprint" text;

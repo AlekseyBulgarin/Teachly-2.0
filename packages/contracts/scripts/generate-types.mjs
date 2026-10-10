@@ -8,13 +8,17 @@ const schemaPath = resolve(packageRoot, 'openapi.json');
 const outputPath = resolve(packageRoot, 'src/generated.ts');
 const checkOnly = process.argv.includes('--check');
 
+function normalizeLineEndings(value) {
+  return value.replaceAll('\r\n', '\n');
+}
+
 const schema = JSON.parse(await readFile(schemaPath, 'utf8'));
 const ast = await openapiTS(schema, { alphabetize: true, immutable: true });
 const next = `${COMMENT_HEADER}${astToString(ast)}`;
 
 if (checkOnly) {
   const current = await readFile(outputPath, 'utf8').catch(() => '');
-  if (current !== next) {
+  if (normalizeLineEndings(current) !== normalizeLineEndings(next)) {
     throw new Error('Generated TypeScript contracts are stale. Run `pnpm contracts:generate`.');
   }
 } else {

@@ -1,10 +1,11 @@
 import { ConflictException, Injectable, NotFoundException, PayloadTooLargeException } from '@nestjs/common';
 import { and, asc, desc, eq, type SQL } from 'drizzle-orm';
 import { DatabaseService } from '../../infrastructure/database/database';
-import { theoryVersions, whiteboards, whiteboardResources, whiteboardSnapshots } from '../../infrastructure/database/schema';
+import { whiteboards, whiteboardResources, whiteboardSnapshots } from '../../infrastructure/database/schema';
 import { AuditService } from '../audit/audit.service';
 import type { TenantContext } from '../core/core.types';
 import { EducationService } from '../education/education.service';
+import { TheoryService } from '../theory/theory.service';
 import type { AttachWhiteboardResourceDto, CreateWhiteboardDto, SaveWhiteboardStateDto, WhiteboardListQueryDto, UpdateWhiteboardDto } from './whiteboard.dto';
 import type { WhiteboardResourceView, WhiteboardSaveResult, WhiteboardStateView, WhiteboardStatus, WhiteboardView } from './whiteboard.types';
 import { WHITEBOARD_MAX_DATA_BYTES } from './whiteboard.types';
@@ -15,6 +16,7 @@ export class WhiteboardService {
     private readonly database: DatabaseService,
     private readonly audit: AuditService,
     private readonly education: EducationService,
+    private readonly theory: TheoryService,
   ) {}
 
   async create(tenant: TenantContext, input: CreateWhiteboardDto): Promise<WhiteboardView> {
@@ -119,7 +121,7 @@ export class WhiteboardService {
       if (input.type === 'task') {
         await this.education.getPublishedTaskVersion(input.resourceId, tenant);
       } else {
-        await this.assertPublishedTheory(tenant, input.resourceId);
+        await this.theory.assertPublishedVersion(input.resourceId, tenant);
       }
       const existing = await this.findResourceLink(board.id, tenant.workspaceId, input.type, input.resourceId);
       if (existing) return this.toResourceView(existing);
@@ -181,15 +183,6 @@ export class WhiteboardService {
     const [link] = await this.database.db.select().from(whiteboardResources)
       .where(and(...conditions)).limit(1);
     return link;
-  }
-
-  private async assertPublishedTheory(tenant: TenantContext, versionId: string) {
-    const [version] = await this.database.db.select({ id: theoryVersions.id }).from(theoryVersions).where(and(
-      eq(theoryVersions.id, versionId),
-      eq(theoryVersions.workspaceId, tenant.workspaceId),
-      eq(theoryVersions.status, 'published'),
-    )).limit(1);
-    if (!version) throw new NotFoundException('Published theory version not found');
   }
 
   private toResourceView(link: typeof whiteboardResources.$inferSelect): WhiteboardResourceView {

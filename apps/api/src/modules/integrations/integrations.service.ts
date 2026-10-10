@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { and, desc, eq } from 'drizzle-orm';
 import { DatabaseService } from '../../infrastructure/database/database';
-import { apiKeys, integrations, organizations, workspaces } from '../../infrastructure/database/schema';
+import { apiKeys, integrations } from '../../infrastructure/database/schema';
 import { AuditService } from '../audit/audit.service';
 import { TenancyService } from '../tenancy/tenancy.service';
 import { requireTenantContext } from '../core/core.access';
@@ -113,23 +113,24 @@ export class IntegrationsService {
     const [row] = await this.database.db.select({
       apiKey: apiKeys,
       integrationStatus: integrations.status,
-      workspaceStatus: workspaces.status,
-      organizationStatus: organizations.status,
     }).from(apiKeys)
       .innerJoin(integrations, and(
         eq(integrations.id, apiKeys.integrationId),
         eq(integrations.workspaceId, apiKeys.workspaceId),
         eq(integrations.organizationId, apiKeys.organizationId),
       ))
-      .innerJoin(workspaces, and(
-        eq(workspaces.id, apiKeys.workspaceId),
-        eq(workspaces.organizationId, apiKeys.organizationId),
-      ))
-      .innerJoin(organizations, eq(organizations.id, apiKeys.organizationId))
       .where(eq(apiKeys.keyPrefix, prefix)).limit(1);
     if (!row || row.apiKey.status !== 'active' || row.apiKey.revokedAt ||
-      row.integrationStatus !== 'active' || row.workspaceStatus !== 'active' || row.organizationStatus !== 'active' ||
+      row.integrationStatus !== 'active' ||
       !apiKeyHashMatches(secret, row.apiKey.keyHash)) return null;
+
+    try {
+      await this.tenancy.requireActiveOrganization(row.apiKey.organizationId);
+      await this.tenancy.requireActiveWorkspace(row.apiKey.organizationId, row.apiKey.workspaceId);
+    } catch (error) {
+      if (error instanceof NotFoundException) return null;
+      throw error;
+    }
 
     const [used] = await this.database.db.update(apiKeys).set({ lastUsedAt: new Date() })
       .where(and(eq(apiKeys.id, row.apiKey.id), eq(apiKeys.status, 'active'))).returning({ id: apiKeys.id });
@@ -237,6 +238,13 @@ export class IntegrationsService {
     workspaceId: string,
     integrationId: string,
   ): Promise<IntegrationView> {
+    try {
+      await this.tenancy.requireActiveOrganization(organizationId);
+      await this.tenancy.requireActiveWorkspace(organizationId, workspaceId);
+    } catch (error) {
+      if (error instanceof NotFoundException) throw new NotFoundException('Active integration not found');
+      throw error;
+    }
     const [integration] = await this.database.db.select().from(integrations).where(and(
       eq(integrations.id, integrationId),
       eq(integrations.organizationId, organizationId),

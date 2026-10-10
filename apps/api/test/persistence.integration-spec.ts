@@ -106,6 +106,18 @@ describe('Phase 2 PostgreSQL invariants', () => {
     expect(await database.db.select().from(teacherStudentRelationships)).toHaveLength(beforeRelationships.length);
   });
 
+  it('keeps nested module work inside the outer transaction boundary', async () => {
+    const action = 'nested_transaction_rollback_probe';
+    await expect(database.transaction(async () => {
+      await database.transaction(async () => {
+        await database.db.insert(auditEvents).values({ action, resourceType: 'test' });
+      });
+      throw new Error('Injected outer transaction failure');
+    })).rejects.toThrow('Injected outer transaction failure');
+
+    expect(await database.db.select().from(auditEvents).where(eq(auditEvents.action, action))).toHaveLength(0);
+  });
+
   it('keeps published content immutable and attempts pinned to the exact version', async () => {
     const { attempt } = await assignedAttempt();
     const original = (await database.db.select().from(taskVersions).where(eq(taskVersions.id, fixtureIds.version)))[0]!;

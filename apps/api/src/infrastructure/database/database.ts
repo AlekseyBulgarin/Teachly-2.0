@@ -33,6 +33,7 @@ export class DatabaseService implements OnModuleDestroy {
   }
 
   async transaction<T>(work: () => Promise<T>): Promise<T> {
+    if (transactionContext.getStore()) return work();
     return this.rootDb.transaction((tx) => transactionContext.run(tx, work));
   }
 

@@ -1,8 +1,9 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { createHash } from 'node:crypto';
 import { and, asc, eq, ne, sql } from 'drizzle-orm';
 import { DomainError } from '../../common/errors';
 import { DatabaseService } from '../../infrastructure/database/database';
-import { results, trainerSessionItems, trainerSessions } from '../../infrastructure/database/schema';
+import { trainerSessionItems, trainerSessions } from '../../infrastructure/database/schema';
 import { AuditService } from '../audit/audit.service';
 import { AttemptsService } from '../attempts/attempts.service';
 import { EducationService } from '../education/education.service';
@@ -27,12 +28,19 @@ export class TrainerService {
 
   async create(tenant: TenantContext, input: CreateTrainerSessionDto) {
     const learner = await this.externalUsers.resolveActiveLearner(tenant, input.externalLearnerId);
+    const requestFingerprint = this.requestFingerprint(input);
     const existing = await this.findIdempotent(tenant, learner.id, input.idempotencyKey);
-    if (existing) return { ...(await this.sessionView(tenant, existing)), idempotentReplay: true };
+    if (existing) {
+      this.assertEquivalentRequest(existing.requestFingerprint, requestFingerprint);
+      return { ...(await this.sessionView(tenant, existing)), idempotentReplay: true };
+    }
     const tasks = await this.selectTasks(tenant, input);
     return this.database.transaction(async () => {
       const replay = await this.findIdempotent(tenant, learner.id, input.idempotencyKey);
-      if (replay) return { ...(await this.sessionView(tenant, replay)), idempotentReplay: true };
+      if (replay) {
+        this.assertEquivalentRequest(replay.requestFingerprint, requestFingerprint);
+        return { ...(await this.sessionView(tenant, replay)), idempotentReplay: true };
+      }
       const [session] = await this.database.db.insert(trainerSessions).values({
         organizationId: tenant.organizationId,
         workspaceId: tenant.workspaceId,
@@ -44,8 +52,21 @@ export class TrainerService {
         topicId: input.topicId,
         skillId: input.skillId,
         idempotencyKey: input.idempotencyKey,
+        requestFingerprint,
+      }).onConflictDoNothing({
+        target: [
+          trainerSessions.workspaceId,
+          trainerSessions.integrationId,
+          trainerSessions.externalUserId,
+          trainerSessions.idempotencyKey,
+        ],
       }).returning();
-      if (!session) throw new Error('Trainer session creation failed');
+      if (!session) {
+        const concurrentReplay = await this.findIdempotent(tenant, learner.id, input.idempotencyKey);
+        if (!concurrentReplay) throw new Error('Trainer session creation failed');
+        this.assertEquivalentRequest(concurrentReplay.requestFingerprint, requestFingerprint);
+        return { ...(await this.sessionView(tenant, concurrentReplay)), idempotentReplay: true };
+      }
       await this.database.db.insert(trainerSessionItems).values(tasks.map((task, index) => ({
         sessionId: session.id,
         workspaceId: tenant.workspaceId,
@@ -264,20 +285,32 @@ export class TrainerService {
 
   private async itemView(tenant: TenantContext, item: typeof trainerSessionItems.$inferSelect): Promise<TrainerSessionItemView> {
     const task = await this.education.getPublishedTaskVersion(item.taskVersionId, tenant);
-    const [result] = item.resultId
-      ? await this.database.db.select().from(results).where(and(eq(results.id, item.resultId), eq(results.workspaceId, tenant.workspaceId))).limit(1)
-      : [undefined];
+    const result = item.resultId ? await this.attempts.findIntegrationResult(item.resultId, tenant) : null;
     return {
       id: item.id,
       position: item.position,
       status: item.status as TrainerSessionItemView['status'],
       task: this.education.toPublicTaskVersion(task.taskVersion),
       attemptId: item.attemptId,
-      result: result ? {
-        id: result.id, attemptId: result.attemptId, submissionId: result.submissionId, evaluationRule: result.evaluationRule,
-        outcome: result.outcome, isCorrect: result.isCorrect, score: result.score, evaluatedAt: result.evaluatedAt,
-        learningHandoff: result.details?.learningHandoff,
-      } : null,
+      result,
     };
+  }
+
+  private requestFingerprint(input: CreateTrainerSessionDto): string {
+    const payload = {
+      externalLearnerId: input.externalLearnerId,
+      subjectId: input.subjectId ?? null,
+      courseId: input.courseId ?? null,
+      topicId: input.topicId ?? null,
+      skillId: input.skillId ?? null,
+      taskIds: input.taskIds ? [...new Set(input.taskIds)].sort() : null,
+    };
+    return createHash('sha256').update(JSON.stringify(payload), 'utf8').digest('hex');
+  }
+
+  private assertEquivalentRequest(stored: string | null, incoming: string): void {
+    if (stored && stored !== incoming) {
+      throw new DomainError('IDEMPOTENCY_CONFLICT', 'Idempotency key was used for a different Trainer request', 409);
+    }
   }
 }

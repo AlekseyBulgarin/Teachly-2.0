@@ -1,10 +1,11 @@
 import { and, eq } from 'drizzle-orm';
 import { DatabaseService } from '../src/infrastructure/database/database';
-import { apiKeys, externalUsers, memberships } from '../src/infrastructure/database/schema';
+import { apiKeys, externalUsers, memberships, organizations, workspaces } from '../src/infrastructure/database/schema';
 import { AuditService } from '../src/modules/audit/audit.service';
 import { ExternalUsersService } from '../src/modules/external-users/external-users.service';
 import { IntegrationsService } from '../src/modules/integrations/integrations.service';
 import { TenancyService } from '../src/modules/tenancy/tenancy.service';
+import { UsersService } from '../src/modules/users/users.service';
 import { fixtureIds } from '../src/infrastructure/database/seed';
 import { resetTestDatabase, testDatabase } from './postgres-test';
 
@@ -21,7 +22,7 @@ describe('B2B tenant and integration identity foundation (PostgreSQL)', () => {
     await resetTestDatabase(database);
     tenancy = new TenancyService(database);
     integrations = new IntegrationsService(database, tenancy, new AuditService(database));
-    externalUsersService = new ExternalUsersService(database, integrations);
+    externalUsersService = new ExternalUsersService(database, integrations, new UsersService(database));
   });
 
   afterEach(async () => { await database?.onModuleDestroy(); });
@@ -89,6 +90,16 @@ describe('B2B tenant and integration identity foundation (PostgreSQL)', () => {
     expect(await integrations.authenticateApiKey('tlk_0000000000000000.invalid')).toBeNull();
 
     await integrations.revokeApiKey(fixture.context, fixture.key.id);
+    expect(await integrations.authenticateApiKey(fixture.key.secret)).toBeNull();
+  });
+
+  it('rejects API keys when their workspace or organization is archived', async () => {
+    const fixture = await tenantFixture();
+    await database.db.update(workspaces).set({ status: 'archived' }).where(eq(workspaces.id, fixture.workspace.id));
+    expect(await integrations.authenticateApiKey(fixture.key.secret)).toBeNull();
+
+    await database.db.update(workspaces).set({ status: 'active' }).where(eq(workspaces.id, fixture.workspace.id));
+    await database.db.update(organizations).set({ status: 'archived' }).where(eq(organizations.id, fixture.organization.id));
     expect(await integrations.authenticateApiKey(fixture.key.secret)).toBeNull();
   });
 

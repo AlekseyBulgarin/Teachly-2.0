@@ -7,6 +7,10 @@ import { createOpenApiDocument } from '../src/openapi';
 const outputPath = resolve(__dirname, '../../../packages/contracts/openapi.json');
 const checkOnly = process.argv.includes('--check');
 
+function normalizeLineEndings(value: string): string {
+  return value.replaceAll('\r\n', '\n');
+}
+
 function sortObjectKeys(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(sortObjectKeys);
   if (value === null || typeof value !== 'object') return value;
@@ -30,7 +34,7 @@ async function generate(): Promise<void> {
 
     if (checkOnly) {
       const current = await readFile(outputPath, 'utf8').catch(() => '');
-      if (current !== next) {
+      if (normalizeLineEndings(current) !== normalizeLineEndings(next)) {
         throw new Error('OpenAPI artifact is stale. Run `pnpm contracts:generate`.');
       }
       return;
