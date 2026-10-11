@@ -216,6 +216,7 @@ const copy = {
       ["AI layer", "Помогает строить объяснение, но не владеет оценкой или прогрессом."],
       ["Progress", "Хранит подтверждённые связи, пробелы и следующий шаг на сервере."],
     ],
+    sourceTitle: "Методическая основа и лицензирование",
     source: "Метод адаптирован из открытого проекта ConceptLoom v1.1.0 (MIT). Это не заявление о партнёрстве или готовом production-модуле.",
     sourceAction: "Открыть исходный проект",
   },
@@ -262,6 +263,7 @@ const copy = {
       ["AI layer", "Helps build explanations but never owns grading or progress."],
       ["Progress", "Stores evidenced connections, gaps and the next step on the server."],
     ],
+    sourceTitle: "Method foundation and licensing",
     source: "The method is adapted from the open-source ConceptLoom v1.1.0 project (MIT). This does not claim a partnership or a production-ready module.",
     sourceAction: "Open the source project",
   },
@@ -312,7 +314,7 @@ export function ConceptLoomPage() {
           description={c.description}
           action={
             <div className="flex flex-wrap items-center justify-end gap-3">
-              <StatusBadge status={capabilityRegistry["concept-loom"].demoStatus} locale={locale} />
+              <StatusBadge status={capabilityRegistry["concept-loom"].publicStatus} locale={locale} />
               <a href="#demo" className="inline-flex items-center gap-2 rounded-xl bg-emerald-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-200">
                 {locale === "ru" ? "Попробовать демо" : "Try the demo"}<ArrowRight aria-hidden="true" size={16} />
               </a>
@@ -343,7 +345,7 @@ export function ConceptLoomPage() {
 
       <div id="demo" className="scroll-mt-28">
         <SectionCard title={c.demoTitle} detail={c.demoDetail} icon={BrainCircuit} action={<StatusBadge status="DEMO" locale={locale} />}>
-          <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[.78fr_1.22fr]">
+          <div key={`${scenarioId}-${frontier}`} data-motion-panel="concept-loom" className="content-swap grid gap-6 p-5 sm:p-7 lg:grid-cols-[.78fr_1.22fr]">
             <div className="space-y-6">
               <fieldset>
                 <legend className="text-[11px] font-bold uppercase tracking-[.18em] text-emerald-200">{c.chooseScenario}</legend>
@@ -413,7 +415,7 @@ export function ConceptLoomPage() {
             </div>
             <div aria-live="polite">
               {revealed && selected && (
-                <div role="status" className="mt-5 rounded-2xl border border-emerald-300/18 bg-emerald-300/[.055] p-5">
+                <div key={`${scenarioId}-${frontier}-${selected}`} role="status" className="content-swap mt-5 rounded-2xl border border-emerald-300/18 bg-emerald-300/[.055] p-5">
                   <p className="text-[10px] font-bold uppercase tracking-[.16em] text-emerald-200">{c.result}</p>
                   <p className="mt-3 text-sm leading-7 text-slate-200">{outcome}</p>
                   <p className="mt-3 text-xs leading-6 text-slate-400"><span className="font-semibold text-slate-300">{c.rationale}:</span> {scenario.checkpoint.rationale}</p>
@@ -449,7 +451,10 @@ export function ConceptLoomPage() {
             })}
           </div>
           <div className="flex flex-col gap-4 border-t border-[var(--border)] px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
-            <p className="max-w-3xl text-xs leading-6 text-slate-400">{c.source}</p>
+            <div className="max-w-3xl">
+              <p className="text-xs font-bold uppercase tracking-[.14em] text-slate-500">{c.sourceTitle}</p>
+              <p className="mt-2 text-xs leading-6 text-slate-400">{c.source}</p>
+            </div>
             <a href="https://github.com/Zproger/ConceptLoom" target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-cyan-200 transition hover:text-cyan-100">
               {c.sourceAction}<ExternalLink aria-hidden="true" size={15} />
             </a>

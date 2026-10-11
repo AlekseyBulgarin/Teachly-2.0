@@ -15,6 +15,12 @@ export function createOpenApiDocument(app: INestApplication): OpenAPIObject {
     .addBearerAuth({
       type: 'http',
       scheme: 'bearer',
+      bearerFormat: 'Neon Auth JWT',
+      description: 'Human access token. Teachly resolves the verified subject to an internal user and applies server-side roles.',
+    }, 'human-access-token')
+    .addBearerAuth({
+      type: 'http',
+      scheme: 'bearer',
       bearerFormat: 'Metrics token',
       description: 'Dedicated token for Prometheus-compatible metrics scraping.',
     }, 'metrics-token')

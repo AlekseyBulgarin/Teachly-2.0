@@ -39,6 +39,14 @@ class EnvironmentSchema {
   @IsOptional()
   @IsString()
   PROMETHEUS_URL?: string;
+
+  @IsOptional()
+  @IsIn(['development', 'neon'])
+  HUMAN_AUTH_PROVIDER?: string;
+
+  @IsOptional()
+  @IsString()
+  NEON_AUTH_BASE_URL?: string;
 }
 
 export function isProduction(): boolean {
@@ -54,11 +62,25 @@ export function requiredEnvironment(env: NodeJS.ProcessEnv = process.env): void 
     NODE_ENV: env.NODE_ENV, DEV_AUTH_ENABLED: env.DEV_AUTH_ENABLED,
     DATABASE_URL: env.DATABASE_URL, PORT: env.PORT, METRICS_TOKEN: env.METRICS_TOKEN,
     AI_PROVIDER: env.AI_PROVIDER, PROMETHEUS_URL: env.PROMETHEUS_URL,
+    HUMAN_AUTH_PROVIDER: env.HUMAN_AUTH_PROVIDER, NEON_AUTH_BASE_URL: env.NEON_AUTH_BASE_URL,
   });
   const errors = validateSync(config, { skipMissingProperties: false });
   if (errors.length > 0) throw new Error(`Invalid environment: ${errors.map((error) => error.property).join(', ')}`);
   if (env.DEV_AUTH_ENABLED === 'true' && env.NODE_ENV === 'production') throw new Error('Development authentication cannot be enabled in production');
   if (env.NODE_ENV === 'production' && !env.METRICS_TOKEN) throw new Error('METRICS_TOKEN is required in production');
+  const humanAuthProvider = env.HUMAN_AUTH_PROVIDER?.trim() || (env.NODE_ENV === 'production' ? 'neon' : 'development');
+  if (env.NODE_ENV === 'production' && humanAuthProvider !== 'neon') {
+    throw new Error('HUMAN_AUTH_PROVIDER=neon is required in production');
+  }
+  if (humanAuthProvider === 'neon') {
+    if (!env.NEON_AUTH_BASE_URL?.trim()) throw new Error('NEON_AUTH_BASE_URL is required for Neon authentication');
+    try {
+      const authUrl = new URL(env.NEON_AUTH_BASE_URL);
+      if (authUrl.protocol !== 'https:' || authUrl.username || authUrl.password) throw new Error();
+    } catch {
+      throw new Error('NEON_AUTH_BASE_URL must be a valid HTTPS URL without credentials');
+    }
+  }
   const aiProvider = env.AI_PROVIDER?.trim() || (env.AI_API_KEY || env.OPENAI_API_KEY ? 'openai' : 'disabled');
   const aiApiKey = env.AI_API_KEY?.trim() || env.OPENAI_API_KEY?.trim();
   if (env.NODE_ENV === 'production' && aiProvider === 'fake') throw new Error('AI_PROVIDER=fake is not allowed in production');

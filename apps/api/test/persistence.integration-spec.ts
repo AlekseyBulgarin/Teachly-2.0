@@ -3,7 +3,7 @@ import { DatabaseService } from '../src/infrastructure/database/database';
 import { fixtureIds, seedDevelopmentFixtures } from '../src/infrastructure/database/seed';
 import { demoLearningTasks, demoTheoryFixtures } from '../src/infrastructure/database/demo-learning-fixtures';
 import { applyMigrations } from '../src/infrastructure/database/migrate';
-import { apiKeys, assignments, attempts, auditEvents, externalIdentities, learningEvents, results, skillEvidence, submissions, taskVersions, tasks, teacherStudentRelationships, theoryMaterials, theoryMaterialTasks, theoryVersions, trainerSessionItems, trainerSessions, users } from '../src/infrastructure/database/schema';
+import { apiKeys, assignments, attempts, auditEvents, externalIdentities, learningEvents, rateLimitCounters, results, skillEvidence, submissions, taskVersions, tasks, teacherStudentRelationships, theoryMaterials, theoryMaterialTasks, theoryVersions, trainerSessionItems, trainerSessions, users } from '../src/infrastructure/database/schema';
 import { AttemptsService } from '../src/modules/attempts/attempts.service';
 import { AuditService } from '../src/modules/audit/audit.service';
 import { EducationService } from '../src/modules/education/education.service';
@@ -14,6 +14,7 @@ import { TenancyService } from '../src/modules/tenancy/tenancy.service';
 import type { AuthenticationAdapter } from '../src/modules/identity/auth.port';
 import { UsersService } from '../src/modules/users/users.service';
 import { resetTestDatabase, testDatabase } from './postgres-test';
+import { PostgresThrottlerStorage } from '../src/infrastructure/security/postgres-throttler.storage';
 
 jest.setTimeout(120_000);
 
@@ -90,6 +91,17 @@ describe('Phase 2 PostgreSQL invariants', () => {
     expect(skillBEvidence.slice(0, 3).map((row) => row.outcome)).toEqual(['correct', 'correct', 'correct']);
     const version = await database.db.select().from(taskVersions).where(eq(taskVersions.id, fixtureIds.version));
     expect(version[0]?.provenance.licenseStatus).toBe('development_only');
+  });
+
+  it('shares an atomic request budget across concurrent limiter instances', async () => {
+    const first = new PostgresThrottlerStorage(database);
+    const second = new PostgresThrottlerStorage(database);
+    const attempts = await Promise.all(Array.from({ length: 12 }, (_, index) =>
+      (index % 2 ? first : second).increment('same-client', 60_000, 10, 60_000, 'default')));
+
+    expect(attempts.filter((result) => result.isBlocked)).toHaveLength(2);
+    expect(Math.max(...attempts.map((result) => result.totalHits))).toBe(11);
+    expect(await database.db.select().from(rateLimitCounters)).toHaveLength(1);
   });
 
   it('rolls back student, identity, relationship, and audit state as one unit', async () => {

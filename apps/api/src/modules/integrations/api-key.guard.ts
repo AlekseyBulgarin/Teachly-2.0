@@ -5,6 +5,7 @@ import { IntegrationsService } from './integrations.service';
 import { REQUIRED_SCOPES_KEY } from './scope.decorator';
 import type { IntegrationScope } from './integrations.types';
 import { CoreAccessService } from '../core/core.access';
+import { extractBearerToken } from '../../common/bearer-token';
 
 @Injectable()
 export class ApiKeyGuard implements CanActivate {
@@ -16,10 +17,7 @@ export class ApiKeyGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<TeachlyRequest>();
-    const authorization = request.headers.authorization;
-    const secret = typeof authorization === 'string' && authorization.startsWith('Bearer ')
-      ? authorization.slice('Bearer '.length)
-      : null;
+    const secret = extractBearerToken(request.headers.authorization);
     if (!secret) throw new UnauthorizedException('Workspace API key required');
     const authenticatedContext = await this.integrations.authenticateApiKey(secret);
     if (!authenticatedContext) throw new UnauthorizedException('Invalid or revoked workspace API key');

@@ -464,7 +464,7 @@ export function CapabilityPage({ capability, demo }: { capability: CapabilityPag
           eyebrow={item.eyebrow}
           title={item.title}
           description={item.description}
-          action={<StatusBadge status={definition.demoStatus} locale={locale} />}
+          action={<StatusBadge status={definition.publicStatus} locale={locale} />}
         />
       </div>
       <QuickSectionNav items={nav} />

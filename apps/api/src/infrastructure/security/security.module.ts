@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerGuard, ThrottlerModule, ThrottlerStorage } from '@nestjs/throttler';
+import { PostgresThrottlerStorage } from './postgres-throttler.storage';
 
 @Module({
   imports: [
@@ -9,6 +10,10 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
       limit: 300,
     }]),
   ],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [
+    PostgresThrottlerStorage,
+    { provide: ThrottlerStorage, useExisting: PostgresThrottlerStorage },
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
 })
 export class SecurityModule {}

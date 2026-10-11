@@ -46,6 +46,7 @@ export function TasksDemo() {
             <button
               key={row.id}
               type="button"
+              data-task-select={row.id}
               onClick={() => {
                 setSelectedId(row.id);
                 setPicked(undefined);
@@ -66,7 +67,7 @@ export function TasksDemo() {
       </div>
 
       {selected && (
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 sm:p-6">
+        <div key={`${track}-${selected.id}`} data-motion-panel="tasks" className="content-swap rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 sm:p-6">
           <div className="flex flex-wrap gap-2">
             <span className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[.12em] text-emerald-200">{selected.status}</span>
             <span className="rounded-full border border-white/10 bg-white/[.055] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[.1em] text-slate-400">v{selected.version}</span>

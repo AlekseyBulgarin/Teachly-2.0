@@ -10,7 +10,7 @@ import { EcosystemNextStep, PipelineStep } from '@/components/showcase/shared';
 export function LearningPage() {
   const { t, locale } = useEcosystem();
   return <div className="flex flex-col gap-12 lg:gap-16">
-    <PageHeader eyebrow={t('learning.eyebrow')} title={t('learning.title')} description={t('learning.description')} action={<StatusBadge status={capabilityRegistry.learning.demoStatus} locale={locale} />} />
+    <PageHeader eyebrow={t('learning.eyebrow')} title={t('learning.title')} description={t('learning.description')} action={<StatusBadge status={capabilityRegistry.learning.publicStatus} locale={locale} />} />
     <SectionCard title={t('learning.flowTitle')} icon={Workflow}><div className="grid gap-3 p-5 sm:p-7 lg:grid-cols-4"><PipelineStep index="01" title={t('learning.step1')} detail={t('learning.step1Detail')} icon={Activity} /><PipelineStep index="02" title={t('learning.step2')} detail={t('learning.step2Detail')} icon={CircleDot} /><PipelineStep index="03" title={t('learning.step3')} detail={t('learning.step3Detail')} icon={Gauge} /><PipelineStep index="04" title={t('learning.step4')} detail={t('learning.step4Detail')} icon={ArrowRight} last /></div></SectionCard>
     <SectionCard title={t('learning.liveTitle')} detail={t('learning.liveDetail')} icon={UsersRound}>
       <div className="p-5 sm:p-7"><ProgressDemo /></div>

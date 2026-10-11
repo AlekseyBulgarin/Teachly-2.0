@@ -27,7 +27,7 @@ export function AiPage() {
           eyebrow={t("ai.eyebrow")}
           title={t("ai.title")}
           description={t("ai.description")}
-          action={<StatusBadge status={capabilityRegistry.ai.demoStatus} locale={locale} />}
+          action={<StatusBadge status={capabilityRegistry.ai.publicStatus} locale={locale} />}
         />
       </div>
       <QuickSectionNav
@@ -115,10 +115,10 @@ export function AiPage() {
       </div>
       <SectionCard title={t("ai.roadmapTitle")} icon={CheckCircle2}>
         <div className="grid gap-3 p-5 sm:grid-cols-3 sm:p-7">
-          <Road label={t("ai.roadmapLive")} status="LIVE" locale={locale} />
+          <Road label={t("ai.roadmapLive")} status="PILOT" locale={locale} />
           <Road
             label={t("ai.roadmapNext")}
-            status="COMING NEXT"
+            status="IN_DEVELOPMENT"
             locale={locale}
           />
           <Road
@@ -175,7 +175,7 @@ function Road({
   locale,
 }: {
   label: string;
-  status: "LIVE" | "COMING NEXT" | "PLANNED";
+  status: "PILOT" | "IN_DEVELOPMENT" | "PLANNED";
   locale: "ru" | "en";
 }) {
   return (

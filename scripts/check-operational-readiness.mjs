@@ -5,9 +5,15 @@ const requirements = [
   ['docs/operations/slo-incident-response.md', ['## Pilot objectives', '## Severity', '## Incident flow']],
   ['docs/operations/deployment-rollback.md', ['Application rollback', 'Database']],
   ['docs/operations/backup-restore.md', ['restore', 'smoke']],
-  ['docs/operations/observability.md', ['Teachly Monitor', 'persistent storage']],
+  ['docs/operations/observability.md', ['Teachly Monitor', 'persistent storage', '## Ownership and alert delivery', 'ALERT_CONTACT_URL']],
   ['docs/integrations/reference-pilot-acceptance.md', ['## Technical gate', '## Product and legal gate']],
   ['docs/api/v1-policy.md', ['Deprecation', 'Idempotency']],
+];
+
+const observabilityRequirements = [
+  ['infra/observability/prometheus.local.yml', ['alertmanagers:', 'alertmanager:9093']],
+  ['infra/observability/alertmanager.local.yml', ['receiver: local-review', 'group_by:']],
+  ['infra/observability/rules/teachly.rules.yml', ['owner: teachly-platform', 'service: teachly-api']],
 ];
 
 const failures = [];
@@ -20,9 +26,18 @@ for (const [path, markers] of requirements) {
   }
 }
 
+for (const [path, markers] of observabilityRequirements) {
+  try {
+    const text = await readFile(path, 'utf8');
+    for (const marker of markers) if (!text.includes(marker)) failures.push(`${path}: missing ${marker}`);
+  } catch {
+    failures.push(`${path}: missing file`);
+  }
+}
+
 if (failures.length) {
   console.error(failures.join('\n'));
   process.exitCode = 1;
 } else {
-  console.log(`Operational readiness contract passed (${requirements.length} artifacts).`);
+  console.log(`Operational readiness contract passed (${requirements.length + observabilityRequirements.length} artifacts).`);
 }

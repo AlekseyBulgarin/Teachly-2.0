@@ -131,7 +131,7 @@ export function AiRemediationDemo() {
       >
         <div aria-live="polite" className="p-5 sm:p-7">
           {submitFailed && (
-            <div role="status" className="flex items-start gap-3 rounded-xl border border-amber-300/15 bg-amber-300/[.06] p-4 text-sm leading-6 text-slate-300">
+            <div role="status" data-motion-panel="ai" className="content-swap flex items-start gap-3 rounded-xl border border-amber-300/15 bg-amber-300/[.06] p-4 text-sm leading-6 text-slate-300">
               <CircleAlert aria-hidden="true" size={18} className="mt-0.5 shrink-0 text-amber-200" />
               {copy.failed}
             </div>
@@ -143,7 +143,7 @@ export function AiRemediationDemo() {
             </div>
           )}
           {result && (
-            <div className="space-y-4">
+            <div data-motion-panel="ai" className="content-swap space-y-4">
               <AnswerBlock label={copy.summary} value={result.remediation.summary} />
               <AnswerBlock label={copy.explanation} value={result.remediation.explanation} />
               <AnswerBlock label={copy.hint} value={result.remediation.hint} accent />

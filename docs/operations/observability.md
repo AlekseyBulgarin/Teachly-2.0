@@ -37,7 +37,7 @@ sum(rate(teachly_http_requests_total[5m]))
 histogram_quantile(0.95, sum(rate(teachly_http_request_duration_seconds_bucket[5m])) by (le, route))
 ```
 
-Initial alerts should cover readiness failure, error ratio above 5% for ten minutes and p95 latency above one second for ten minutes. Tune thresholds after a representative pilot load.
+Initial alerts cover readiness failure, error ratio above 5% for ten minutes, p95 latency above one second for ten minutes, sustained rate-limit rejection, monitoring-pipeline availability, local Prometheus storage pressure and Alertmanager delivery failures. Tune workload thresholds after a representative pilot load.
 
 ## Grafana Cloud / OpenTelemetry path
 
@@ -52,3 +52,11 @@ The API exposes `GET /internal/monitoring/overview?range=...` for five bounded r
 The first dashboards cover availability, request rate, 5xx ratio, p95 latency, requests in flight, process memory, AI request/failure rate, AI p95 latency, provider-reported tokens, abstentions, and estimated cost when the provider reports it. Metrics never label learner, workspace, API key, prompt, answer, request ID, raw error or SQL text.
 
 The opt-in local profile is in `infra/observability`. Production should run Prometheus on a private network with persistent storage and authenticated scraping. Back up Prometheus configuration and rules; raw local TSDB blocks are operational data and should use a storage-level snapshot/backup process rather than ad-hoc file copying while Prometheus is running.
+
+## Ownership and alert delivery
+
+The accountable role for metrics collection, retention and restore checks is `teachly-platform`. The same role owns first response for alerts labelled `owner="teachly-platform"`; the incident owner may be reassigned after acknowledgement, but never left implicit. The product owner owns customer communication for SEV-1/2 incidents.
+
+Local Compose sends alerts to the `local-review` Alertmanager sink and is deliberately not paging-capable. A production release must set `ALERT_OWNER`, `METRICS_STORAGE_OWNER` and `ALERT_CONTACT_URL` in the deployment inventory, configure the corresponding Alertmanager receiver outside Git, and deliver a synthetic `TeachlyApiUnavailable` notification before go-live. `ALERT_CONTACT_URL` is an identifier or internal URL for the response channel, not a secret-bearing webhook URL.
+
+Prometheus owns time-series data with a 15-day/5-GB local ceiling. In production, `METRICS_STORAGE_OWNER` owns the persistent volume, capacity alarms, retention choice, and snapshot/restore evidence. Alertmanager state also uses a persistent volume so silences and notification state survive restarts.

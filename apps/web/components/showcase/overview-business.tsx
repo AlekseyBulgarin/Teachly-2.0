@@ -105,10 +105,10 @@ const copy = {
       action: "Запросить демонстрацию",
     },
     trust: {
-      eyebrow: "Честная стадия продукта",
-      title: "Показываем возможности без обещаний, которых ещё нет",
-      detail: "В каталоге отмечено, что уже работает, что является интерактивным прототипом и что находится в плане. Пилот начинается только с согласованных возможностей.",
-      principles: ["Сервер — источник правил и прав", "AI не выставляет итоговую оценку", "Схема данных меняется через миграции", "Интеграция ограничена согласованным scope"],
+      eyebrow: "Контроль и безопасность",
+      title: "Технические ограничения переведены в понятные правила работы",
+      detail: "Показываем только подтверждённые механизмы без заявлений о сертификатах, SLA или enterprise-compliance.",
+      principles: ["Данные каждой организации изолированы", "API-ключ получает только согласованные права", "Права и учебные правила проверяются на сервере", "API версионируется и описан через OpenAPI", "Запросы ограничиваются и получают request ID", "Ошибки, нагрузка и AI-запросы наблюдаемы"],
       about: "Teachly развивается как модульный образовательный слой для B2B-продуктов. Мы начинаем с прикладного пилота, работаем вместе с командой клиента и расширяем систему только после подтверждения сценария.",
       faq: [
         ["Нужно ли переносить пользователей и курсы?", "Нет. В пилоте согласуется минимальный набор данных, который Teachly получает из существующего продукта."],
@@ -206,10 +206,10 @@ const copy = {
       action: "Request a demo",
     },
     trust: {
-      eyebrow: "An honest product stage",
-      title: "Capabilities without claims that are not ready yet",
-      detail: "The catalog distinguishes what works now, what is an interactive prototype and what is planned. A pilot only starts with agreed capabilities.",
-      principles: ["The server owns rules and permissions", "AI does not issue final grades", "Data changes use reviewed migrations", "Integration is limited to an agreed scope"],
+      eyebrow: "Control and security",
+      title: "Technical boundaries become clear operating rules",
+      detail: "Only evidenced mechanisms are shown, without claims of certifications, SLAs or enterprise compliance.",
+      principles: ["Each organisation's data is isolated", "API keys receive only agreed permissions", "Permissions and learning rules are enforced server-side", "The API is versioned and described with OpenAPI", "Requests are bounded and receive request IDs", "Errors, load and AI requests are observable"],
       about: "Teachly is being developed as a modular education layer for B2B products. We start with a practical pilot, work alongside the client's team and expand only after the workflow is validated.",
       faq: [
         ["Do users and courses need to be migrated?", "No. The pilot defines the minimum data Teachly receives from the existing product."],
@@ -260,7 +260,10 @@ export function AudienceAndComparison({ locale }: { locale: Locale }) {
     </section>
     <section className="section-reveal overflow-hidden rounded-[34px] border border-white/[.08] bg-[var(--surface)] p-6 sm:p-8 lg:p-10">
       <Heading {...c.compare} />
-      <div className="mt-8 overflow-x-auto rounded-2xl border border-white/[.08]"><table className="w-full min-w-[760px] text-left text-sm"><thead className="bg-white/[.035] text-slate-300"><tr>{c.compare.headings.map((item, index) => <th key={item} className={`px-5 py-4 font-semibold ${index === 3 ? "bg-emerald-300/[.07] text-emerald-100" : ""}`}>{item}</th>)}</tr></thead><tbody>{c.compare.rows.map((row) => <tr key={row[0]} className="border-t border-white/[.07]">{row.map((item, index) => <td key={item} className={`px-5 py-4 leading-6 ${index === 0 ? "font-semibold text-slate-200" : index === 3 ? "bg-emerald-300/[.045] text-emerald-100" : "text-slate-400"}`}>{item}</td>)}</tr>)}</tbody></table></div>
+      <details className="group mt-8 rounded-2xl border border-white/[.08] bg-black/15 p-5">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-lg font-semibold text-slate-100 marker:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70"><span>{locale === "ru" ? "Сравнить три подхода подробно" : "Compare the three approaches in detail"}</span><span aria-hidden="true" className="text-2xl font-light text-emerald-300 transition-transform group-open:rotate-45">+</span></summary>
+        <div className="mt-5 overflow-x-auto rounded-2xl border border-white/[.08]"><table className="w-full min-w-[760px] text-left text-sm"><thead className="bg-white/[.035] text-slate-300"><tr>{c.compare.headings.map((item, index) => <th key={item} className={`px-5 py-4 font-semibold ${index === 3 ? "bg-emerald-300/[.07] text-emerald-100" : ""}`}>{item}</th>)}</tr></thead><tbody>{c.compare.rows.map((row) => <tr key={row[0]} className="border-t border-white/[.07]">{row.map((item, index) => <td key={item} className={`px-5 py-4 leading-6 ${index === 0 ? "font-semibold text-slate-200" : index === 3 ? "bg-emerald-300/[.045] text-emerald-100" : "text-slate-400"}`}>{item}</td>)}</tr>)}</tbody></table></div>
+      </details>
     </section>
   </>;
 }
@@ -279,6 +282,6 @@ export function IntegrationPilotAndTrust({ locale }: { locale: Locale }) {
       <div className="mt-6 flex flex-col gap-5 rounded-2xl border border-white/[.08] bg-white/[.025] p-5 lg:flex-row lg:items-center lg:justify-between"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-slate-500">{c.pilot.included}</p><div className="mt-3 flex flex-wrap gap-3">{c.pilot.includes.map((item) => <span key={item} className="inline-flex items-center gap-2 text-sm text-slate-300"><Check size={14} className="text-emerald-300" />{item}</span>)}</div></div><a href="#contact" className="interactive inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-300 px-5 py-3.5 text-sm font-semibold text-slate-950 hover:bg-emerald-200">{c.pilot.action}<ArrowRight size={16} /></a></div>
     </section>
 
-    <section id="about" className="section-reveal scroll-mt-28 grid gap-8 lg:grid-cols-[.78fr_1.22fr] lg:items-start"><Heading {...c.trust} /><div className="space-y-4"><div className="rounded-[30px] border border-white/[.08] bg-white/[.025] p-7 sm:p-8"><p className="text-base leading-8 text-slate-300">{c.trust.about}</p><div className="mt-7 grid gap-3 sm:grid-cols-2">{c.trust.principles.map((item) => <p key={item} className="flex gap-3 rounded-2xl border border-white/[.07] bg-black/15 p-4 text-sm leading-6 text-slate-300"><ShieldCheck className="mt-0.5 shrink-0 text-emerald-300" size={17} />{item}</p>)}</div></div><div className="space-y-2">{c.trust.faq.map(([question, answer]) => <details key={question} className="group rounded-2xl border border-white/[.08] bg-white/[.025] p-5"><summary className="cursor-pointer list-none pr-6 font-semibold text-slate-200 marker:hidden">{question}<span className="float-right text-emerald-300 transition group-open:rotate-45">+</span></summary><p className="mt-3 text-sm leading-7 text-slate-400">{answer}</p></details>)}</div></div></section>
+    <section id="about" className="section-reveal scroll-mt-28 grid gap-8 lg:grid-cols-[.78fr_1.22fr] lg:items-start"><Heading {...c.trust} /><div className="space-y-4"><div className="rounded-[30px] border border-white/[.08] bg-white/[.025] p-7 sm:p-8"><p className="text-base leading-8 text-slate-300">{c.trust.about}</p><div className="mt-7 grid gap-3 sm:grid-cols-2">{c.trust.principles.map((item) => <p key={item} className="flex gap-3 rounded-2xl border border-white/[.07] bg-black/15 p-4 text-sm leading-6 text-slate-300"><ShieldCheck className="mt-0.5 shrink-0 text-emerald-300" size={17} />{item}</p>)}</div></div><div className="space-y-2">{c.trust.faq.map(([question, answer]) => <details key={question} className="group rounded-2xl border border-white/[.08] bg-white/[.025] p-5"><summary className="cursor-pointer list-none rounded-lg pr-6 font-semibold text-slate-200 marker:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70">{question}<span className="float-right text-emerald-300 transition group-open:rotate-45">+</span></summary><p className="mt-3 text-sm leading-7 text-slate-400">{answer}</p></details>)}</div></div></section>
   </>;
 }

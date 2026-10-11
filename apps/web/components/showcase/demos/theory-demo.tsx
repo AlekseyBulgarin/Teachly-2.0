@@ -105,6 +105,7 @@ export function TheoryDemo() {
               <button
                 key={item.id}
                 type="button"
+                data-theory-select={item.id}
                 onClick={() => setActiveId(item.id)}
                 aria-pressed={isActive}
                 className={`interactive rounded-full border px-3.5 py-2 text-xs font-semibold transition ${
@@ -120,7 +121,7 @@ export function TheoryDemo() {
         </div>
       )}
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,.75fr)]">
+      <div key={active.id} data-motion-panel="theory" className="content-swap grid gap-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,.75fr)]">
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 sm:p-6">
           <div className="flex flex-wrap items-center gap-2">
             <span className="flex items-center gap-1.5 rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[.12em] text-emerald-200">
