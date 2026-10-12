@@ -334,6 +334,43 @@ test("wide desktop section navigation does not cover page content", async ({ pag
   expect(navigationBox).not.toBeNull();
   expect(cardBox).not.toBeNull();
   expect(navigationBox!.x).toBeGreaterThanOrEqual(cardBox!.x + cardBox!.width + 16);
+  expect(1920 - navigationBox!.x - navigationBox!.width).toBeCloseTo(24, 0);
+});
+
+test("wide desktop section navigation stays pinned to the right edge on every page", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-1440", "Run the wide-screen regression once");
+
+  const routes = [
+    "/ai",
+    "/analytics",
+    "/concept-loom",
+    "/integrations",
+    "/platform",
+    "/progress",
+    "/student-profile",
+    "/tasks",
+    "/theory",
+    "/trainer",
+    "/variants",
+    "/whiteboard",
+  ];
+
+  await page.setViewportSize({ width: 1920, height: 1080 });
+
+  for (const route of routes) {
+    await page.goto(route);
+    const sectionNav = page.locator('nav[aria-label="Навигация по странице"]:visible');
+    await expect(sectionNav, `${route} should show its section navigation`).toBeVisible();
+
+    const navigationBox = await sectionNav.boundingBox();
+    expect(navigationBox, `${route} should have a measurable section navigation`).not.toBeNull();
+    expect(1920 - navigationBox!.x - navigationBox!.width, `${route} right offset`).toBeCloseTo(24, 0);
+
+    const horizontalOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(horizontalOverflow, `${route} horizontal overflow`).toBeLessThanOrEqual(0);
+  }
 });
 
 test("production responses include the security baseline", async ({ request }) => {

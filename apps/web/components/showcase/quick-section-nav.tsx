@@ -1,12 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 type Item = { id: string; label: string };
 
 export function QuickSectionNav({ items }: { items: Item[] }) {
   const [active, setActive] = useState(items[0]?.id);
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
   const ids = items.map((item) => item.id).join(",");
+
+  useEffect(() => setPortalTarget(document.body), []);
 
   useEffect(() => {
     const list = ids.split(",").filter(Boolean);
@@ -62,30 +66,34 @@ export function QuickSectionNav({ items }: { items: Item[] }) {
           ))}
         </div>
       </nav>
-      <nav
-        aria-label="Навигация по странице"
-        className="pointer-events-none fixed top-1/2 z-20 hidden -translate-y-1/2 xl:block"
-        style={{ right: "max(1.5rem, calc((100vw - 1784px) / 2 - 2rem))" }}
-      >
-        <ul className="pointer-events-auto flex w-[172px] flex-col gap-1 rounded-2xl border border-[var(--border)] bg-[var(--canvas)]/85 p-1.5 shadow-[0_28px_64px_-40px_rgba(0,0,0,.95)] backdrop-blur-xl">
-          {items.map((item) => (
-            <li key={item.id}>
-              <a
-                href={`#${item.id}`}
-                aria-current={isActive(item.id) ? "location" : undefined}
-                onClick={handle(item.id)}
-                className={`interactive flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-medium transition ${isActive(item.id) ? "bg-emerald-300/10 text-emerald-100" : "text-slate-400 hover:bg-white/[.055] hover:text-slate-200"}`}
-              >
-                <span
-                  aria-hidden="true"
-                  className={`size-1.5 shrink-0 rounded-full transition ${isActive(item.id) ? "bg-emerald-300" : "bg-slate-600"}`}
-                />
-                <span className="min-w-0 truncate">{item.label}</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      {portalTarget
+        ? createPortal(
+            <nav
+              aria-label="Навигация по странице"
+              className="pointer-events-none fixed right-6 top-1/2 z-20 hidden -translate-y-1/2 xl:block"
+            >
+              <ul className="pointer-events-auto flex w-[172px] flex-col gap-1 rounded-2xl border border-[var(--border)] bg-[var(--canvas)]/85 p-1.5 shadow-[0_28px_64px_-40px_rgba(0,0,0,.95)] backdrop-blur-xl">
+                {items.map((item) => (
+                  <li key={item.id}>
+                    <a
+                      href={`#${item.id}`}
+                      aria-current={isActive(item.id) ? "location" : undefined}
+                      onClick={handle(item.id)}
+                      className={`interactive flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-medium transition ${isActive(item.id) ? "bg-emerald-300/10 text-emerald-100" : "text-slate-400 hover:bg-white/[.055] hover:text-slate-200"}`}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`size-1.5 shrink-0 rounded-full transition ${isActive(item.id) ? "bg-emerald-300" : "bg-slate-600"}`}
+                      />
+                      <span className="min-w-0 truncate">{item.label}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>,
+            portalTarget,
+          )
+        : null}
     </>
   );
 }
