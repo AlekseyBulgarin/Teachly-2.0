@@ -32,6 +32,8 @@ AI_TIMEOUT_MS=10000
 
 The compatible provider must support Chat Completions structured JSON schema. Validate the exact provider/model combination in a non-production environment before enabling it in production.
 
+Set `AI_TIMEOUT_MS` from observed provider latency rather than assuming every model responds within 10 seconds. The API caps the value at 60 seconds. Keep downstream budgets ordered so callers receive the API's sanitized error instead of aborting first: AI runtime timeout < server-side proxy timeout < browser request timeout. The production Showcase currently uses 25 seconds at the AI runtime, 35 seconds at its proxy, and 40 seconds in the browser.
+
 ## Verification and rollback
 
 1. Configure the server-only values on the API service; never expose them through `NEXT_PUBLIC_*` or the Web deployment.

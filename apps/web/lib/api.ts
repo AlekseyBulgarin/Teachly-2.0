@@ -168,13 +168,17 @@ export class ApiError extends Error {
 }
 
 const REQUEST_TIMEOUT_MS = 15_000;
+// Provider-backed remediation may legitimately take longer than ordinary reads.
+// Keep this above the Showcase proxy timeout so the proxy can return a useful
+// 504/503 response instead of the browser aborting first.
+const REMEDIATION_REQUEST_TIMEOUT_MS = 40_000;
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
+async function request<T>(path: string, options?: RequestInit, timeoutMs = REQUEST_TIMEOUT_MS): Promise<T> {
   const timeoutController = new AbortController();
   const abortFromCaller = () => timeoutController.abort();
   if (options?.signal?.aborted) timeoutController.abort();
   else options?.signal?.addEventListener('abort', abortFromCaller, { once: true });
-  const timeout = window.setTimeout(() => timeoutController.abort(), REQUEST_TIMEOUT_MS);
+  const timeout = window.setTimeout(() => timeoutController.abort(), timeoutMs);
   try {
     const response = await fetch(`/api/teachly/${path.replace(/^\//, '')}`, {
       ...options,
@@ -211,7 +215,7 @@ export const api = {
   knowledge: (signal?: AbortSignal) => request<KnowledgeStatus[]>('v1/knowledge/status', { signal }),
   aiTraces: () => request<AiTrace[]>('v1/ai-requests'),
   aiStatus: (signal?: AbortSignal) => request<AiProviderStatus>('v1/ai/status', { signal }),
-  remediation: (body: { learnerQuestion?: string; idempotencyKey: string; locale: 'ru' | 'en' }, signal?: AbortSignal) => request<RemediationResponse>('v1/remediations', { method: 'POST', body: JSON.stringify(body), headers: { 'x-request-id': crypto.randomUUID() }, signal }),
+  remediation: (body: { learnerQuestion?: string; idempotencyKey: string; locale: 'ru' | 'en' }, signal?: AbortSignal) => request<RemediationResponse>('v1/remediations', { method: 'POST', body: JSON.stringify(body), headers: { 'x-request-id': crypto.randomUUID() }, signal }, REMEDIATION_REQUEST_TIMEOUT_MS),
   publishedTasks: (signal?: AbortSignal) => request<PublishedTask[]>('v1/assessment/tasks', { signal }),
   publishedVariants: (signal?: AbortSignal) => request<PublishedVariant[]>('v1/assessment/variants', { signal }),
   theoryMaterials: (signal?: AbortSignal) => request<TheoryMaterial[]>('v1/theory/materials', { signal }),

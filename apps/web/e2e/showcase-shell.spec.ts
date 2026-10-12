@@ -209,6 +209,58 @@ test("AI demo renders a successful provider response", async ({ page }) => {
   await expect(page.locator('[data-motion-panel="ai"]')).toHaveCSS("animation-name", "content-swap");
 });
 
+test("AI demo waits for a slow provider and renders a safe abstention", async ({ page }) => {
+  await page.route("**/api/teachly/v1/ai/status", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({ configured: true, provider: "openrouter", model: "demo-model", apiMode: "chat_completions" }),
+  }));
+  await page.route("**/api/teachly/v1/remediations", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 15_500));
+    return route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({
+        requestId: "slow-showcase-test",
+        remediation: {
+          summary: "Недостаточно подтверждённого контекста.",
+          explanation: "Teachly не придумывает объяснение без разрешённых источников.",
+          hint: "Обратитесь к преподавателю за дополнительным материалом.",
+          likelyGap: null,
+          confidence: 0,
+          abstained: true,
+        },
+        evidenceRefs: [],
+        knowledgeRefs: [],
+      }),
+    });
+  });
+
+  await page.goto("/ai");
+  await page.getByRole("button", { name: /Получить объяснение|Get an explanation/i }).click();
+  await expect(page.getByText("Недостаточно подтверждённого контекста.")).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText(/Безопасный отказ|Safe abstention/i).first()).toBeVisible();
+  await expect(page.getByText("0%")).toBeVisible();
+});
+
+test("AI demo offers a retry when the provider is temporarily unavailable", async ({ page }) => {
+  await page.route("**/api/teachly/v1/ai/status", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({ configured: true, provider: "openrouter", model: "demo-model", apiMode: "chat_completions" }),
+  }));
+  await page.route("**/api/teachly/v1/remediations", (route) => route.fulfill({
+    status: 503,
+    contentType: "application/json",
+    body: JSON.stringify({ code: "TEACHLY_API_ERROR", message: "The live Teachly demo request could not be completed" }),
+  }));
+
+  await page.goto("/ai");
+  await page.getByRole("button", { name: /Получить объяснение|Get an explanation/i }).click();
+  await expect(page.getByText(/временно недоступен|temporarily unavailable/i)).toBeVisible();
+  await expect(page.getByRole("button", { name: /Повторить|Try again/i })).toBeVisible();
+});
+
 test("Concept Loom demo keeps its boundary honest and demonstrates a routed checkpoint", async ({ page }) => {
   await page.goto("/concept-loom");
   await expect(page.getByText("Интерактивное демо", { exact: true }).first()).toBeVisible();
