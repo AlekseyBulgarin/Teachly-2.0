@@ -65,7 +65,7 @@ export function QuickSectionNav({ items }: { items: Item[] }) {
       <nav
         aria-label="Навигация по странице"
         className="pointer-events-none fixed top-1/2 z-20 hidden -translate-y-1/2 xl:block"
-        style={{ right: "max(1.5rem, calc((100vw - 1784px) / 2 + 1.5rem))" }}
+        style={{ right: "max(1.5rem, calc((100vw - 1784px) / 2 - 2rem))" }}
       >
         <ul className="pointer-events-auto flex w-[172px] flex-col gap-1 rounded-2xl border border-[var(--border)] bg-[var(--canvas)]/85 p-1.5 shadow-[0_28px_64px_-40px_rgba(0,0,0,.95)] backdrop-blur-xl">
           {items.map((item) => (

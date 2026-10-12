@@ -316,6 +316,26 @@ test("desktop sidebar does not overlap content", async ({ page }, testInfo) => {
   expect(layout!.mainLeft).toBeGreaterThanOrEqual(layout!.asideRight - 1);
 });
 
+test("wide desktop section navigation does not cover page content", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-1440", "Run the wide-screen regression once");
+
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await page.goto("/ai");
+
+  const sectionNav = page.locator('nav[aria-label="Навигация по странице"]:visible');
+  const businessCard = page.locator("#benefits > *").last();
+  await expect(sectionNav).toBeVisible();
+  await expect(businessCard).toBeVisible();
+
+  const [navigationBox, cardBox] = await Promise.all([
+    sectionNav.boundingBox(),
+    businessCard.boundingBox(),
+  ]);
+  expect(navigationBox).not.toBeNull();
+  expect(cardBox).not.toBeNull();
+  expect(navigationBox!.x).toBeGreaterThanOrEqual(cardBox!.x + cardBox!.width + 16);
+});
+
 test("production responses include the security baseline", async ({ request }) => {
   const response = await request.get("/ecosystem");
   expect(response.ok()).toBeTruthy();
