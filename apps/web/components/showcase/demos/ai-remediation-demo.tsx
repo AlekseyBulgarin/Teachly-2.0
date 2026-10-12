@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { BrainCircuit, CircleAlert, Lightbulb, LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
-import { api, type AiProviderStatus, type RemediationResponse } from "@/lib/api";
+import { BrainCircuit, Lightbulb, LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
+import { api, ApiError, type AiProviderStatus, type RemediationResponse } from "@/lib/api";
 import { useEcosystem } from "@/lib/ecosystem-context";
 import { ErrorState, SectionCard, StatusBadge } from "@/components/ui";
 import { useDemoData } from "@/components/showcase/demos/use-demo-data";
@@ -14,7 +14,7 @@ export function AiRemediationDemo() {
   const [question, setQuestion] = useState("");
   const [result, setResult] = useState<RemediationResponse>();
   const [submitting, setSubmitting] = useState(false);
-  const [submitFailed, setSubmitFailed] = useState(false);
+  const [submitError, setSubmitError] = useState<"timeout" | "unavailable" | "generic" | null>(null);
   const actionController = useRef<AbortController | null>(null);
 
   const copy = locale === "ru"
@@ -30,12 +30,16 @@ export function AiRemediationDemo() {
         run: "Получить объяснение",
         running: "Teachly собирает контекст…",
         failed: "Не удалось получить объяснение. Учебный результат при этом не изменён.",
+        timeout: "AI-провайдер отвечает дольше обычного. Попробуйте ещё раз — учебный результат не изменён.",
+        unavailable: "AI-провайдер временно недоступен. Остальные функции Teachly продолжают работать.",
+        retry: "Повторить",
         summary: "Кратко",
         explanation: "Объяснение",
         hint: "Подсказка",
         gap: "На что обратить внимание",
         grounded: "Ответ проверен по разрешённому учебному контексту",
         confidence: "Уверенность",
+        abstained: "Безопасный отказ: разрешённого контекста недостаточно для подтверждённого ответа",
       }
     : {
         ready: "Provider configured",
@@ -49,12 +53,16 @@ export function AiRemediationDemo() {
         run: "Get an explanation",
         running: "Teachly is assembling context…",
         failed: "The explanation could not be generated. The learning result was not changed.",
+        timeout: "The AI provider is taking longer than usual. Try again — the learning result was not changed.",
+        unavailable: "The AI provider is temporarily unavailable. The rest of Teachly remains operational.",
+        retry: "Try again",
         summary: "Summary",
         explanation: "Explanation",
         hint: "Hint",
         gap: "Area to review",
         grounded: "The response is checked against permitted learning context",
         confidence: "Confidence",
+        abstained: "Safe abstention: permitted context is insufficient for a verified answer",
       };
 
   async function run() {
@@ -63,7 +71,7 @@ export function AiRemediationDemo() {
     const controller = new AbortController();
     actionController.current = controller;
     setSubmitting(true);
-    setSubmitFailed(false);
+    setSubmitError(null);
     setResult(undefined);
     try {
       const response = await api.remediation({
@@ -72,8 +80,14 @@ export function AiRemediationDemo() {
         locale,
       }, controller.signal);
       setResult(response);
-    } catch {
-      if (!controller.signal.aborted) setSubmitFailed(true);
+    } catch (error) {
+      if (!controller.signal.aborted) {
+        setSubmitError(error instanceof ApiError && error.status === 504
+          ? "timeout"
+          : error instanceof ApiError && error.status === 503
+            ? "unavailable"
+            : "generic");
+      }
     } finally {
       if (!controller.signal.aborted) setSubmitting(false);
     }
@@ -125,18 +139,21 @@ export function AiRemediationDemo() {
 
       <SectionCard
         title={t("ai.proposal")}
-        detail={result ? copy.grounded : t("ai.previewDetail")}
+        detail={result ? (result.remediation.abstained ? copy.abstained : copy.grounded) : t("ai.previewDetail")}
         icon={Sparkles}
-        action={result ? <StatusBadge status="LIVE" locale={locale} /> : undefined}
+        action={result ? <StatusBadge status={result.remediation.abstained ? (locale === "ru" ? "БЕЗОПАСНЫЙ ОТКАЗ" : "SAFE ABSTENTION") : "LIVE"} locale={locale} /> : undefined}
       >
         <div aria-live="polite" className="p-5 sm:p-7">
-          {submitFailed && (
-            <div role="status" data-motion-panel="ai" className="content-swap flex items-start gap-3 rounded-xl border border-amber-300/15 bg-amber-300/[.06] p-4 text-sm leading-6 text-slate-300">
-              <CircleAlert aria-hidden="true" size={18} className="mt-0.5 shrink-0 text-amber-200" />
-              {copy.failed}
+          {submitError && (
+            <div data-motion-panel="ai" className="content-swap">
+              <ErrorState
+                message={submitError === "timeout" ? copy.timeout : submitError === "unavailable" ? copy.unavailable : copy.failed}
+                retry={() => void run()}
+                retryLabel={copy.retry}
+              />
             </div>
           )}
-          {!result && !submitFailed && (
+          {!result && !submitError && (
             <div className="flex min-h-[240px] flex-col items-center justify-center text-center">
               <span className="flex size-12 items-center justify-center rounded-2xl bg-emerald-300/10 text-emerald-200"><Lightbulb aria-hidden="true" size={21} /></span>
               <p className="mt-4 max-w-md text-sm leading-7 text-slate-400">{status.configured ? t("ai.requestDetail") : copy.connectDetail}</p>
@@ -149,7 +166,7 @@ export function AiRemediationDemo() {
               <AnswerBlock label={copy.hint} value={result.remediation.hint} accent />
               {result.remediation.likelyGap && <AnswerBlock label={copy.gap} value={result.remediation.likelyGap} />}
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4 text-xs text-slate-500">
-                <span className="flex items-center gap-2"><ShieldCheck aria-hidden="true" size={15} className="text-emerald-300" />{copy.grounded}</span>
+                <span className="flex items-center gap-2"><ShieldCheck aria-hidden="true" size={15} className="text-emerald-300" />{result.remediation.abstained ? copy.abstained : copy.grounded}</span>
                 <span>{copy.confidence}: {Math.round(result.remediation.confidence * 100)}%</span>
               </div>
             </div>

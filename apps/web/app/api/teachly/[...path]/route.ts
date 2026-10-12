@@ -15,7 +15,9 @@ const whiteboardStateRoute =
   /^v1\/whiteboards\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\/state$/i;
 const demoBoardCookie = 'teachly-demo-board';
 const upstreamTimeoutMs = 15_000;
-const remediationUpstreamTimeoutMs = 30_000;
+// The API runtime gets up to 25 seconds in production. Leave enough time for
+// persistence and the provider response before returning a bounded timeout.
+const remediationUpstreamTimeoutMs = 35_000;
 const showcaseTrackTaskIds = {
   python: ['00000000-0000-4000-8000-000000000310', '00000000-0000-4000-8000-000000000311', '00000000-0000-4000-8000-000000000312', '00000000-0000-4000-8000-000000000313', '00000000-0000-4000-8000-000000000314'],
   algorithms: ['00000000-0000-4000-8000-000000000315', '00000000-0000-4000-8000-000000000316', '00000000-0000-4000-8000-000000000317', '00000000-0000-4000-8000-000000000318', '00000000-0000-4000-8000-000000000314'],
