@@ -2,7 +2,8 @@ import { defineConfig } from "@neon/config/v1";
 
 export default defineConfig({
   // Declare your Neon services here
-  auth: false,
+  // Auth is enabled in production; keep branch configuration aligned so a config deploy cannot disable it.
+  auth: true,
   // Branch policy: per-branch tuning
   branch: (branch) => {
     if (branch.isDefault) {

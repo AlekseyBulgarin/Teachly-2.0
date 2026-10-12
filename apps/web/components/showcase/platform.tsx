@@ -27,7 +27,7 @@ export function PlatformPage() {
           eyebrow={t("platform.eyebrow")}
           title={t("platform.title")}
           description={t("platform.description")}
-          action={<StatusBadge status={capabilityRegistry.platform.demoStatus} locale={locale} />}
+          action={<StatusBadge status={capabilityRegistry.platform.publicStatus} locale={locale} />}
         />
       </div>
       <QuickSectionNav
@@ -93,7 +93,7 @@ export function PlatformPage() {
           title={t("platform.connection")}
           detail={t("platform.connectionDetail")}
           icon={Network}
-          action={<StatusBadge status={capabilityRegistry.platform.demoStatus} locale={locale} />}
+          action={<StatusBadge status={capabilityRegistry.platform.publicStatus} locale={locale} />}
         >
           <div className="grid gap-4 p-5 sm:grid-cols-3 sm:p-7">
             <Stat label={t("platform.customer")} value={t("platform.customerDetail")} />

@@ -196,23 +196,21 @@ function ShellFrame({ children }: { children: ReactNode }) {
 
 const marketingNavigation = {
   ru: {
-    how: 'Продукт',
+    product: 'Продукт',
+    solutions: 'Решения',
     modules: 'Модули',
-    business: 'Для бизнеса',
     integration: 'Интеграция',
-    developers: 'Разработчикам',
-    about: 'О нас',
-    contact: 'Обсудить пилот',
+    demo: 'Демо',
+    contact: 'Запросить демонстрацию',
     footer: 'Образовательные модули и интеллект для вашего продукта.',
   },
   en: {
-    how: 'Product',
+    product: 'Product',
+    solutions: 'Solutions',
     modules: 'Modules',
-    business: 'For business',
     integration: 'Integration',
-    developers: 'Developers',
-    about: 'About',
-    contact: 'Discuss a pilot',
+    demo: 'Demo',
+    contact: 'Request a demo',
     footer: 'Learning modules and intelligence for your product.',
   },
 } as const;
@@ -249,12 +247,11 @@ function MarketingFrame({
 
   const navigation = (
     <>
-      <a href="#how" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/[.055] hover:text-white">{c.how}</a>
-      <a href="#catalog" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/[.055] hover:text-white">{c.modules}</a>
-      <a href="#business" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/[.055] hover:text-white">{c.business}</a>
+      <a href="#how" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/[.055] hover:text-white">{c.product}</a>
+      <a href="#solutions" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/[.055] hover:text-white">{c.solutions}</a>
+      <a href="#modules" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/[.055] hover:text-white">{c.modules}</a>
       <Link href="/integrations" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/[.055] hover:text-white">{c.integration}</Link>
-      <a href="#developers" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/[.055] hover:text-white">{c.developers}</a>
-      <a href="#about" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/[.055] hover:text-white">{c.about}</a>
+      <a href="#demo" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/[.055] hover:text-white">{c.demo}</a>
     </>
   );
 

@@ -232,7 +232,7 @@ export function TrainerDemo() {
       {failedAction && <ErrorState message={t("demo.error")} retry={retry} retryLabel={t("shell.retry")} />}
 
       {phase === "done" ? (
-        <div className="flex flex-col items-start gap-4 rounded-2xl border border-emerald-300/20 bg-emerald-300/[.06] p-5">
+        <div data-motion-panel="trainer" className="content-swap flex flex-col items-start gap-4 rounded-2xl border border-emerald-300/20 bg-emerald-300/[.06] p-5">
           <p className="flex items-center gap-2 text-sm leading-6 text-emerald-100">
             <CircleCheck aria-hidden="true" size={17} className="shrink-0 text-emerald-300" />
             {t("demo.trainer.done")}
@@ -253,7 +253,7 @@ export function TrainerDemo() {
           </button>
         </div>
       ) : phase === "complete" ? (
-        <div className="flex flex-col items-start gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-5">
+        <div data-motion-panel="trainer" className="content-swap flex flex-col items-start gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-5">
           <p className="text-sm leading-6 text-slate-300">{progress.completed}/{progress.total}</p>
           <button
             type="button"
@@ -266,7 +266,7 @@ export function TrainerDemo() {
           </button>
         </div>
       ) : visible && localizedVisible ? (
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,.9fr)]">
+        <div key={`${visible.id}-${phase}`} data-motion-panel="trainer" className="content-swap grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,.9fr)]">
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 sm:p-6">
             <p className="text-[10px] font-bold uppercase tracking-[.16em] text-slate-500">
               {t("demo.trainer.item")} {visible.position}/{progress.total}
@@ -334,7 +334,7 @@ export function TrainerDemo() {
                 </p>
                 <p className="mt-3 text-sm leading-6 text-slate-300">{localizedVisible.explanation}</p>
                 <details className="mt-3 text-xs text-slate-500">
-                  <summary className="cursor-pointer">{locale === 'ru' ? 'Технические детали' : 'Technical details'}</summary>
+                  <summary className="cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70">{locale === 'ru' ? 'Технические детали' : 'Technical details'}</summary>
                   <p className="mt-2 font-mono">score: {feedback.submitted.result.score} · {feedback.submitted.result.evaluationRule}</p>
                 </details>
               </div>

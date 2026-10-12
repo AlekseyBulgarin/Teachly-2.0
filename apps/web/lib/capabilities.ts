@@ -1,6 +1,6 @@
 import type { Locale } from "@/lib/i18n";
 
-export type CapabilityStatus = "LIVE" | "DEMO" | "COMING NEXT" | "PLANNED";
+export type PublicCapabilityStatus = "PILOT" | "DEMO" | "IN_DEVELOPMENT" | "PLANNED";
 export type CapabilityNavGroup =
   | "overview"
   | "learning"
@@ -40,8 +40,7 @@ export type CapabilityDefinition = {
   navGroup: CapabilityNavGroup;
   label: LocalizedText;
   detail: LocalizedText;
-  productStatus: CapabilityStatus;
-  demoStatus: CapabilityStatus;
+  publicStatus: PublicCapabilityStatus;
   dependencies: readonly CapabilityKey[];
   next: CapabilityKey | null;
 };
@@ -53,8 +52,7 @@ export const capabilityRegistry = {
     navGroup: "overview",
     label: { ru: "Главная", en: "Home" },
     detail: { ru: "Экосистема Teachly", en: "Teachly ecosystem" },
-    productStatus: "LIVE",
-    demoStatus: "LIVE",
+    publicStatus: "DEMO",
     dependencies: [],
     next: "platform",
   },
@@ -64,8 +62,7 @@ export const capabilityRegistry = {
     navGroup: "overview",
     label: { ru: "Платформа", en: "Platform" },
     detail: { ru: "Единое ядро", en: "One core" },
-    productStatus: "LIVE",
-    demoStatus: "LIVE",
+    publicStatus: "PILOT",
     dependencies: [],
     next: "tasks",
   },
@@ -75,8 +72,7 @@ export const capabilityRegistry = {
     navGroup: "learning",
     label: { ru: "База заданий", en: "Task bank" },
     detail: { ru: "Основа практики", en: "Practice foundation" },
-    productStatus: "LIVE",
-    demoStatus: "LIVE",
+    publicStatus: "PILOT",
     dependencies: ["platform"],
     next: "theory",
   },
@@ -86,8 +82,7 @@ export const capabilityRegistry = {
     navGroup: "learning",
     label: { ru: "Варианты", en: "Variants" },
     detail: { ru: "Гибкие сценарии", en: "Flexible scenarios" },
-    productStatus: "LIVE",
-    demoStatus: "LIVE",
+    publicStatus: "PILOT",
     dependencies: ["tasks"],
     next: "progress",
   },
@@ -97,8 +92,7 @@ export const capabilityRegistry = {
     navGroup: "learning",
     label: { ru: "Теория", en: "Theory" },
     detail: { ru: "Понятный контекст", en: "Clear context" },
-    productStatus: "LIVE",
-    demoStatus: "LIVE",
+    publicStatus: "PILOT",
     dependencies: ["platform"],
     next: "ai",
   },
@@ -108,8 +102,7 @@ export const capabilityRegistry = {
     navGroup: "learning",
     label: { ru: "Тренажёр", en: "Trainer" },
     detail: { ru: "Практика и поддержка", en: "Practice and support" },
-    productStatus: "LIVE",
-    demoStatus: "LIVE",
+    publicStatus: "PILOT",
     dependencies: ["tasks", "theory"],
     next: "progress",
   },
@@ -119,8 +112,7 @@ export const capabilityRegistry = {
     navGroup: "learning",
     label: { ru: "Онлайн-доска", en: "Whiteboard" },
     detail: { ru: "Визуальная работа", en: "Visual workspace" },
-    productStatus: "LIVE",
-    demoStatus: "LIVE",
+    publicStatus: "PILOT",
     dependencies: ["platform"],
     next: "platform",
   },
@@ -130,8 +122,7 @@ export const capabilityRegistry = {
     navGroup: "intelligence",
     label: { ru: "Интеллект обучения", en: "Learning intelligence" },
     detail: { ru: "Прогресс и пробелы", en: "Progress and gaps" },
-    productStatus: "LIVE",
-    demoStatus: "LIVE",
+    publicStatus: "PILOT",
     dependencies: ["progress"],
     next: "ai",
   },
@@ -141,8 +132,7 @@ export const capabilityRegistry = {
     navGroup: "intelligence",
     label: { ru: "Карта понимания", en: "Understanding map" },
     detail: { ru: "Цель, пробелы и маршрут", en: "Goals, gaps and route" },
-    productStatus: "PLANNED",
-    demoStatus: "DEMO",
+    publicStatus: "DEMO",
     dependencies: ["progress", "knowledge"],
     next: "teacher",
   },
@@ -152,8 +142,7 @@ export const capabilityRegistry = {
     navGroup: "intelligence",
     label: { ru: "Образовательный AI", en: "Educational AI" },
     detail: { ru: "Помощь по контексту", en: "Contextual assistance" },
-    productStatus: "LIVE",
-    demoStatus: "LIVE",
+    publicStatus: "PILOT",
     dependencies: ["theory", "knowledge", "progress"],
     next: "student-profile",
   },
@@ -163,8 +152,7 @@ export const capabilityRegistry = {
     navGroup: "intelligence",
     label: { ru: "Профиль ученика", en: "Learner profile" },
     detail: { ru: "Целостная картина", en: "A connected picture" },
-    productStatus: "LIVE",
-    demoStatus: "LIVE",
+    publicStatus: "PILOT",
     dependencies: ["platform"],
     next: "progress",
   },
@@ -174,8 +162,7 @@ export const capabilityRegistry = {
     navGroup: "intelligence",
     label: { ru: "Прогресс", en: "Progress" },
     detail: { ru: "Движение в обучении", en: "Learning movement" },
-    productStatus: "LIVE",
-    demoStatus: "LIVE",
+    publicStatus: "PILOT",
     dependencies: ["tasks"],
     next: "ai",
   },
@@ -185,8 +172,7 @@ export const capabilityRegistry = {
     navGroup: "intelligence",
     label: { ru: "Для преподавателя", en: "Teacher view" },
     detail: { ru: "Ученики, темы и сигналы", en: "Learners, topics and signals" },
-    productStatus: "LIVE",
-    demoStatus: "DEMO",
+    publicStatus: "DEMO",
     dependencies: ["progress", "learning"],
     next: "analytics",
   },
@@ -196,8 +182,7 @@ export const capabilityRegistry = {
     navGroup: "intelligence",
     label: { ru: "Аналитика", en: "Analytics" },
     detail: { ru: "Учебная картина для команды", en: "Learning picture for teams" },
-    productStatus: "LIVE",
-    demoStatus: "DEMO",
+    publicStatus: "DEMO",
     dependencies: ["progress", "teacher"],
     next: "ecosystem",
   },
@@ -207,8 +192,7 @@ export const capabilityRegistry = {
     navGroup: "connection",
     label: { ru: "Знания", en: "Knowledge" },
     detail: { ru: "Проверенные материалы", en: "Approved materials" },
-    productStatus: "LIVE",
-    demoStatus: "LIVE",
+    publicStatus: "PILOT",
     dependencies: ["platform"],
     next: "ai",
   },
@@ -218,8 +202,7 @@ export const capabilityRegistry = {
     navGroup: "connection",
     label: { ru: "Интеграции", en: "Integrations" },
     detail: { ru: "Ваша платформа + Teachly", en: "Your platform + Teachly" },
-    productStatus: "LIVE",
-    demoStatus: "LIVE",
+    publicStatus: "PILOT",
     dependencies: ["platform"],
     next: "ecosystem",
   },
@@ -256,8 +239,18 @@ export const capabilityKeys = Object.keys(capabilityRegistry) as CapabilityKey[]
 
 export const liveShowcaseRoutes = capabilityKeys
   .map((key) => capabilityRegistry[key])
-  .filter((capability) => capability.demoStatus === "LIVE")
+  .filter((capability) => capability.publicStatus === "PILOT")
   .map((capability) => capability.path);
+
+export function publicCapabilityStatusLabel(status: PublicCapabilityStatus, locale: Locale): string {
+  const labels: Record<PublicCapabilityStatus, Record<Locale, string>> = {
+    PILOT: { ru: "Доступно для пилота", en: "Available for pilot" },
+    DEMO: { ru: "Интерактивное демо", en: "Interactive demo" },
+    IN_DEVELOPMENT: { ru: "В разработке", en: "In development" },
+    PLANNED: { ru: "Запланировано", en: "Planned" },
+  };
+  return labels[status][locale];
+}
 
 export function getCapability(key: CapabilityKey): CapabilityDefinition {
   return capabilityRegistry[key];

@@ -18,9 +18,7 @@ test("capability registry has unique routes and valid references", () => {
       assert.ok(capabilityRegistry[dependency]);
     }
     if (capability.next) assert.ok(capabilityRegistry[capability.next]);
-    if (capability.demoStatus === "LIVE") {
-      assert.equal(capability.productStatus, "LIVE");
-    }
+    assert.ok(["PILOT", "DEMO", "IN_DEVELOPMENT", "PLANNED"].includes(capability.publicStatus));
   }
 });
 
@@ -39,11 +37,11 @@ test("navigation uses each listed capability once and in its declared group", ()
   }
 });
 
-test("live smoke routes come only from truthful live demo statuses", () => {
+test("live smoke routes come only from capabilities available for a pilot", () => {
   assert.deepEqual(
     liveShowcaseRoutes,
     capabilityKeys
-      .filter((key) => capabilityRegistry[key].demoStatus === "LIVE")
+      .filter((key) => capabilityRegistry[key].publicStatus === "PILOT")
       .map((key) => capabilityRegistry[key].path),
   );
   const liveRoutes = new Set<string>(liveShowcaseRoutes);
@@ -54,6 +52,6 @@ test("live smoke routes come only from truthful live demo statuses", () => {
   assert.ok(liveRoutes.has("/variants"));
   assert.ok(!liveRoutes.has("/teacher"));
   assert.ok(!liveRoutes.has("/analytics"));
-  assert.equal(capabilityRegistry.teacher.demoStatus, "DEMO");
-  assert.equal(capabilityRegistry.analytics.demoStatus, "DEMO");
+  assert.equal(capabilityRegistry.teacher.publicStatus, "DEMO");
+  assert.equal(capabilityRegistry.analytics.publicStatus, "DEMO");
 });

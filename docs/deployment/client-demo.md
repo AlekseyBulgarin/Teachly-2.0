@@ -28,6 +28,8 @@ API server-only:
 
 - `NODE_ENV`
 - `DEV_AUTH_ENABLED`
+- `HUMAN_AUTH_PROVIDER` (`neon` in production)
+- `NEON_AUTH_BASE_URL` (branch Auth URL; server-side JWT issuer and JWKS base)
 - `DATABASE_URL`
 - `DATABASE_URL_UNPOOLED`
 - `AI_PROVIDER` (`disabled`, `openai`, or `openai-compatible`)
@@ -40,6 +42,9 @@ API server-only:
 - `METRICS_TOKEN`
 - `SERVICE_VERSION`
 - `DEPLOYMENT_ENVIRONMENT`
+- `ALERT_OWNER`
+- `METRICS_STORAGE_OWNER`
+- `ALERT_CONTACT_URL` (channel identifier/internal URL, never a secret-bearing webhook)
 - `PROMETHEUS_URL` (private server-side URL; optional until Teachly Monitor is enabled)
 - `PROMETHEUS_BEARER_TOKEN` (optional server-side Prometheus query credential)
 - `PROMETHEUS_TIMEOUT_MS` (optional, capped at 15 seconds)
@@ -81,7 +86,7 @@ Output: managed by Next.js/Vercel
 ## Safe initialization
 
 1. Create the Neon database and set both database URLs on Railway.
-2. Set `NODE_ENV=production`, `DEV_AUTH_ENABLED=false`, and the remaining API variables. Keep `AI_PROVIDER=disabled` until a provider credential is ready; the API and Showcase then fail closed without fabricated AI output.
+2. Set `NODE_ENV=production`, `DEV_AUTH_ENABLED=false`, `HUMAN_AUTH_PROVIDER=neon`, `NEON_AUTH_BASE_URL`, and the remaining API variables. Keep `AI_PROVIDER=disabled` until a provider credential is ready; the API and Showcase then fail closed without fabricated AI output.
 3. Run migrations with `corepack pnpm db:migrate`.
 4. Generate a fresh Teachly-format key; never use the deterministic development key from `apps/web/.env.example`. One suitable one-time command is `node -e "const {randomBytes}=require('node:crypto'); console.log('tlk_'+randomBytes(8).toString('hex')+'.'+randomBytes(32).toString('base64url'))"`.
 5. Temporarily set `TEACHLY_DEMO_SEED_ENABLED=true` and set `TEACHLY_DEMO_API_KEY` to that fresh key.
@@ -105,7 +110,7 @@ The production demo seed is guarded, idempotent, does not run at application sta
 
 No browser CORS configuration is needed: the browser uses the Web same-origin proxy and only the Vercel server calls the Railway API. Direct B2B API clients remain server-to-server integrations.
 
-The API currently uses a process-local rate limiter. That is intentional for the single-instance baseline. Before running multiple API replicas, replace its storage with a shared implementation and verify limits across replicas; do not add shared infrastructure before that scaling requirement exists.
+The API rate limiter uses an atomic PostgreSQL counter shared by every API replica. Its table is created by the reviewed migration, stale counters are cleaned opportunistically, and a database failure fails the request closed rather than silently bypassing quotas.
 
 ## Post-deploy smoke checklist
 

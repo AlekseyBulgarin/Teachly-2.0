@@ -6,6 +6,7 @@ import { IntegrationsService } from '../integrations/integrations.service';
 import { CoreAccessService } from '../core/core.access';
 import { TASK_BANK_SCOPES_KEY } from './task-bank.scope';
 import type { TaskBankScope } from './task-bank.types';
+import { extractBearerToken, isTeachlyApiKey } from '../../common/bearer-token';
 
 @Injectable()
 export class TaskBankGuard implements CanActivate {
@@ -18,10 +19,10 @@ export class TaskBankGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<TeachlyRequest>();
-    const authorization = request.headers.authorization;
     const required = this.reflector.getAllAndOverride<TaskBankScope[]>(TASK_BANK_SCOPES_KEY, [context.getHandler(), context.getClass()]) ?? [];
-    if (typeof authorization === 'string' && authorization.startsWith('Bearer ')) {
-      const tenant = this.core.requireTenantContext(await this.integrations.authenticateApiKey(authorization.slice('Bearer '.length)));
+    const bearer = extractBearerToken(request.headers.authorization);
+    if (isTeachlyApiKey(bearer)) {
+      const tenant = this.core.requireTenantContext(await this.integrations.authenticateApiKey(bearer));
       if (required.some((scope) => !tenant.scopes.includes(scope))) throw new ForbiddenException('API key lacks required assessment scope');
       request.tenantContext = tenant;
       return true;

@@ -19,6 +19,8 @@ groups:
         for: 2m
         labels:
           severity: critical
+          service: teachly-api
+          owner: teachly-platform
         annotations:
           summary: Teachly API metrics target is unavailable
           runbook: docs/operations/observability.md
@@ -27,6 +29,8 @@ groups:
         for: 10m
         labels:
           severity: critical
+          service: teachly-api
+          owner: teachly-platform
         annotations:
           summary: Teachly API 5xx ratio is above 5%
           runbook: docs/operations/observability.md
@@ -35,6 +39,8 @@ groups:
         for: 10m
         labels:
           severity: warning
+          service: teachly-api
+          owner: teachly-platform
         annotations:
           summary: Teachly API p95 latency is above one second
           runbook: docs/operations/observability.md
@@ -43,6 +49,48 @@ groups:
         for: 10m
         labels:
           severity: warning
+          service: teachly-api
+          owner: teachly-platform
         annotations:
           summary: Teachly AI failure ratio is above 15%
+          runbook: docs/operations/observability.md
+      - alert: TeachlyRateLimitRejectionsHigh
+        expr: sum(rate(teachly_http_requests_total{status_code="429"}[5m])) > 1
+        for: 10m
+        labels:
+          severity: warning
+          service: teachly-api
+          owner: teachly-platform
+        annotations:
+          summary: Teachly is rejecting more than one request per second
+          runbook: docs/operations/observability.md
+      - alert: TeachlyMonitoringPipelineUnavailable
+        expr: up{job=~"prometheus|alertmanager"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: teachly-observability
+          owner: teachly-platform
+        annotations:
+          summary: A Teachly monitoring component is unavailable
+          runbook: docs/operations/observability.md
+      - alert: TeachlyPrometheusStorageNearLocalLimit
+        expr: prometheus_tsdb_storage_blocks_bytes > 4500000000
+        for: 15m
+        labels:
+          severity: warning
+          service: teachly-observability
+          owner: teachly-platform
+        annotations:
+          summary: Prometheus storage is above 4.5 GB of the 5 GB local ceiling
+          runbook: docs/operations/observability.md
+      - alert: TeachlyAlertDeliveryFailing
+        expr: sum(rate(alertmanager_notifications_failed_total[5m])) > 0
+        for: 5m
+        labels:
+          severity: critical
+          service: teachly-observability
+          owner: teachly-platform
+        annotations:
+          summary: Alertmanager is failing to deliver notifications
           runbook: docs/operations/observability.md

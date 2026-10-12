@@ -2,14 +2,16 @@ import type { LucideIcon } from 'lucide-react';
 import { CircleAlert } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { Locale } from '@/lib/i18n';
+import { publicCapabilityStatusLabel, type PublicCapabilityStatus } from '@/lib/capabilities';
 
-export function StatusBadge({ status, locale }: { status: 'LIVE' | 'COMING NEXT' | 'PLANNED' | string; locale: Locale }) {
+export function StatusBadge({ status, locale }: { status: PublicCapabilityStatus | string; locale: Locale }) {
   const normalized = status.toUpperCase();
-  const live = normalized === 'LIVE' || normalized === 'APPROVED' || normalized === 'ALLOWED' || normalized === 'ACTIVE';
+  const publicStatus = (["PILOT", "DEMO", "IN_DEVELOPMENT", "PLANNED"] as const).find((item) => item === normalized);
+  const live = normalized === 'PILOT' || normalized === 'LIVE' || normalized === 'APPROVED' || normalized === 'ALLOWED' || normalized === 'ACTIVE';
   const demo = normalized === 'DEMO';
-  const next = normalized === 'COMING NEXT' || normalized === 'REVIEW' || normalized === 'NOT_REVIEWED';
-  const text = normalized === 'LIVE' ? 'LIVE' : normalized === 'DEMO' ? (locale === 'ru' ? 'ДЕМО' : 'DEMO') : normalized === 'COMING NEXT' ? (locale === 'ru' ? 'СКОРО' : 'COMING NEXT') : normalized === 'PLANNED' ? (locale === 'ru' ? 'В ПЛАНАХ' : 'PLANNED') : status.replaceAll('_', ' ');
-  return <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[.14em] ${live ? 'border-emerald-300/25 bg-emerald-300/10 text-emerald-200' : demo ? 'border-cyan-300/25 bg-cyan-300/10 text-cyan-200' : next ? 'border-amber-300/25 bg-amber-300/10 text-amber-200' : 'border-white/10 bg-white/[.05] text-slate-400'}`}><span className={`size-1.5 rounded-full ${live ? 'bg-emerald-300' : demo ? 'bg-cyan-300' : next ? 'bg-amber-300' : 'bg-slate-500'}`} />{text}</span>;
+  const next = normalized === 'IN_DEVELOPMENT' || normalized === 'COMING NEXT' || normalized === 'REVIEW' || normalized === 'NOT_REVIEWED';
+  const text = publicStatus ? publicCapabilityStatusLabel(publicStatus, locale) : normalized === 'LIVE' ? 'LIVE' : normalized === 'COMING NEXT' ? (locale === 'ru' ? 'СКОРО' : 'COMING NEXT') : status.replaceAll('_', ' ');
+  return <span className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[.14em] ${live ? 'border-emerald-300/25 bg-emerald-300/10 text-emerald-200' : demo ? 'border-cyan-300/25 bg-cyan-300/10 text-cyan-200' : next ? 'border-amber-300/25 bg-amber-300/10 text-amber-200' : 'border-white/10 bg-white/[.05] text-slate-400'}`}><span className={`size-1.5 rounded-full ${live ? 'bg-emerald-300' : demo ? 'bg-cyan-300' : next ? 'bg-amber-300' : 'bg-slate-500'}`} />{text}</span>;
 }
 
 export function PageHeader({ eyebrow, title, description, action }: { eyebrow: string; title: string; description: string; action?: ReactNode }) {
@@ -20,7 +22,7 @@ export function SectionCard({ children, className = '', title, detail, icon: Ico
   return <section className={`relative overflow-hidden rounded-[28px] border border-[var(--border)] bg-[linear-gradient(150deg,rgba(255,255,255,.025),transparent_46%),var(--surface)] shadow-[0_30px_90px_-58px_rgba(0,0,0,.98)] ${className}`}>{title && <div className="flex items-start justify-between gap-4 border-b border-[var(--border)] px-5 py-6 sm:px-7 sm:py-7"><div className="group flex items-start gap-3.5">{Icon && <span className="motion-icon flex size-11 shrink-0 items-center justify-center rounded-2xl border border-emerald-300/10 bg-emerald-300/[.08] text-emerald-200"><Icon aria-hidden="true" size={19} /></span>}<div><h2 className="text-lg font-semibold tracking-[-.015em] text-slate-50">{title}</h2>{detail && <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">{detail}</p>}</div></div>{action}</div>}{children}</section>;
 }
 
-export function IconCard({ icon: Icon, title, detail, status, locale, hint }: { icon: LucideIcon; title: string; detail: string; status?: 'LIVE' | 'COMING NEXT' | 'PLANNED'; locale?: Locale; hint?: string }) {
+export function IconCard({ icon: Icon, title, detail, status, locale, hint }: { icon: LucideIcon; title: string; detail: string; status?: PublicCapabilityStatus | 'LIVE' | 'COMING NEXT'; locale?: Locale; hint?: string }) {
   return <div tabIndex={hint ? 0 : undefined} className={`card-lift group rounded-3xl border border-[var(--border)] bg-[linear-gradient(150deg,rgba(255,255,255,.026),transparent_52%),var(--surface)] p-6 transition hover:border-emerald-300/20 hover:bg-[var(--surface-raised)] ${hint ? 'focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60' : ''}`}><div className="flex items-start justify-between gap-3"><span className="motion-icon flex size-11 items-center justify-center rounded-2xl border border-white/[.04] bg-white/[.055] text-emerald-200"><Icon aria-hidden="true" size={20} /></span>{status && locale && <StatusBadge status={status} locale={locale} />}</div><h3 className="mt-5 text-lg font-semibold tracking-[-.015em] text-slate-100">{title}</h3>{detail && <p className="mt-2 text-[15px] leading-7 text-slate-400">{detail}</p>}{hint && <p className="mt-2 text-[13px] leading-6 text-slate-400 opacity-100 transition-opacity duration-200 md:opacity-0 md:group-hover:opacity-100 md:group-focus:opacity-100 md:group-focus-within:opacity-100">{hint}</p>}</div>;
 }
 

@@ -3558,6 +3558,12 @@
       }
     },
     "securitySchemes": {
+      "human-access-token": {
+        "bearerFormat": "Neon Auth JWT",
+        "description": "Human access token. Teachly resolves the verified subject to an internal user and applies server-side roles.",
+        "scheme": "bearer",
+        "type": "http"
+      },
       "metrics-token": {
         "bearerFormat": "Metrics token",
         "description": "Dedicated token for Prometheus-compatible metrics scraping.",

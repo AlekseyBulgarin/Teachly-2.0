@@ -220,8 +220,7 @@ const copy = {
     description:
       "Teachly подключается к онлайн-школе, LMS или EdTech-продукту через единое ядро. Добавляйте задания, прогресс, AI и аналитику поэтапно — без миграции с вашей платформы.",
     primary: "Запросить демонстрацию",
-    secondary: "Запустить пилот",
-    tertiary: "Посмотреть возможности",
+    secondary: "Посмотреть живое демо",
     audience: "Для владельцев онлайн-школ, LMS и EdTech-продуктов",
     pilotNote: "Начинаем с одного полезного сценария и проверяем его вместе с вашей командой.",
     trust: [
@@ -230,14 +229,14 @@ const copy = {
       "Модули подключаются поэтапно",
       "Данные и правила остаются на сервере",
     ],
-    proofEyebrow: "Связанный учебный контекст",
-    proofTitle: "Ошибка превращается в понятный следующий шаг",
+    proofEyebrow: "Живое демо · три шага",
+    proofTitle: "Посмотрите, как действие ученика превращается в понятный следующий шаг",
     proofItems: [
       ["Задание и результат", "Teachly видит конкретную учебную ситуацию."],
       ["Прогресс и пробел", "Один ответ становится частью общей истории."],
       ["Сигнал преподавателю", "Команда понимает, где нужна поддержка."],
     ],
-    proofCaption: "Практика → прогресс → поддержка",
+    proofCaption: "Откройте каждый шаг: практика → прогресс → поддержка",
     howEyebrow: "Как работает Teachly",
     howTitle: "От подключения к полезному учебному сценарию",
     howDetail:
@@ -258,6 +257,22 @@ const copy = {
         "Команда получает связанные инструменты",
         "Ученики, преподаватели и бизнес используют один образовательный контекст.",
       ],
+    ],
+    solutionsEyebrow: "Сценарии для бизнеса",
+    solutionsTitle: "Начните с результата, а не с изучения каталога",
+    solutionsDetail: "Каждый сценарий соединяет несколько модулей вокруг одной проверяемой задачи. Статус показывает, что можно включить в пилот, а что пока доступно только как интерактивное демо.",
+    solutions: [
+      ["Запустить учебную практику", "Соберите задания в тренажёр, сохраните попытки и покажите ученику и преподавателю движение по темам.", "База заданий → Тренажёр → Прогресс"],
+      ["Найти точки, где ученики теряют понимание", "Свяжите историю результатов с профилем ученика и понятным приоритетом для преподавателя.", "Прогресс → Профиль ученика → Преподаватель"],
+      ["Добавить AI поверх проверенных материалов", "Дайте ученику объяснение по конкретной ошибке, не передавая AI право выставлять оценку.", "Знания → Теория → Образовательный AI"],
+      ["Показать короткий путь к пониманию", "Определите границу знаний и продемонстрируйте минимальный маршрут к практической цели.", "Прогресс → Карта понимания → Следующий шаг"],
+    ],
+    differencesTitle: "Похожие возможности решают разные задачи",
+    differences: [
+      ["Прогресс", "Что произошло", "История попыток, результатов и динамики по темам."],
+      ["Интеллект обучения", "Что это означает", "Интерпретирует историю и помогает выбрать полезное действие."],
+      ["Теория", "Что изучает ученик", "Материал, который показывается рядом с практикой."],
+      ["Знания", "На что может опираться система", "Проверенные версии источников для AI и других модулей."],
     ],
     modulesEyebrow: "Возможности",
     modulesTitle: "Подключайте нужные модули постепенно",
@@ -326,8 +341,7 @@ const copy = {
     description:
       "Teachly connects to an online school, LMS or EdTech product through one core. Add tasks, progress, AI and analytics step by step — without migrating away from your platform.",
     primary: "Request a demo",
-    secondary: "Start a pilot",
-    tertiary: "Explore capabilities",
+    secondary: "View the live demo",
     audience: "For owners of online schools, LMS and EdTech products",
     pilotNote: "Start with one useful scenario and validate it together with your team.",
     trust: [
@@ -336,14 +350,14 @@ const copy = {
       "Enable modules step by step",
       "Data and rules stay server-side",
     ],
-    proofEyebrow: "Connected learning context",
-    proofTitle: "A mistake becomes a clear next step",
+    proofEyebrow: "Live demo · three steps",
+    proofTitle: "See how a learner action becomes a clear next step",
     proofItems: [
       ["Task and result", "Teachly sees the exact learning situation."],
       ["Progress and gap", "One answer becomes part of the learning history."],
       ["Teacher signal", "The team sees where support is needed."],
     ],
-    proofCaption: "Practice → progress → support",
+    proofCaption: "Open each step: practice → progress → support",
     howEyebrow: "How Teachly works",
     howTitle: "From connection to a useful learning scenario",
     howDetail:
@@ -364,6 +378,22 @@ const copy = {
         "Your team gets connected tools",
         "Learners, teachers and the business use one learning context.",
       ],
+    ],
+    solutionsEyebrow: "Business use cases",
+    solutionsTitle: "Start with an outcome, not a catalog",
+    solutionsDetail: "Each use case connects several modules around one verifiable need. The status shows what can enter a pilot and what is currently an interactive demo.",
+    solutions: [
+      ["Launch learning practice", "Combine tasks in a trainer, retain attempts and show learners and teachers how understanding changes by topic.", "Task bank → Trainer → Progress"],
+      ["Find where learners lose understanding", "Connect outcome history to a learner profile and a clear teacher priority.", "Progress → Learner profile → Teacher"],
+      ["Add AI on approved material", "Explain a specific mistake without giving AI authority over grading.", "Knowledge → Theory → Educational AI"],
+      ["Show a short path to understanding", "Identify the knowledge frontier and demonstrate a minimal route to a practical goal.", "Progress → Understanding map → Next step"],
+    ],
+    differencesTitle: "Related capabilities answer different questions",
+    differences: [
+      ["Progress", "What happened", "Attempt, outcome and topic history over time."],
+      ["Learning intelligence", "What it means", "Interprets history and helps choose a useful action."],
+      ["Theory", "What the learner studies", "Material shown directly alongside practice."],
+      ["Knowledge", "What the system may rely on", "Approved source versions for AI and other modules."],
     ],
     modulesEyebrow: "Capabilities",
     modulesTitle: "Enable the modules you need, step by step",
@@ -458,17 +488,11 @@ export function OverviewPage() {
               <MessageCircle aria-hidden="true" size={17} />
             </a>
             <a
-              href="#pilot"
+              href="#demo"
               className="interactive inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--border-strong)] bg-white/[.035] px-6 py-4 text-sm font-semibold text-slate-100 hover:-translate-y-0.5 hover:bg-white/[.075]"
             >
               {c.secondary}
               <ArrowRight aria-hidden="true" size={17} />
-            </a>
-            <a
-              href="#catalog"
-              className="interactive inline-flex items-center justify-center px-3 py-4 text-sm font-semibold text-slate-300 hover:text-white"
-            >
-              {c.tertiary}
             </a>
           </div>
           <p className="mt-5 flex max-w-xl items-start gap-2 text-sm leading-6 text-slate-400">
@@ -530,6 +554,32 @@ export function OverviewPage() {
           ))}
         </div>
       </section>
+      <section id="solutions" className="section-reveal scroll-mt-28">
+        <SectionHeading eyebrow={c.solutionsEyebrow} title={c.solutionsTitle} detail={c.solutionsDetail} />
+        <div className="mt-10 grid gap-4 lg:grid-cols-2">
+          {c.solutions.map(([title, detail, flow], index) => {
+            const capability = [capabilityRegistry.trainer, capabilityRegistry.teacher, capabilityRegistry.ai, capabilityRegistry["concept-loom"]][index];
+            const Icon = [GraduationCap, UsersRound, BrainCircuit, Waypoints][index];
+            return (
+              <Link key={title} href={capability.path} className="card-lift group rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7">
+                <div className="flex items-start justify-between gap-4">
+                  <span className="motion-icon flex size-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-300/[.08] text-emerald-200"><Icon aria-hidden="true" size={20} /></span>
+                  <StatusBadge status={capability.publicStatus} locale={locale} />
+                </div>
+                <h3 className="mt-6 text-xl font-semibold text-slate-100">{title}</h3>
+                <p className="mt-3 text-[15px] leading-7 text-slate-400">{detail}</p>
+                <p className="mt-5 flex items-center gap-2 text-sm font-semibold text-emerald-200">{flow}<ArrowRight aria-hidden="true" size={15} className="transition-transform group-hover:translate-x-1" /></p>
+              </Link>
+            );
+          })}
+        </div>
+        <div className="mt-8 rounded-[30px] border border-white/[.08] bg-white/[.025] p-6 sm:p-8">
+          <h3 className="text-xl font-semibold text-slate-100">{c.differencesTitle}</h3>
+          <div className="mt-6 grid gap-3 md:grid-cols-2">
+            {c.differences.map(([title, question, detail]) => <div key={title} className="rounded-2xl border border-white/[.07] bg-black/15 p-5"><p className="font-semibold text-slate-100">{title}</p><p className="mt-2 text-xs font-bold uppercase tracking-[.14em] text-emerald-200">{question}</p><p className="mt-3 text-sm leading-6 text-slate-400">{detail}</p></div>)}
+          </div>
+        </div>
+      </section>
       <section id="modules" className="section-reveal scroll-mt-28">
         <SectionHeading
           eyebrow={c.modulesEyebrow}
@@ -548,7 +598,14 @@ export function OverviewPage() {
             title={locale === "ru" ? "Понимайте статус и ценность каждого модуля" : "Understand the status and value of every module"}
             detail={locale === "ru" ? "Выберите направление и откройте модуль: что он делает, кому помогает, какие данные использует и готов ли он к подключению." : "Choose an area and open a module to see what it does, who it helps, which data it uses and whether it is ready to connect."}
           />
-          <EcosystemCatalog locale={locale} />
+          <details className="group mt-8 rounded-[28px] border border-white/[.08] bg-white/[.025] p-5 sm:p-6">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-lg font-semibold text-slate-100 marker:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70">
+              <span>{locale === "ru" ? "Открыть полный каталог и статусы" : "Open the complete catalog and statuses"}</span>
+              <span aria-hidden="true" className="text-2xl font-light text-emerald-300 transition-transform group-open:rotate-45">+</span>
+            </summary>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">{locale === "ru" ? "Подробности нужны на следующем шаге: сначала выберите бизнес-задачу, затем сравните конкретные возможности." : "Use the detail when you need it: choose the business need first, then compare individual capabilities."}</p>
+            <EcosystemCatalog locale={locale} />
+          </details>
         </div>
       </section>
       <section className="section-reveal overflow-hidden rounded-[34px] border border-[var(--border)] bg-[linear-gradient(130deg,rgba(125,182,255,.08),transparent_48%),var(--surface)] p-7 sm:p-10 lg:p-12">
@@ -716,18 +773,18 @@ function ProductProof({
             const Icon = icons[index];
             const capability = capabilities[index];
             return (
-              <div key={itemTitle} className="proof-step group flex gap-4 rounded-2xl border border-white/[.07] bg-white/[.025] p-4" style={{ animationDelay: `${index * 800}ms` }}>
+              <Link href={capability.path} key={itemTitle} className="proof-step interactive group flex gap-4 rounded-2xl border border-white/[.07] bg-white/[.025] p-4 hover:border-emerald-300/20 hover:bg-white/[.045]" style={{ animationDelay: `${index * 800}ms` }}>
                 <span className="motion-icon flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-300/[.08] text-emerald-200">
                   <Icon aria-hidden="true" size={18} />
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <h3 className="font-semibold text-slate-100">{itemTitle}</h3>
-                    <StatusBadge status={capability.demoStatus} locale={locale} />
+                    <span className="flex items-center gap-2"><StatusBadge status={capability.publicStatus} locale={locale} /><ArrowRight aria-hidden="true" size={15} className="text-emerald-200 transition-transform group-hover:translate-x-1" /></span>
                   </div>
                   <p className="mt-1.5 text-sm leading-6 text-slate-400">{detail}</p>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>
@@ -782,7 +839,7 @@ function ProductCard({
         <span className="motion-icon flex size-12 items-center justify-center rounded-2xl bg-white/[.055] text-emerald-200">
           <Icon aria-hidden="true" size={22} />
         </span>
-        <StatusBadge status={capability.demoStatus} locale={locale} />
+        <StatusBadge status={capability.publicStatus} locale={locale} />
       </div>
       <h3 className="mt-7 text-xl font-semibold text-slate-100">{title}</h3>
       <p className="mt-3 text-base leading-7 text-slate-300">{statement}</p>
