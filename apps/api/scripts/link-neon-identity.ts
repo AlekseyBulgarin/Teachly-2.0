@@ -42,7 +42,8 @@ async function main(): Promise<void> {
   }
 }
 
-void main().catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : error);
+void main().catch(() => {
+  // Keep environment-derived identifiers out of CI and production logs.
+  console.error('Failed to link Neon identity. Review the supplied identifiers and database state.');
   process.exitCode = 1;
 });
