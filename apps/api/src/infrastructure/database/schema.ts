@@ -67,6 +67,16 @@ export const externalIdentities = pgTable(
   }),
 );
 
+export const rateLimitCounters = pgTable('rate_limit_counters', {
+  key: text('key').primaryKey(),
+  totalHits: integer('total_hits').notNull(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  blockedUntil: timestamp('blocked_until', { withTimezone: true }),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  expiresAtIndex: index('rate_limit_counters_expires_at_idx').on(table.expiresAt),
+}));
+
 export const organizations = pgTable('organizations', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull(),

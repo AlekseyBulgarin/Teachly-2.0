@@ -69,6 +69,8 @@ corepack pnpm dev:api
 
 Development authentication uses the `x-dev-user` header and is enabled only when `NODE_ENV` is not `production` and `DEV_AUTH_ENABLED=true`. Use `teacher` or `student` for the seeded identities.
 
+Production human requests use Neon Auth JWTs. Set `HUMAN_AUTH_PROVIDER=neon` and `NEON_AUTH_BASE_URL`, then link a verified Neon subject to an existing Teachly user explicitly with `TEACHLY_USER_ID=... NEON_AUTH_SUBJECT=... corepack pnpm --filter @teachly/api auth:link-neon`. Login never assigns roles automatically; authorization continues to use Teachly memberships and relationships.
+
 ## Verification
 
 ```text

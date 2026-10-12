@@ -1,6 +1,14 @@
 import { developmentAuthEnabled, requiredEnvironment } from './config';
 
 const base = { NODE_ENV: 'development', DEV_AUTH_ENABLED: 'true', DATABASE_URL: 'postgres://user:password@localhost:5432/teachly' };
+const production = {
+  ...base,
+  NODE_ENV: 'production',
+  DEV_AUTH_ENABLED: 'false',
+  METRICS_TOKEN: 'test-metrics-token-at-least-32-characters',
+  HUMAN_AUTH_PROVIDER: 'neon',
+  NEON_AUTH_BASE_URL: 'https://example.neonauth.eu-central-1.aws.neon.tech/teachly/auth',
+};
 
 describe('environment validation', () => {
   it('requires explicit safe configuration', () => {
@@ -13,19 +21,13 @@ describe('environment validation', () => {
   it('rejects development authentication in production before startup', () => {
     expect(() => requiredEnvironment({ ...base, NODE_ENV: 'production' })).toThrow('cannot be enabled in production');
     expect(() => requiredEnvironment({
-      ...base,
-      NODE_ENV: 'production',
-      DEV_AUTH_ENABLED: 'false',
-      METRICS_TOKEN: 'test-metrics-token-at-least-32-characters',
+      ...production,
     })).not.toThrow();
   });
 
   it('allows production to run with AI explicitly disabled', () => {
     expect(() => requiredEnvironment({
-      ...base,
-      NODE_ENV: 'production',
-      DEV_AUTH_ENABLED: 'false',
-      METRICS_TOKEN: 'test-metrics-token-at-least-32-characters',
+      ...production,
       AI_PROVIDER: 'disabled',
     })).not.toThrow();
   });
@@ -48,10 +50,7 @@ describe('environment validation', () => {
       AI_MODEL: 'provider-model',
     })).not.toThrow();
     expect(() => requiredEnvironment({
-      ...base,
-      NODE_ENV: 'production',
-      DEV_AUTH_ENABLED: 'false',
-      METRICS_TOKEN: 'test-metrics-token-at-least-32-characters',
+      ...production,
       AI_PROVIDER: 'fake',
     })).toThrow('AI_PROVIDER=fake is not allowed in production');
   });
@@ -63,6 +62,12 @@ describe('environment validation', () => {
       DEV_AUTH_ENABLED: 'false',
     })).toThrow('METRICS_TOKEN is required in production');
     expect(() => requiredEnvironment({ ...base, METRICS_TOKEN: 'too-short' })).toThrow('METRICS_TOKEN');
+  });
+
+  it('requires a trusted Neon JWT issuer for production human authentication', () => {
+    expect(() => requiredEnvironment({ ...production, NEON_AUTH_BASE_URL: undefined })).toThrow('NEON_AUTH_BASE_URL');
+    expect(() => requiredEnvironment({ ...production, NEON_AUTH_BASE_URL: 'http://auth.example.test' })).toThrow('HTTPS URL');
+    expect(() => requiredEnvironment({ ...production, HUMAN_AUTH_PROVIDER: 'development' })).toThrow('HUMAN_AUTH_PROVIDER=neon');
   });
 
   it('validates the optional private Prometheus endpoint without accepting embedded credentials', () => {

@@ -19,7 +19,7 @@ export function AnalyticsPage() {
           eyebrow={t("analytics.eyebrow")}
           title={t("analytics.title")}
           description={t("analytics.description")}
-          action={<StatusBadge status={capabilityRegistry.analytics.demoStatus} locale={locale} />}
+          action={<StatusBadge status={capabilityRegistry.analytics.publicStatus} locale={locale} />}
         />
       </div>
       <QuickSectionNav
@@ -42,7 +42,7 @@ export function AnalyticsPage() {
           title={t("analytics.liveTitle")}
           detail={t("analytics.liveDetail")}
           icon={BarChart3}
-          action={<StatusBadge status="LIVE" locale={locale} />}
+          action={<StatusBadge status="PILOT" locale={locale} />}
         >
           <div className="p-5 sm:p-7">
             <ProgressDemo />

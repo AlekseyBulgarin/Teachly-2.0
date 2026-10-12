@@ -59,6 +59,7 @@ export function VariantsDemo() {
             <button
               key={variant.id}
               type="button"
+              data-variant-select={variant.id}
               onClick={() => setSelectedId(variant.id)}
               aria-pressed={active}
               className={`interactive rounded-xl border px-4 py-3 text-left transition ${active ? "border-emerald-300/30 bg-emerald-300/10" : "border-[var(--border)] bg-white/[.025] hover:border-[var(--border-strong)]"}`}
@@ -70,7 +71,7 @@ export function VariantsDemo() {
         })}
       </div>
 
-      <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 sm:p-6">
+      <div key={selected.id} data-motion-panel="variants" className="content-swap rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-lg font-semibold text-slate-50">{localizedTitle}</p>

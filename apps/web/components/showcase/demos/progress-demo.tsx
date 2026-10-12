@@ -106,6 +106,7 @@ export function ProgressDemo() {
                 <button
                   key={option}
                   type="button"
+                  data-progress-group={option}
                   onClick={() => setGroupBy(option)}
                   aria-pressed={active}
                   className={`interactive rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
@@ -121,7 +122,7 @@ export function ProgressDemo() {
           </div>
         </div>
 
-        <div className="mt-4 overflow-x-auto">
+        <div key={groupBy} data-motion-panel="progress" className="content-swap mt-4 overflow-x-auto">
           <table className="w-full min-w-[520px] border-collapse text-left text-xs">
             <caption className="sr-only">{t("demo.progress.skills")}</caption>
             <thead>

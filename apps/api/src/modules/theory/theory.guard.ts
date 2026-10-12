@@ -6,6 +6,7 @@ import { IdentityService } from '../identity/identity.service';
 import { IntegrationsService } from '../integrations/integrations.service';
 import { THEORY_SCOPES_KEY } from './theory.scope';
 import type { TheoryScope } from './theory.types';
+import { extractBearerToken, isTeachlyApiKey } from '../../common/bearer-token';
 
 @Injectable()
 export class TheoryGuard implements CanActivate {
@@ -19,9 +20,9 @@ export class TheoryGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<TeachlyRequest>();
     const required = this.reflector.getAllAndOverride<TheoryScope[]>(THEORY_SCOPES_KEY, [context.getHandler(), context.getClass()]) ?? [];
-    const authorization = request.headers.authorization;
-    if (typeof authorization === 'string' && authorization.startsWith('Bearer ')) {
-      const tenant = this.core.requireTenantContext(await this.integrations.authenticateApiKey(authorization.slice('Bearer '.length)));
+    const bearer = extractBearerToken(request.headers.authorization);
+    if (isTeachlyApiKey(bearer)) {
+      const tenant = this.core.requireTenantContext(await this.integrations.authenticateApiKey(bearer));
       if (required.some((scope) => !tenant.scopes.includes(scope))) throw new ForbiddenException('API key lacks required theory scope');
       request.tenantContext = tenant;
       return true;

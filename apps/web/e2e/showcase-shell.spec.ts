@@ -57,21 +57,61 @@ test("navigation, module tabs and language switch stay usable", async ({ page })
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Grow your education platform");
 });
 
+test("B2B hero states the buyer, product boundary and low-risk next step", async ({ page }) => {
+  await page.goto("/ecosystem");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("без месяцев собственной разработки");
+  await expect(page.getByText("Для владельцев онлайн-школ, LMS и EdTech-продуктов")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Запросить демонстрацию", exact: true }).first()).toHaveAttribute("href", "#contact");
+  await expect(page.getByRole("link", { name: "Посмотреть живое демо", exact: true })).toHaveAttribute("href", "#demo");
+  await expect(page.getByText("Teachly не заменяет LMS, CRM или личный кабинет")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Начните с результата, а не с изучения каталога" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Запустить учебную практику/ })).toBeVisible();
+  await expect(page.getByText("Что произошло", { exact: true })).toBeVisible();
+  await expect(page.getByText("Что это означает", { exact: true })).toBeVisible();
+});
+
+test("page and data-panel transitions are present and respect reduced motion", async ({ page }) => {
+  await mockShowcaseApi(page);
+  await page.goto("/tasks");
+  await expect(page.locator(".showcase-page")).toHaveCSS("animation-name", "page-enter");
+
+  const taskChoices = page.locator("[data-task-select]");
+  if (await taskChoices.count() > 1) {
+    await taskChoices.nth(1).click();
+    await expect(page.locator('[data-motion-panel="tasks"]')).toHaveCSS("animation-name", "content-swap");
+  }
+
+  if ((page.viewportSize()?.width ?? 0) < 1024) {
+    await page.getByRole("button", { name: /Открыть меню|Open menu/i }).click();
+  }
+  await page.locator('aside a[href="/variants"]').click();
+  await expect(page).toHaveURL(/\/variants$/);
+  await expect(page.locator(".showcase-page")).toHaveCSS("animation-name", "page-enter");
+  await expect(page.locator('[data-motion-panel="variants"]')).toHaveCSS("animation-name", "content-swap");
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/theory");
+  const duration = await page.locator(".showcase-page").evaluate((element) => getComputedStyle(element).animationDuration);
+  expect(Number.parseFloat(duration) * (duration.endsWith("ms") ? 1 : 1_000)).toBeLessThanOrEqual(0.011);
+});
+
 test("ecosystem catalog keeps all readiness states explicit", async ({ page }) => {
   await page.goto("/ecosystem");
   const catalog = page.locator("#catalog");
   await catalog.scrollIntoViewIfNeeded();
+  await catalog.getByText("Открыть полный каталог и статусы", { exact: true }).click();
   await expect(catalog.getByRole("tab", { name: "Обучение", exact: true })).toBeVisible();
-  await expect(catalog.getByText("Доступно").first()).toBeVisible();
+  await expect(catalog.getByText("Доступно для пилота").first()).toBeVisible();
   await expect(catalog.getByText("В разработке").first()).toBeVisible();
 
   await catalog.getByRole("tab", { name: "Автоматизация" }).click();
   await expect(catalog.getByText("Запланировано").first()).toBeVisible();
-  await expect(catalog.getByText("Демо").first()).toBeVisible();
+  await expect(catalog.getByText("Интерактивное демо").first()).toBeVisible();
 });
 
 test("business comparison and technical integration path cover the promised decision criteria", async ({ page }) => {
   await page.goto("/ecosystem");
+  await page.getByText("Сравнить три подхода подробно", { exact: true }).click();
   await expect(page.getByRole("cell", { name: "Архитектура", exact: true })).toBeVisible();
   await expect(page.getByRole("cell", { name: "Масштабирование", exact: true })).toBeVisible();
   const ecosystemFlow = page.getByRole("tablist", { name: "Этапы учебного контекста" });
@@ -79,9 +119,12 @@ test("business comparison and technical integration path cover the promised deci
   await expect(ecosystemFlow.getByRole("tab", { name: "Аналитика", exact: true })).toBeVisible();
 
   await page.goto("/integrations#technical");
+  await expect(page.getByRole("heading", { name: "Понятная граница интеграции до разговора о технологии" })).toBeVisible();
+  await expect(page.getByText("Интерфейс, пользователи, авторизация, курсы, биллинг и продуктовая логика.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Контракты и контроль, которые можно проверить" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Техническая готовность подключения" })).toBeVisible();
   await expect(page.getByText("Webhooks, SDK и embed", { exact: true })).toBeVisible();
-  await expect(page.getByText("В ПЛАНАХ", { exact: true })).toBeVisible();
+  await expect(page.getByText("Запланировано", { exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Посмотреть OpenAPI" })).toHaveAttribute("href", "https://teachlyapi-production.up.railway.app/docs");
 
   await page.getByRole("button", { name: /^en$/i }).click();
@@ -163,11 +206,12 @@ test("AI demo renders a successful provider response", async ({ page }) => {
   await page.getByRole("button", { name: /Получить объяснение|Get an explanation/i }).click();
   await expect(page.getByText("Проверь знак перед вторым слагаемым.")).toBeVisible();
   await expect(page.getByText("91%")).toBeVisible();
+  await expect(page.locator('[data-motion-panel="ai"]')).toHaveCSS("animation-name", "content-swap");
 });
 
 test("Concept Loom demo keeps its boundary honest and demonstrates a routed checkpoint", async ({ page }) => {
   await page.goto("/concept-loom");
-  await expect(page.getByText("ДЕМО", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Интерактивное демо", { exact: true }).first()).toBeVisible();
   await expect(page.getByText(/результат не сохраняется, AI не вызывается/i)).toBeVisible();
   await expect(page.getByRole("heading", { name: "Что происходит с учебным сигналом" })).toBeVisible();
   await expect(page.getByText("Progress → Teacher → Analytics", { exact: true })).toBeVisible();

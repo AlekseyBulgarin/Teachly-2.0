@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { ArrowRight, Check } from "lucide-react";
 import { StatusBadge } from "@/components/ui";
-import { capabilityRegistry, type CapabilityKey } from "@/lib/capabilities";
+import { capabilityRegistry, type CapabilityKey, type PublicCapabilityStatus } from "@/lib/capabilities";
 import type { Locale } from "@/lib/i18n";
 
 export function shortId(value: string) {
@@ -22,7 +22,7 @@ export function ModuleCard({
   title: string;
   kicker: string;
   description: string;
-  status: "LIVE" | "COMING NEXT" | "PLANNED";
+  status: PublicCapabilityStatus;
   icon: LucideIcon;
   locale: Locale;
   exploreLabel?: string;
