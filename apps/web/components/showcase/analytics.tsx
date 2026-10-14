@@ -28,7 +28,7 @@ export function AnalyticsPage() {
             ? [
                 { id: "overview", label: "Обзор" },
                 { id: "live", label: "Живые данные" },
-                { id: "signals", label: "Сигналы" },
+                { id: "signals", label: "Выводы" },
               ]
             : [
                 { id: "overview", label: "Overview" },
@@ -63,14 +63,17 @@ export function AnalyticsPage() {
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           <Preview
+            locale={locale}
             title={t("analytics.preview1")}
             detail={t("analytics.preview1Detail")}
           />
           <Preview
+            locale={locale}
             title={t("analytics.preview2")}
             detail={t("analytics.preview2Detail")}
           />
           <Preview
+            locale={locale}
             title={t("analytics.preview3")}
             detail={t("analytics.preview3Detail")}
           />
@@ -81,7 +84,7 @@ export function AnalyticsPage() {
   );
 }
 
-function Preview({ title, detail }: { title: string; detail: string }) {
+function Preview({ title, detail, locale }: { title: string; detail: string; locale: "ru" | "en" }) {
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
       <span className="flex size-10 items-center justify-center rounded-xl bg-white/[.055] text-emerald-200">
@@ -90,7 +93,7 @@ function Preview({ title, detail }: { title: string; detail: string }) {
       <h3 className="mt-5 text-base font-semibold text-slate-100">{title}</h3>
       <p className="mt-2 text-sm leading-6 text-slate-500">{detail}</p>
       <span className="mt-5 inline-flex rounded-full border border-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[.14em] text-slate-500">
-        Preview
+        {locale === "ru" ? "В ПРОТОТИПЕ" : "PREVIEW"}
       </span>
     </div>
   );
