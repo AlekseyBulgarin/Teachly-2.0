@@ -95,6 +95,24 @@ test("page and data-panel transitions are present and respect reduced motion", a
   expect(Number.parseFloat(duration) * (duration.endsWith("ms") ? 1 : 1_000)).toBeLessThanOrEqual(0.011);
 });
 
+test("analytics explains metrics with labelled charts and Russian copy", async ({ page }) => {
+  await mockShowcaseApi(page);
+  await page.goto("/analytics");
+
+  await expect(page.getByText("Результаты заданий", { exact: true })).toBeVisible();
+  await expect(page.getByRole("img", { name: /Верные ответы: 58%/ })).toBeVisible();
+  await expect(page.getByText("Состояние навыков", { exact: true })).toBeVisible();
+  await expect(page.getByText("Количество учебных действий; шкала слева показывает их число.")).toBeVisible();
+  await expect(page.getByRole("progressbar", { name: "Результаты, связанные с навыками" })).toHaveAttribute("aria-valuenow", "100");
+  await expect(page.getByText("Предыдущий период", { exact: true })).toBeVisible();
+  await expect(page.getByText("Текущий период", { exact: true })).toBeVisible();
+  await expect(page.getByText("В ПРОТОТИПЕ", { exact: true }).first()).toBeVisible();
+
+  await page.getByRole("button", { name: "Тема", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Тема", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator('[data-motion-panel="progress"]')).toBeVisible();
+});
+
 test("ecosystem catalog keeps all readiness states explicit", async ({ page }) => {
   await page.goto("/ecosystem");
   const catalog = page.locator("#catalog");
