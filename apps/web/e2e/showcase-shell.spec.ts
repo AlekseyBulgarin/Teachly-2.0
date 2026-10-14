@@ -103,6 +103,7 @@ test("analytics explains metrics with labelled charts and Russian copy", async (
   await expect(page.getByRole("img", { name: /Верные ответы: 58%/ })).toBeVisible();
   await expect(page.getByText("Состояние навыков", { exact: true })).toBeVisible();
   await expect(page.getByText("Количество учебных действий; шкала слева показывает их число.")).toBeVisible();
+  await expect(page.getByText("Прокрутите график по горизонтали, чтобы увидеть все дни.")).toBeVisible();
   await expect(page.getByRole("progressbar", { name: "Результаты, связанные с навыками" })).toHaveAttribute("aria-valuenow", "100");
   await expect(page.getByText("Предыдущий период", { exact: true })).toBeVisible();
   await expect(page.getByText("Текущий период", { exact: true })).toBeVisible();
@@ -111,6 +112,12 @@ test("analytics explains metrics with labelled charts and Russian copy", async (
   await page.getByRole("button", { name: "Тема", exact: true }).click();
   await expect(page.getByRole("button", { name: "Тема", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator('[data-motion-panel="progress"]')).toBeVisible();
+
+  if ((page.viewportSize()?.width ?? 0) < 768) {
+    const chart = page.locator("[data-activity-scroll]");
+    const dimensions = await chart.evaluate((element) => ({ clientWidth: element.clientWidth, scrollWidth: element.scrollWidth }));
+    expect(dimensions.scrollWidth).toBeGreaterThan(dimensions.clientWidth);
+  }
 });
 
 test("ecosystem catalog keeps all readiness states explicit", async ({ page }) => {
