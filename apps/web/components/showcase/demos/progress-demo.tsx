@@ -75,19 +75,32 @@ function StateDistribution({ states }: { states: LearnerSkillStates }) {
 }
 
 function ActivityChart({ days }: { days: LearnerProgress["activityByDay"] }) {
-  const { t } = useEcosystem();
+  const { t, locale } = useEcosystem();
   if (!days.length) return <p className="mt-4 text-sm text-slate-500">{t("common.noData")}</p>;
   const maxValue = Math.max(1, ...days.map((day) => day.evidenceCount));
   const middle = Math.ceil(maxValue / 2);
   return (
-    <div className="mt-5 grid grid-cols-[32px_1fr] gap-3">
-      <div className="flex h-44 flex-col justify-between text-right text-[10px] tabular-nums text-slate-500" aria-hidden="true"><span>{maxValue}</span><span>{middle}</span><span>0</span></div>
-      <div className="relative h-52 overflow-hidden">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-44 border-y border-white/[.08] bg-[linear-gradient(to_bottom,transparent_calc(50%-0.5px),rgba(255,255,255,.08)_50%,transparent_calc(50%+0.5px))]" />
-        <ul className="relative flex h-full items-start gap-2 sm:gap-4">{days.map((day) => <li key={day.date} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end"><span className="mb-2 text-xs font-semibold tabular-nums text-slate-200">{day.evidenceCount}</span><span role="img" aria-label={`${formatDay(day.date)}: ${day.evidenceCount} ${t("demo.progress.learningActions").toLowerCase()}`} className="w-full max-w-12 rounded-t-lg border border-emerald-200/20 bg-gradient-to-t from-emerald-500/45 to-emerald-300" style={{ height: `${Math.max(8, (day.evidenceCount / maxValue) * 144)}px` }} /><span className="mt-2 truncate text-[10px] text-slate-500 sm:text-xs">{formatDay(day.date).slice(5)}</span></li>)}</ul>
+    <div className="mt-5">
+      {days.length > 8 && <p className="mb-3 text-xs text-slate-500">{t("demo.progress.scrollHint")}</p>}
+      <div className="grid grid-cols-[32px_minmax(0,1fr)] gap-3">
+        <div className="flex h-44 flex-col justify-between text-right text-[10px] tabular-nums text-slate-500" aria-hidden="true"><span>{maxValue}</span><span>{middle}</span><span>0</span></div>
+        <div data-activity-scroll className="overflow-x-auto pb-2">
+          <div className="relative h-52" style={{ minWidth: `${Math.max(320, days.length * 48)}px` }}>
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-44 border-y border-white/[.08] bg-[linear-gradient(to_bottom,transparent_calc(50%-0.5px),rgba(255,255,255,.08)_50%,transparent_calc(50%+0.5px))]" />
+            <ul className="relative flex h-full items-start gap-3">{days.map((day) => <li key={day.date} className="flex h-full min-w-9 flex-1 flex-col items-center justify-end"><span className="mb-2 text-xs font-semibold tabular-nums text-slate-200">{day.evidenceCount}</span><span role="img" aria-label={`${formatDay(day.date)}: ${activityCountLabel(day.evidenceCount, locale)}`} className="w-full max-w-12 rounded-t-lg border border-emerald-200/20 bg-gradient-to-t from-emerald-500/45 to-emerald-300" style={{ height: `${Math.max(8, (day.evidenceCount / maxValue) * 144)}px` }} /><span className="mt-2 text-[10px] text-slate-500 sm:text-xs">{formatDay(day.date).slice(5)}</span></li>)}</ul>
+          </div>
+        </div>
       </div>
     </div>
   );
+}
+
+function activityCountLabel(count: number, locale: "ru" | "en"): string {
+  if (locale === "en") return `${count} learning ${count === 1 ? "action" : "actions"}`;
+  const mod100 = count % 100;
+  const mod10 = count % 10;
+  const unit = mod100 >= 11 && mod100 <= 14 ? "учебных действий" : mod10 === 1 ? "учебное действие" : mod10 >= 2 && mod10 <= 4 ? "учебных действия" : "учебных действий";
+  return `${count} ${unit}`;
 }
 
 function StatusBadge({ status }: { status: LearnerSkill["state"]["status"] }) {
