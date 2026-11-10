@@ -196,20 +196,20 @@ function ShellFrame({ children }: { children: ReactNode }) {
 
 const marketingNavigation = {
   ru: {
-    product: 'Продукт',
-    solutions: 'Решения',
+    product: 'Как работает',
+    solutions: 'Кому подходит',
     modules: 'Модули',
     integration: 'Интеграция',
-    demo: 'Демо',
+    demo: 'Пилот',
     contact: 'Запросить демонстрацию',
     footer: 'Образовательные модули и интеллект для вашего продукта.',
   },
   en: {
-    product: 'Product',
-    solutions: 'Solutions',
+    product: 'How it works',
+    solutions: 'Who it fits',
     modules: 'Modules',
     integration: 'Integration',
-    demo: 'Demo',
+    demo: 'Pilot',
     contact: 'Request a demo',
     footer: 'Learning modules and intelligence for your product.',
   },
@@ -247,11 +247,11 @@ function MarketingFrame({
 
   const navigation = (
     <>
-      <a href="#how" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/[.055] hover:text-white">{c.product}</a>
+      <a href="#scenario" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/[.055] hover:text-white">{c.product}</a>
       <a href="#solutions" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/[.055] hover:text-white">{c.solutions}</a>
       <a href="#modules" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/[.055] hover:text-white">{c.modules}</a>
       <Link href="/integrations" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/[.055] hover:text-white">{c.integration}</Link>
-      <a href="#demo" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/[.055] hover:text-white">{c.demo}</a>
+      <a href="#pilot" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/[.055] hover:text-white">{c.demo}</a>
     </>
   );
 

@@ -16,7 +16,7 @@ for (const route of showcaseRoutes) {
   });
 }
 
-test("navigation, module tabs and language switch stay usable", async ({ page }) => {
+test("navigation, catalogue and language switch stay usable", async ({ page }) => {
   await page.goto("/ecosystem");
   const isCompact = (page.viewportSize()?.width ?? 0) < 1024;
 
@@ -35,8 +35,9 @@ test("navigation, module tabs and language switch stay usable", async ({ page })
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
   await page.goto("/ecosystem");
-  await page.getByRole("tab", { name: "Интеллект" }).click();
-  await expect(page.locator('#modules a[href="/ai"]')).toBeVisible();
+  await page.locator("#catalog").getByText("Открыть полный каталог и статусы", { exact: true }).click();
+  await page.locator("#catalog").getByRole("tab", { name: "AI", exact: true }).click();
+  await expect(page.locator('#catalog a[href="/ai"]')).toBeVisible();
 
   const isMobile = (page.viewportSize()?.width ?? 0) < 640;
   if (isMobile) {
@@ -49,25 +50,41 @@ test("navigation, module tabs and language switch stay usable", async ({ page })
     await page.getByRole("button", { name: /^en$/i }).click();
   }
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "Grow your education platform",
+    "Add tasks and learning practice",
   );
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Grow your education platform");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Add tasks and learning practice");
 });
 
-test("B2B hero states the buyer, product boundary and low-risk next step", async ({ page }) => {
+test("B2B homepage explains the buyer, boundary, workflow and real next step", async ({ page }) => {
   await page.goto("/ecosystem");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("без месяцев собственной разработки");
-  await expect(page.getByText("Для владельцев онлайн-школ, LMS и EdTech-продуктов")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Запросить демонстрацию", exact: true }).first()).toHaveAttribute("href", "#contact");
-  await expect(page.getByRole("link", { name: "Посмотреть живое демо", exact: true })).toHaveAttribute("href", "#demo");
-  await expect(page.getByText("Teachly не заменяет LMS, CRM или личный кабинет")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Начните с результата, а не с изучения каталога" })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Запустить учебную практику/ })).toBeVisible();
-  await expect(page.getByText("Что произошло", { exact: true })).toBeVisible();
-  await expect(page.getByText("Что это означает", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Добавьте задания и учебную практику");
+  await expect(page.getByText("Для команд со своей платформой и разработчиком на стороне заказчика")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Обсудить пилот", exact: true }).first()).toHaveAttribute("href", "#contact");
+  await expect(page.getByRole("link", { name: "Посмотреть сценарий", exact: true })).toHaveAttribute("href", "#scenario");
+  await expect(page.getByRole("heading", { name: "Teachly дополняет ваш продукт, а не заменяет его" })).toBeVisible();
+  await expect(page.getByText("Потребуется разработчик вашей команды.", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Позвонить: +7 992 313-57-78" })).toHaveAttribute("href", "tel:+79923135778");
+  await page.getByRole("button", { name: "passed", exact: true }).click();
+  await expect(page.getByText("Верно", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Сбросить пример" }).click();
+  await expect(page.getByText("Выберите ответ — результат появится здесь без обращения к AI.")).toBeVisible();
+});
+
+test("B2B homepage remains usable at 360 and 1024 pixels", async ({ page }) => {
+  for (const viewport of [{ width: 360, height: 800 }, { width: 1024, height: 768 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/ecosystem");
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Обсудить пилот", exact: true }).first()).toBeVisible();
+    const dimensions = await page.evaluate(() => ({
+      clientWidth: document.documentElement.clientWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+    }));
+    expect(dimensions.scrollWidth, `${viewport.width}px horizontal overflow`).toBeLessThanOrEqual(dimensions.clientWidth + 1);
+  }
 });
 
 test("page and data-panel transitions are present and respect reduced motion", async ({ page }) => {
@@ -134,15 +151,7 @@ test("ecosystem catalog keeps all readiness states explicit", async ({ page }) =
   await expect(catalog.getByText("Интерактивное демо").first()).toBeVisible();
 });
 
-test("business comparison and technical integration path cover the promised decision criteria", async ({ page }) => {
-  await page.goto("/ecosystem");
-  await page.getByText("Сравнить три подхода подробно", { exact: true }).click();
-  await expect(page.getByRole("cell", { name: "Архитектура", exact: true })).toBeVisible();
-  await expect(page.getByRole("cell", { name: "Масштабирование", exact: true })).toBeVisible();
-  const ecosystemFlow = page.getByRole("tablist", { name: "Этапы учебного контекста" });
-  await expect(ecosystemFlow.getByRole("tab", { name: "Teachly Core", exact: true })).toBeVisible();
-  await expect(ecosystemFlow.getByRole("tab", { name: "Аналитика", exact: true })).toBeVisible();
-
+test("technical integration path covers the promised decision criteria", async ({ page }) => {
   await page.goto("/integrations#technical");
   await expect(page.getByRole("heading", { name: "Понятная граница интеграции до разговора о технологии" })).toBeVisible();
   await expect(page.getByText("Интерфейс, пользователи, авторизация, курсы, биллинг и продуктовая логика.")).toBeVisible();

@@ -17,8 +17,8 @@ type ShowcaseMetadataDefinition = {
 
 export const showcaseMetadataCatalog = {
   '/ecosystem': {
-    title: 'Teachly Ecosystem — образовательные модули для бизнеса',
-    description: 'Teachly Ecosystem добавляет задания, AI-помощь, учебную аналитику и инструменты преподавателя в существующий образовательный продукт.',
+    title: 'Teachly — задания и учебная практика для вашей платформы',
+    description: 'Подключите задания, тренажёр и прогресс к существующей LMS, онлайн-школе или EdTech-продукту. Начните с ограниченного интеграционного пилота.',
   },
   '/platform': {
     title: 'Teachly Core для образовательного продукта',
