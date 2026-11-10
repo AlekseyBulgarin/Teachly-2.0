@@ -103,5 +103,5 @@ Exit criteria: the merged production version is live and verified; the final rep
 - 2026-11-10: The only contact channel treated as verified by the approved brief is `+7 992 313-57-78`; unverified Telegram and email links were removed from the homepage.
 - 2026-11-10: Verification passed: typecheck, 13 unit tests, production build, 128 Playwright scenarios across four standard projects (8 wide-screen-only skips), dedicated 360/1024 checks, and 32 visual baselines.
 - 2026-11-10: Lighthouse passed all configured assertions across 10 routes. Homepage scores: performance 95, accessibility 96, best practices 96, SEO 100, CLS 0.
-- 2026-11-10: Next.js 16.4.0 emitted a known-security-vulnerability upgrade warning. The build and tests pass, but dependency remediation remains a separate release risk and should not be hidden inside the homepage redesign.
+- 2026-11-10: CI exposed newly published high/critical advisories. Next.js, OpenAI, Zod and reviewed transitive overrides were upgraded; the production dependency audit now reports no high or critical advisories.
 
