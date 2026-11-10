@@ -3,7 +3,7 @@ import { siteUrl } from './site';
 export const teachlyBrand = {
   name: 'Teachly Ecosystem',
   alternateNames: ['Teachly', 'Teachly educational ecosystem'],
-  description: 'Интеграционная образовательная экосистема для владельцев EdTech-продуктов: задания, AI-помощь, аналитика и инструменты преподавателя в одном контексте.',
+  description: 'Образовательные модули для существующих LMS, онлайн-школ и EdTech-продуктов: задания, тренажёр и прогресс через согласованную интеграцию.',
 } as const;
 
 export function structuredDataForSite(baseUrl: URL = siteUrl) {
